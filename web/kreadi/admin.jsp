@@ -122,7 +122,6 @@
             // Hook each textarea with its editor
             CKEDITOR.on('instanceReady', function(e) {
                 onresize();
-                console.log("NOW!!!!");
             });
 
             onresize = function() {
