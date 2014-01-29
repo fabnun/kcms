@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+    
+    <servlet>
+        <servlet-name>Set</servlet-name>
+        <servlet-class>com.kreadi.servlets.Set</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>Set</servlet-name>
+        <url-pattern>/kreadi/set</url-pattern>
+    </servlet-mapping>
+    
+    <filter>  
+        <filter-name>FiltroUrl</filter-name>  
+        <filter-class>com.kreadi.servlets.FiltroUrl</filter-class>  
+    </filter>  
+      
+    <filter-mapping>  
+        <filter-name>FiltroUrl</filter-name>  
+        <url-pattern>*</url-pattern>  
+    </filter-mapping>  
+    
+    <mime-mapping>
+        <extension>fnt</extension>
+        <mime-type>application/xml</mime-type>
+    </mime-mapping>
+    
+</web-app>
