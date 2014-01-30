@@ -54,11 +54,21 @@ if (typeof String.prototype.startsWith !== 'function') {
     };
 }
 
+function setWait(msg) {
+    var wd = document.getElementById("waitDiv");
+    if (msg) {
+        wd.style.display = "block";
+        document.getElementById("waitMsg").innerHTML = msg;
+    } else
+        wd.style.display = "none";
+}
+
 function fileSelect(elem, col, row) {//Upload de archivos y respaldo
     if (col !== undefined && col !== null) {
         var f = elem.files[0];
         var parent = elem.parentNode;
         elem.parentNode.innerHTML = elem.parentNode.innerHTML + "<span></span>";
+        currentEdit = [];
         ajax(server, {command: 'upload', id: data.id, row: row, col: col, name: f.name, size: f.size, data: f},
         function(resp) {
             if (resp.startsWith("Error:")) {
@@ -69,8 +79,10 @@ function fileSelect(elem, col, row) {//Upload de archivos y respaldo
                 data.columns[col].data[row] = resp;
                 buildTable();
             }
+            currentEdit = undefined;
         }, parent.childNodes[parent.childNodes.length - 1]);
     } else {
+        setWait("Restaurando Web 0%");
         var f = elem.files[0];//Archivo zip
         // use a BlobReader to read the zip from a Blob object
         zip.createReader(new zip.BlobReader(f), function(reader) {
@@ -96,24 +108,32 @@ function fileSelect(elem, col, row) {//Upload de archivos y respaldo
 
 function sendSerializable(entries, first, size) {
     if (first) {
-        console.log("Envia peticion de borrado de datos al servidor.");
         ajax(server, {command: "serialdelete"}, function(resp) {
             sendSerializable(entries, false, size);
         });
     } else {
         if (size > 0)
-            if (entries[0]) {
+            if (entries.length > 0) {
+
                 entries[0].getData(new zip.BlobWriter(), function(text) {
                     ajax(server, {command: 'serial', id: entries[0].filename, data: text},
-                    function(resp) {
-                        console.log("Recibido -> " + entries[0].filename + " " + (100 * (size - entries.length) / size) + "%");
+                    function() {
+                        setWait("Restaurando Web " + Math.round(100 * (size - entries.length) / size) + "%");
                         entries.splice(0, 1);
                         if (entries.length > 0)
                             sendSerializable(entries, false, size);
+                        else {
+
+                            ajax(server, {command: "getData", id: data.id}, function(resp) {
+                                currentEdit = undefined;
+                                eval("data = " + resp);
+                                buildTable();
+                                setWait();
+                            });
+
+                        }
                     });
                 });
-            } else {
-                console.log("THE END!!!");
             }
     }
 }
@@ -238,37 +258,41 @@ function getSelRows() {
 
 
 function delRow() {
-    var sel = getSelRows();
-    if (sel.length > 0) {
-        if (confirm("Desea eliminar " + sel.length + " registros?")) {
-            ajax(server, {command: "delrow", id: data.id, rows: sel.join(",")},
-            function(resp, json) {
-                if (resp === "") {
-                    var sel = json.rows.split(",");
-                    for (var i = 0; i < data.columns.length; i++) {
-                        for (var j = sel.length - 1; j >= 0; j--) {
-                            data.columns[i].data.splice(sel[j], 1);
+    if (!currentEdit) {
+        var sel = getSelRows();
+        if (sel.length > 0) {
+            if (confirm("Desea eliminar " + sel.length + " registros?")) {
+                ajax(server, {command: "delrow", id: data.id, rows: sel.join(",")},
+                function(resp, json) {
+                    if (resp === "") {
+                        var sel = json.rows.split(",");
+                        for (var i = 0; i < data.columns.length; i++) {
+                            for (var j = sel.length - 1; j >= 0; j--) {
+                                data.columns[i].data.splice(sel[j], 1);
+                            }
                         }
-                    }
-                    buildTable();
-                } else
-                    alert(resp);
-            });
+                        buildTable();
+                    } else
+                        alert(resp);
+                });
+            }
         }
     }
 }
 
 function addRow() {
-    ajax(server, {command: "addrow", id: data.id},
-    function(resp) {
-        if (resp === "") {
-            for (var i = 0; i < data.columns.length; i++) {
-                data.columns[i].data.push("");
-            }
-            buildTable();
-        } else
-            alert(resp);
-    });
+    if (!currentEdit) {
+        ajax(server, {command: "addrow", id: data.id},
+        function(resp) {
+            if (resp === "") {
+                for (var i = 0; i < data.columns.length; i++) {
+                    data.columns[i].data.push("");
+                }
+                buildTable();
+            } else
+                alert(resp);
+        });
+    }
 }
 
 function setSel(add, indexes) {
@@ -279,54 +303,58 @@ function setSel(add, indexes) {
 }
 
 function downRow() {
-    var sel = getSelRows();
-    if (sel.length > 0 && data.columns && data.columns.length > 0 && sel[sel.length - 1] < data.columns[0].data.length - 1) {
-        var button = document.getElementById("downRowButton");
-        button.disabled = true;
-        ajax(server, {command: "downrow", id: data.id, rows: sel.join(",")},
-        function(resp, json) {
-            var sel = json.rows.split(",");
-            for (var j = sel.length - 1; j >= 0; j--) {
-                var index = parseInt(sel[j]);
-                for (var i = 0; i < data.columns.length; i++) {
-                    var val0 = data.columns[i].data[index];
-                    var val1 = data.columns[i].data[index + 1];
-                    data.columns[i].data[index] = val1;
-                    data.columns[i].data[index + 1] = val0;
+    if (!currentEdit) {
+        var sel = getSelRows();
+        if (sel.length > 0 && data.columns && data.columns.length > 0 && sel[sel.length - 1] < data.columns[0].data.length - 1) {
+            var button = document.getElementById("downRowButton");
+            button.disabled = true;
+            ajax(server, {command: "downrow", id: data.id, rows: sel.join(",")},
+            function(resp, json) {
+                var sel = json.rows.split(",");
+                for (var j = sel.length - 1; j >= 0; j--) {
+                    var index = parseInt(sel[j]);
+                    for (var i = 0; i < data.columns.length; i++) {
+                        var val0 = data.columns[i].data[index];
+                        var val1 = data.columns[i].data[index + 1];
+                        data.columns[i].data[index] = val1;
+                        data.columns[i].data[index + 1] = val0;
+                    }
                 }
-            }
-            buildTable();
-            setSel(1, sel);
-            if (resp === "") {
-            } else
-                alert(resp);
-        });
+                buildTable();
+                setSel(1, sel);
+                if (resp === "") {
+                } else
+                    alert(resp);
+            });
+        }
     }
 }
 
 function upRow() {
-    var sel = getSelRows();
-    if (sel.length > 0 && data.columns && data.columns.length > 0 && sel[0] > 0) {
-        var button = document.getElementById("upRowButton");
-        button.disabled = true;
-        ajax(server, {command: "uprow", id: data.id, rows: sel.join(",")},
-        function(resp, json) {
-            var sel = json.rows.split(",");
-            for (var j = 0; j < sel.length; j++) {
-                var index = parseInt(sel[j]);
-                for (var i = 0; i < data.columns.length; i++) {
-                    var val0 = data.columns[i].data[index];
-                    var val1 = data.columns[i].data[index - 1];
-                    data.columns[i].data[index] = val1;
-                    data.columns[i].data[index - 1] = val0;
+    if (!currentEdit) {
+        var sel = getSelRows();
+        if (sel.length > 0 && data.columns && data.columns.length > 0 && sel[0] > 0) {
+            var button = document.getElementById("upRowButton");
+            button.disabled = true;
+            ajax(server, {command: "uprow", id: data.id, rows: sel.join(",")},
+            function(resp, json) {
+                var sel = json.rows.split(",");
+                for (var j = 0; j < sel.length; j++) {
+                    var index = parseInt(sel[j]);
+                    for (var i = 0; i < data.columns.length; i++) {
+                        var val0 = data.columns[i].data[index];
+                        var val1 = data.columns[i].data[index - 1];
+                        data.columns[i].data[index] = val1;
+                        data.columns[i].data[index - 1] = val0;
+                    }
                 }
-            }
-            buildTable();
-            setSel(-1, sel);
-            if (resp === "") {
-            } else
-                alert(resp);
-        });
+                buildTable();
+                setSel(-1, sel);
+                if (resp === "") {
+                } else
+                    alert(resp);
+            });
+        }
     }
 }
 
@@ -348,14 +376,13 @@ function setBoolean(element, row, col) {
 }
 
 function saveHtml() {
-    
+    setWait("Saving Html...");
     var value = document.getElementById("tinyeditor").value;
-    document.getElementById('saveDiv').style.display = 'block';
     ajax(server, {command: "setTableVal", id: data.id, col: _editCol, row: _editRow, value: value},
     function(resp, json) {
         data.columns[json.col].data[json.row] = JSON.parse(resp);
-        document.getElementById('saveDiv').style.display = 'none';
         document.getElementsByTagName("body")[0].style.overflow = "auto";
+        setWait();
     });
 }
 
@@ -383,10 +410,12 @@ function setScript(row, col) {
 }
 
 function saveScript(name) {
+    setWait("Saving Script...");
     var value = editor.getDoc().getValue();
     ajax(server, {command: "setTableVal", id: data.id, col: _editCol, row: _editRow, value: value, name: name, type: "Script"},
     function(resp, json) {
         data.columns[json.col].data[json.row] = JSON.parse(resp);
+        setWait();
     });
 }
 
@@ -398,35 +427,10 @@ function setHtml(row, col) {
         document.getElementsByTagName("body")[0].style.overflow = "hidden";
         document.getElementById('html').style.display = "block";
         document.getElementById('html').innerHTML = "<textarea id='tinyeditor' style='width:100%;resize: none;'></textarea>" +
-                "<img src='css/cancel.png' style='position:absolute;right:12px;top:9px;cursor:pointer' onclick='html.style.display=\"none\"' title='Cancel'>" +
-                "<div style='position:absolute;width:100%;top:0;bottom:0;background:black;opacity:0.5;display:none' id='saveDiv'></div>";
+                "<img src='css/cancel.png' style='position:absolute;right:12px;top:9px;cursor:pointer' onclick='html.style.display=\"none\"' title='Cancel'>";
         document.getElementById('tinyeditor').value = resp;
-        
         CKEDITOR.replace('tinyeditor');
-        
-//        tinyeditor = new TINY.editor.edit('tinyeditor', {
-//            id: 'tinyeditor',
-//            width: '100%',
-//            cssclass: 'tinyeditor',
-//            controlclass: 'tinyeditor-control',
-//            rowclass: 'tinyeditor-header',
-//            dividerclass: 'tinyeditor-divider',
-//            controls: ['print', '|', '|', '|', 'button', 'bold', 'italic', 'underline', 'strikethrough', '|', 'subscript', 'superscript', '|',
-//                'orderedlist', 'unorderedlist', '|', 'outdent', 'indent', '|', 'leftalign',
-//                'centeralign', 'rightalign', 'blockjustify', '|', 'unformat', '|', 'undo', 'redo', '|',
-//                'font', 'size', 'style', '|', 'image', 'hr', 'link', 'unlink', '|', 'wysiwyg', 'toggle'],
-//            footer: true,
-//            fonts: ['Verdana', 'Arial', 'Georgia', 'Trebuchet MS'],
-//            xhtml: true,
-//            /*cssfile: 'custom.css',*/
-//            bodyid: 'editor',
-//            footerclass: 'tinyeditor-footer',
-//            toggle: {text: 'source', activetext: 'wysiwyg', cssclass: 'toggle'}
-//            /*resize: {cssclass: 'resize'}*/
-//        });
     });
-
-
 
 }
 
@@ -449,7 +453,6 @@ function buildTable(colIndex) {
             html.push("<button id='downRowButton' onclick='downRow()' style='width:26px;padding:0;float:right;margin-right:10px'><img src='css/down.png'></button>",
                     "<button id='upRowButton' onclick='upRow()' style='width:26px;padding:0;float:right;margin-right:10px'><img src='css/up.png'></button>");
         }
-
 
         html.push("</td></tr>");
         if (cols > 0) {
@@ -570,8 +573,8 @@ function buildTable(colIndex) {
             }
         }
         if (superAdmin && data.id === 'ROOT') {
-            html.push("<button onclick='restore(this)' style='float:right;margin-right:32px' id='restoreAll'> RESTORE ALL </button>");
-            html.push("<button style='float:right;'> <a style='text-decoration:none;color:black' target='_blank' href='" + server + "?backup'> BACKUP ALL </a> </button>");
+            html.push("<button onclick='restore(this)' style='float:right;margin-right:32px' id='restoreAll'> Restaurar Web </button>");
+            html.push("<button style='float:right;'> <a style='text-decoration:none;color:black' target='_blank' href='" + server + "?backup'> Respaldar Web </a> </button>");
         }
         element.innerHTML = html.join("");
 

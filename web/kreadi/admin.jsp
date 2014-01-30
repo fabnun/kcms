@@ -49,7 +49,7 @@
         <script src="js/active-line.js"></script>
         <script src="js/zip.js"></script>
     </head>
-    <body oncontextmenu="return false;">
+    <body>
         <%
 
             if (tabla == null && tableID.equals("ROOT")) {
@@ -67,9 +67,9 @@
         </div>
         <div id='data'></div>
         <%if (isSuperAdmin && tableID.equals("ROOT")) {%>
-        <div>
+        <!--div>
             ACA LA DEBE IR CONFIGURACION DE LOS USUARIOS Y PERFILES!!!
-        </div>
+        </div-->
         <%}%>
         <div id="scriptDiv">
             <textarea id="script"></textarea>
@@ -129,12 +129,14 @@
                 if (te) {
                     var h = document.getElementById('html').offsetHeight;
                     te.style.height = (h - 124) + "px";
-                    console.log();
                     document.getElementById('cke_tinyeditor').style.height = (h - 124) + "px";
                     document.getElementsByClassName('cke_contents')[0].style.height = (h - 88 - document.getElementsByClassName('cke_top')[0].offsetHeight) + "px";
                 }
             };
         </script>
+        <div id="waitDiv" style="z-index:99999;display:none;background:#15191f;opacity:.9;position:fixed;top:0;bottom:0;left:0;right:0;background-image: url(load.gif);background-repeat:no-repeat;background-position:center;">
+            <div id="waitMsg" style="color:white;position:fixed;bottom:8px;right:8px"></div>
+        </div>
         <%} else {%>
         <%=username%> no tiene permiso para administrar.
         <br><a href="<%=userService.createLogoutURL(request.getRequestURI())%>">Ingresar con otro correo</a>

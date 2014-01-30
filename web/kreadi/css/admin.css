@@ -6,7 +6,7 @@ body{
     color: white;
     font-family: 'Roboto Condensed', sans-serif;
     font-size: 16px;
-    overflow: scroll;
+    /*overflow: scroll;*/
 }   
 a, a:visited{
     color: yellow;
@@ -43,11 +43,11 @@ button{
     font-weight: bold;
     background: #333;
     padding: 12px;
-    
+
 }
 .tableData{
     background: #332;
-    
+
 }
 input{
     outline: 0;
