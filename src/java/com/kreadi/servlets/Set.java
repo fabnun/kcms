@@ -296,6 +296,7 @@ public class Set extends HttpServlet {
         HashMap<String, Object> paramMap = readParams(is);
 
         String command = (String) paramMap.get("command");//OBTIENE EL COMANDO
+        System.out.println(command);
         if (command.equals("mail")) {//SI SOLICITA ENVIAR UN CORREO
             String mensaje = (String) paramMap.get("msg");
             String correo = (String) paramMap.get("correo");
@@ -386,7 +387,7 @@ public class Set extends HttpServlet {
                         Dao dao = new Dao();
                         byte[] bytes = readByteStream(is);
                         Serializable ser = Serial.fromBytes(bytes);
-                        String key=(String) paramMap.get("id");
+                        String key = (String) paramMap.get("id");
                         dao.setSerial(key, ser);
                     } else if (command.equals("delTable")) {//ELIMINA UNA TABLA (SUPERUSER)
                         String id = (String) paramMap.get("id");
@@ -581,6 +582,16 @@ public class Set extends HttpServlet {
                             for (Column col : tabla.columns) {
                                 col.data.add(null);
                             }
+                            dao.saveTable(tabla);
+                        } else if (command.equals("rename")) {//RENOMBRA UN ARCHIVO
+                            int colIdx = Integer.parseInt((String) paramMap.get("col"));
+                            int rowIdx = Integer.parseInt((String) paramMap.get("row"));
+                            HashMap<String, Serializable> map = null;
+                            try {
+                                map = (HashMap<String, Serializable>) tabla.columns.get(colIdx).data.get(rowIdx);
+                            } catch (Exception e) {
+                            }
+                            map.put("name", (String) paramMap.get("name"));
                             dao.saveTable(tabla);
                         } else if (command.equals("getData")) {//OBTIENE EL JSON DE LA TABLA
                             resp = tabla.toJSON();

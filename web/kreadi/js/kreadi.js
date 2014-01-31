@@ -150,6 +150,7 @@ function getFileUploadedCode(col, row, key, name, size, num, admin, type) {
     var html = "<img title='Upload' src='css/upload.png' style='cursor:pointer;top:5px;position:relative;' onclick='initEdit(this.parentNode, " + col + "," + row + ", \"\",\"File\")'>";
     if (admin && isText)
         html = html + "<img title='Edit Script' src='css/script.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='setScript(" + row + "," + col + ")'>";
+    html = html + "<img title='Rename' src='css/edit.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='rename(" + row + "," + col + ")'>";
     if (key) {
         html = html + "<a class='tooltip'> <img src='css/see.png' style='cursor:pointer;top:5px;position:relative;'> " +
                 "<div onclick='return false'><span style='white-space: nowrap'> <span style='color:white'> URL ESTATICA:</span> /" + data.id + "/" + name + (num > 1 ? "?n=" + num : "") + "</span><br>" +
@@ -294,6 +295,24 @@ function addRow() {
         });
     }
 }
+
+function rename(row, col) {
+    if (!currentEdit) {
+        var oldname = data.columns[col].data[row].name;
+        var newname = prompt('Rename', oldname);
+        if (newname && oldname !== newname) {
+            ajax(server, {command: "rename", id: data.id, row: row, col: col, name: newname},
+            function(resp) {
+                if (resp === "") {
+                    data.columns[col].data[row].name = newname;
+                    buildTable();
+                } else
+                    alert(resp);
+            });
+        }
+    }
+}
+
 
 function setSel(add, indexes) {
     for (var i = 0; i < indexes.length; i++) {
@@ -573,8 +592,8 @@ function buildTable(colIndex) {
             }
         }
         if (superAdmin && data.id === 'ROOT') {
-            html.push("<button onclick='restore(this)' style='float:right;margin-right:32px' id='restoreAll'> Restaurar Web </button>");
-            html.push("<button style='float:right;'> <a style='text-decoration:none;color:black' target='_blank' href='" + server + "?backup'> Respaldar Web </a> </button>");
+            html.push("<br><br><button onclick='restore(this)' style='background:#88ff88;' id='restoreAll'> Restaurar Web </button>");
+            html.push("<button style='background:#ffff88;'> <a style='text-decoration:none;color:black' target='_blank' href='" + server + "?backup'> Respaldar Web </a> </button>");
         }
         element.innerHTML = html.join("");
 

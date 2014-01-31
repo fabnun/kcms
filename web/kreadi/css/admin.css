@@ -1,10 +1,9 @@
-@import url(http://fonts.googleapis.com/css?family=Roboto+Condensed:400,300);
 body{
     margin: 0;
     padding: 0;
     background: black;
     color: white;
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: sans-serif;
     font-size: 16px;
     /*overflow: scroll;*/
 }   
@@ -54,7 +53,7 @@ input{
     width: 100%;
     border: none;
     margin:0;
-    font-family: 'Roboto Condensed', sans-serif;;
+    font-family: sans-serif;
     font-size: 14px;
     background: #ccc;
     padding:2px;
@@ -68,16 +67,18 @@ select{
     -webkit-border-radius: 3px 3px 3px 3px;
     border-radius: 3px 3px 3px 3px;
     height: 24px;
-    font-family: 'Roboto Condensed', sans-serif;;
+    font-family: sans-serif;
     font-size: 14px;
 }
 
 button{
     -webkit-border-radius: 3px 3px 3px 3px;
     border-radius: 3px 3px 3px 3px;
-    height: 24px;margin-left: 4px;
-    font-family: 'Roboto Condensed', sans-serif;;
+    margin-left: 4px;
+    font-family: sans-serif;
+    font-size:14px;
     background: white;
+    padding:8px;
 }
 .shortInput{
     width:100px;margin-left: 4px;
