@@ -66,21 +66,17 @@ function setWait(msg) {
 function fileSelect(elem, col, row) {//Upload de archivos y respaldo
     if (col !== undefined && col !== null) {
         var f = elem.files[0];
-        var parent = elem.parentNode;
-        elem.parentNode.innerHTML = elem.parentNode.innerHTML + "<span></span>";
-        currentEdit = [];
+        setWait("Upload "+f.name);
         ajax(server, {command: 'upload', id: data.id, row: row, col: col, name: f.name, size: f.size, data: f},
         function(resp) {
             if (resp.startsWith("Error:")) {
-                var html = "<span style='color:red'>" + resp + "</span>";
-                parent.innerHTML = html;
             } else {
                 resp = JSON.parse(resp);
                 data.columns[col].data[row] = resp;
                 buildTable();
             }
-            currentEdit = undefined;
-        }, parent.childNodes[parent.childNodes.length - 1]);
+            setWait();
+        });
     } else {
         setWait("Restaurando Web 0%");
         var f = elem.files[0];//Archivo zip
@@ -205,16 +201,16 @@ function ajax(url, json, func, element) {
         };
     ajax.open("POST", url, true);
 
-    if (element) {
-        ajax.element = element;
-        //ajax.upload.addEventListener("progress", progressHandler, false);
-        ajax.upload.addEventListener("progress",
-                (function(ele) {
-                    return function(event) {
-                        progressHandler(event, ele);
-                    };
-                }(element)), false);
-    }
+//    if (element) {
+//        ajax.element = element;
+//        //ajax.upload.addEventListener("progress", progressHandler, false);
+//        ajax.upload.addEventListener("progress",
+//                (function(ele) {
+//                    return function(event) {
+//                        progressHandler(event, ele);
+//                    };
+//                }(element)), false);
+//    }
 
     var fd = new FormData();
 
@@ -300,6 +296,7 @@ function rename(row, col) {
     if (!currentEdit) {
         var oldname = data.columns[col].data[row].name;
         var newname = prompt('Rename', oldname);
+        newname = newname ? newname.replace(/^\s+|\s+$/g, '') : null;
         if (newname && oldname !== newname) {
             ajax(server, {command: "rename", id: data.id, row: row, col: col, name: newname},
             function(resp) {

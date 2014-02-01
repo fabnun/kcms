@@ -30,7 +30,7 @@
         }
 %>
 <!DOCTYPE html>
-<html>
+<html lang="es">
     <head>
         <title><%=tabla.name%></title>
         <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -57,7 +57,14 @@
                 dao.saveTable(tabla);
             }
             if (tabla != null) {
-                isAdmin = tabla.admins.contains(username);
+                String[] usrs = tabla.admins.split(",");
+                for (String us : usrs) {
+                    us = us.trim().toLowerCase();
+                    if (username.toLowerCase().equals(us)) {
+                        isAdmin = true;
+                        break;
+                    }
+                }
             }
             if (isAdmin || isSuperAdmin) {%>
         <div id="top">
