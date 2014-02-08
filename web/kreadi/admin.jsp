@@ -26,7 +26,7 @@
         tableID = tableID == null ? "ROOT" : tableID;
         Table tabla = dao.loadTable(tableID);
         if (tabla == null) {
-            tabla = new Table("ROOT", "TABLA RAIZ");
+            tabla = new Table("ROOT", "Configuración");
         }
 %>
 <!DOCTYPE html>

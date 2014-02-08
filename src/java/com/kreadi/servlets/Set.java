@@ -296,7 +296,6 @@ public class Set extends HttpServlet {
         HashMap<String, Object> paramMap = readParams(is);
 
         String command = (String) paramMap.get("command");//OBTIENE EL COMANDO
-        System.out.println(command);
         if (command.equals("mail")) {//SI SOLICITA ENVIAR UN CORREO
             String mensaje = (String) paramMap.get("msg");
             String correo = (String) paramMap.get("correo");
@@ -391,20 +390,25 @@ public class Set extends HttpServlet {
                         dao.setSerial(key, ser);
                     } else if (command.equals("delTable")) {//ELIMINA UNA TABLA (SUPERUSER)
                         String id = (String) paramMap.get("id");
-                        if (id.equals("ROOT")) {
-                            resp = "No puede eliminar la tabla raiz";
-                        } else {
-                            Dao dao = new Dao();
-                            Table tabla = dao.loadTable(id);
-                            for (int i = 0; i < tabla.columns.size(); i++) {
-                                if (tabla.columns.get(i).type.equals("File")) {
-                                    delColumn(tabla, i, dao);
+                        Dao dao = new Dao();
+                        Table tabla = dao.loadTable(id);
+                        if (tabla != null) {
+                            if (tabla.columns != null) {
+                                for (int i = 0; i < tabla.columns.size(); i++) {
+                                    if (tabla.columns.get(i).type.equals("File")) {
+                                        delColumn(tabla, i, dao);
+                                    }
                                 }
                             }
-                            tabla = dao.loadTable(tabla.parentId);
-                            tabla.subTableMap.remove(id);
-                            dao.saveTable(tabla);
+                            if (tabla.parentId != null) {
+                                tabla = dao.loadTable(tabla.parentId);
+                                tabla.subTableMap.remove(id);
+                                dao.saveTable(tabla);
+                            }
                             dao.delTable(id);
+                        }
+                        if ("ROOT".equals(id)) {
+                            dao.saveTable(new Table("ROOT", "Configuración"));
                         }
                     } else if (command.equals("setCol")) {//MODIFICA UNA PROPIEDAD DE UNA COLUMNA (SUPERUSER)
                         String id = (String) paramMap.get("id");

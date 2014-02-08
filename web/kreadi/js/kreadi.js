@@ -66,7 +66,7 @@ function setWait(msg) {
 function fileSelect(elem, col, row) {//Upload de archivos y respaldo
     if (col !== undefined && col !== null) {
         var f = elem.files[0];
-        setWait("Upload "+f.name);
+        setWait("Upload " + f.name);
         ajax(server, {command: 'upload', id: data.id, row: row, col: col, name: f.name, size: f.size, data: f},
         function(resp) {
             if (resp.startsWith("Error:")) {
@@ -110,7 +110,6 @@ function sendSerializable(entries, first, size) {
     } else {
         if (size > 0)
             if (entries.length > 0) {
-
                 entries[0].getData(new zip.BlobWriter(), function(text) {
                     ajax(server, {command: 'serial', id: entries[0].filename, data: text},
                     function() {
@@ -119,14 +118,12 @@ function sendSerializable(entries, first, size) {
                         if (entries.length > 0)
                             sendSerializable(entries, false, size);
                         else {
-
                             ajax(server, {command: "getData", id: data.id}, function(resp) {
                                 currentEdit = undefined;
                                 eval("data = " + resp);
                                 buildTable();
                                 setWait();
                             });
-
                         }
                     });
                 });
@@ -458,7 +455,11 @@ function buildTable(colIndex) {
         noBuild = true;
         element = document.getElementById("data");
         var html = [];
-        html.push("<table cellspacing=1 cellpadding=4 class='table'><tr class='tableHeader'>",
+        html.push("<table class='table'");
+        if (!data.columns || (data.columns && data.columns.length===0) || (data.columns && data.columns.length>0 && data.columns[0].data.length === 0)) {
+            html.push("style='padding-right:30px'");
+        }
+        html.push("><tr class='tableHeader'>",
                 "<td colspan=", data.columns.length, " id='tituloTabla'>", data.name);
 
         var cols = data.columns.length;
@@ -581,6 +582,7 @@ function buildTable(colIndex) {
         } else {
             html.push("</table>");
         }
+
         html.push("<br>");
         for (var subtable in data.subTableMap) {
             var loContiene = subtables.contains(subtable);
@@ -836,7 +838,10 @@ function delTable() {
                     delete window.opener.data.subTableMap[data.id];
                     window.opener.buildTable();
                 }
-                window.close();
+                if (data.id === "ROOT")
+                    window.location.href = window.location.href;
+                else
+                    window.close();
             } else
                 alert(resp);
         });
