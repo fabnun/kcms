@@ -104,30 +104,32 @@ function fileSelect(elem, col, row) {//Upload de archivos y respaldo
 
 function sendSerializable(entries, first, size) {
     if (first) {
-        ajax(server, {command: "serialdelete"}, function(resp) {
+        ajax(server, {command: "serialdelete"}, function(resp) {//Elimina los datos anteriores
             sendSerializable(entries, false, size);
         });
     } else {
         if (size > 0)
-            if (entries.length > 0) {
-                entries[0].getData(new zip.BlobWriter(), function(text) {
-                    ajax(server, {command: 'serial', id: entries[0].filename, data: text},
-                    function() {
-                        setWait("Restaurando Web " + Math.round(100 * (size - entries.length) / size) + "%");
-                        entries.splice(0, 1);
-                        if (entries.length > 0)
-                            sendSerializable(entries, false, size);
-                        else {
-                            ajax(server, {command: "getData", id: data.id}, function(resp) {
-                                currentEdit = undefined;
-                                eval("data = " + resp);
-                                buildTable();
-                                setWait();
-                            });
-                        }
-                    });
+            var esize = entries.length;
+        if (esize > 0) {
+            esize = Math.min(2, esize);
+            entries[0].getData(new zip.BlobWriter(), function(text) {
+                ajax(server, {command: 'serial', id: entries[0].filename, data: text},
+                function() {
+                    setWait("Restaurando Web " + Math.round(100 * (size - entries.length) / size) + "%");
+                    entries.splice(0, 1);
+                    if (entries.length > 0)
+                        sendSerializable(entries, false, size);
+                    else {
+                        ajax(server, {command: "getData", id: data.id}, function(resp) {
+                            currentEdit = undefined;
+                            eval("data = " + resp);
+                            buildTable();
+                            setWait();
+                        });
+                    }
                 });
-            }
+            });
+        }
     }
 }
 
@@ -456,7 +458,7 @@ function buildTable(colIndex) {
         element = document.getElementById("data");
         var html = [];
         html.push("<table class='table'");
-        if (!data.columns || (data.columns && data.columns.length===0) || (data.columns && data.columns.length>0 && data.columns[0].data.length === 0)) {
+        if (!data.columns || (data.columns && data.columns.length === 0) || (data.columns && data.columns.length > 0 && data.columns[0].data.length === 0)) {
             html.push("style='padding-right:30px'");
         }
         html.push("><tr class='tableHeader'>",
@@ -520,7 +522,7 @@ function buildTable(colIndex) {
                     } else if (columna.type === "Html") {
                         html.push("<button style='width:90px' onclick='setHtml(" + i + "," + j + ")'> Edit Html </button>");
                     } else if (columna.type === "Script") {
-                        html.push("<button style='width:90px' onclick='setScript(" + i + "," + j + ")'> Edit Script </button>");
+                        html.push("<button style='width:90px' onclick='setScript(" + i + "," + j + ")'> Edit Script </button> "+value.name);
                     } else
                         html.push(value);
                     html.push("</td>");

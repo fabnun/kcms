@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.zip.ZipEntry;
@@ -93,7 +94,7 @@ public class Set extends HttpServlet {
         int index = 0;
         while (fileKeys.contains(key = rand.nextLong()));//Busca un key no usado
         fileKeys.add(key);//lo agrega al set de keys
-        dao.setSerial("filekeys", fileKeys);
+        dao.setSerial("fileKeys", fileKeys);
 
         byte[][] buffer = new byte[2][];
         int r;
@@ -202,8 +203,56 @@ public class Set extends HttpServlet {
         return map;
     }
 
+    private static void serial2Zip(Dao dao, ZipOutputStream zipStream, LinkedList<Serial> serList) throws IOException, ClassNotFoundException {
+        if (serList.size() > 0) {
+            Serial s = serList.pollFirst();
+            Serializable ser = s.getValue();
+            try {
+                byte[] data = Serial.toBytes(ser);
+                ZipEntry e = new ZipEntry(s.key);
+                zipStream.putNextEntry(e);
+                zipStream.write(data, 0, data.length);
+                zipStream.closeEntry();
+                if (ser instanceof Table) {
+                    Table table = (Table) ser;
+                    for (Column col : table.columns) {
+                        if (col.type.equals("Script") || col.type.equals("File") || col.type.equals("Html")) {
+                            for (Serializable row : col.data) {
+                                if (row != null) {
+                                    String key = (String) ((HashMap<String, Serializable>) row).get("key");
+                                    Serial fileSerial = dao.getObject(Serial.class, "file:" + key);
+                                    int count = 0;
+                                    while (fileSerial != null) {
+                                        byte[] dat = Serial.toBytes(fileSerial.getValue());
+                                        ZipEntry ee = new ZipEntry(fileSerial.key);
+                                        zipStream.putNextEntry(ee);
+                                        zipStream.write(dat, 0, dat.length);
+                                        zipStream.closeEntry();
+                                        count++;
+                                        fileSerial = dao.getObject(Serial.class, "file:" + key + "." + count);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    for (String sub : table.subTableMap.keySet()) {
+                        serList.add(dao.getObject(Serial.class, "TABLE." + sub));
+                    }
+                }
+                serial2Zip(dao, zipStream, serList);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     /**
      * Procesa la peticion get
+     *
+     * @param req
+     * @param resp
+     * @throws javax.servlet.ServletException
+     * @throws java.io.IOException
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -214,19 +263,31 @@ public class Set extends HttpServlet {
             resp.setHeader("content-disposition", "inline; filename=\"" + req.getServerName() + "." + sdf.format(new Date()) + ".zip\"");
             OutputStream os = resp.getOutputStream();
             Dao dao = new Dao();
-            List<Serial> seriales = (List<Serial>) dao.query(Serial.class);
             ZipOutputStream out = new ZipOutputStream(os);
-            for (Serial s : seriales) {
-                try {
-                    byte[] data = Serial.toBytes(s.getValue());
-                    ZipEntry e = new ZipEntry(s.key);
-                    out.putNextEntry(e);
-                    out.write(data, 0, data.length);
-                    out.closeEntry();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
+            LinkedList<Serial> serList = new LinkedList<Serial>();
+
+            try {
+                Serializable ser=dao.getSerial("fileKeys");
+                serList.add(new Serial("FileKeys", ser));
+                serList.add(dao.getObject(Serial.class, "TABLE.ROOT"));
+                serial2Zip(dao, out, serList);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
+//            List<Serial> seriales = (List<Serial>) dao.query(Serial.class);
+//            for (Serial s : seriales) {
+//                try {
+//                    byte[] data = Serial.toBytes(s.getValue());
+//                    ZipEntry e = new ZipEntry(s.key);
+//                    out.putNextEntry(e);
+//                    out.write(data, 0, data.length);
+//                    out.closeEntry();
+//                } catch (ClassNotFoundException e) {
+//                    e.printStackTrace();
+//                }
+//            }
             out.close();
             os.close();
         } else {

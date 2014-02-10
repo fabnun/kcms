@@ -69,8 +69,8 @@
             if (isAdmin || isSuperAdmin) {%>
         <div id="top">
             <img src="logo.png" style="float:left;margin-left: 10px">
-            <button style="position:relative;top:10px;right:16px" onclick="window.open('/', 'test', 'toolbar=0,titlebar=0,menubar=0,location=0,status=0,scrollbars=1,width=1200,height=600');">
-                <img src="css/run.png" style="position: relative; margin-bottom:-8px"> Ejecutar </button>
+            <button style="position:relative;top:18px;right:16px" onclick="window.open('/', 'test', 'toolbar=0,titlebar=0,menubar=0,location=0,status=0,scrollbars=1,width=1200,height=600');">
+                <img src="css/run.png" style="position: relative; margin-bottom:-8px"> Ejecutar <img src="css/run.png" style="position: relative; margin-bottom:-8px"> </button>
             <span style="position: relative;top:16px"><%=isSuperAdmin ? "(SUPER/ADMIN) " : ""%><%=username%> <a style="margin-right:12px" id="logout" href="<%=userService.createLogoutURL(request.getRequestURI())%>">Salir</a>&nbsp;</span>
         </div>
         <div id='data'></div>
