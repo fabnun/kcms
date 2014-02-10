@@ -276,18 +276,6 @@ public class Set extends HttpServlet {
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
-//            List<Serial> seriales = (List<Serial>) dao.query(Serial.class);
-//            for (Serial s : seriales) {
-//                try {
-//                    byte[] data = Serial.toBytes(s.getValue());
-//                    ZipEntry e = new ZipEntry(s.key);
-//                    out.putNextEntry(e);
-//                    out.write(data, 0, data.length);
-//                    out.closeEntry();
-//                } catch (ClassNotFoundException e) {
-//                    e.printStackTrace();
-//                }
-//            }
             out.close();
             os.close();
         } else {
