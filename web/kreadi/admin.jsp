@@ -29,6 +29,7 @@
             tabla = new Table("ROOT", "Configuración");
         }
 %>
+
 <!DOCTYPE html>
 <html lang="es">
     <head>
@@ -69,9 +70,24 @@
             if (isAdmin || isSuperAdmin) {%>
         <div id="top">
             <img src="logo.png" style="float:left;margin-left: 10px">
-            <button style="position:relative;top:18px;right:16px" onclick="window.open('/', 'test', 'toolbar=0,titlebar=0,menubar=0,location=0,status=0,scrollbars=1,width=1200,height=600');">
-                <img src="css/run.png" style="position: relative; margin-bottom:-8px"> Ejecutar <img src="css/run.png" style="position: relative; margin-bottom:-8px"> </button>
-            <span style="position: relative;top:16px"><%=isSuperAdmin ? "(SUPER/ADMIN) " : ""%><%=username%> <a style="margin-right:12px" id="logout" href="<%=userService.createLogoutURL(request.getRequestURI())%>">Salir</a>&nbsp;</span>
+            <button style="position:relative;top:5px;right:16px;margin-left:32px;padding:3px 12px;" onclick="window.open('/', 'test', 'toolbar=0,titlebar=0,menubar=0,location=0,status=0,scrollbars=1,width=1200,height=600');">
+                <img src="ver.png" style="position: relative; margin-bottom:-2px"> VER 
+            </button>
+            <%if (isSuperAdmin && tableID.equals("ROOT")) {%>
+
+            
+
+            <button style="position:relative;top:5px;right:16px;background:#aaffaa;padding:3px 12px;margin-left:64px">
+                <a style='text-decoration:none;color:black' target='_blank' href='?backup'>
+                    <img src="respaldar.png" style="position: relative; margin-bottom:-2px"> RESPALDAR 
+                </a>
+            </button>
+            
+            <button style="position:relative;top:5px;right:16px;background:#ffaaaa;padding:3px 12px" onclick="restore(this);">
+                <img src="restaurar.png" style="position: relative; margin-bottom:-2px"> RESTAURAR 
+            </button>
+            <%}%>
+            <span style="float:right;position: relative;top:5px"><%=isSuperAdmin ? "(SUPER/ADMIN) " : ""%><%=username%> <a style="margin-right:12px" id="logout" href="<%=userService.createLogoutURL(request.getRequestURI())%>">Salir</a>&nbsp;</span>
         </div>
         <div id='data'></div>
         <%if (isSuperAdmin && tableID.equals("ROOT")) {%>

@@ -462,7 +462,7 @@ function buildTable(colIndex) {
             html.push("style='padding-right:30px'");
         }
         html.push("><tr class='tableHeader'>",
-                "<td colspan=", data.columns.length, " id='tituloTabla'>", data.name);
+                "<td colspan=", data.columns.length, " id='tituloTabla'><span style='top:6px;position:relative'>", data.name,"</span>");
 
         var cols = data.columns.length;
 
@@ -589,13 +589,10 @@ function buildTable(colIndex) {
         for (var subtable in data.subTableMap) {
             var loContiene = subtables.contains(subtable);
             if (superAdmin || loContiene) {
-                html.push("<button onclick='newTab(\"admin.jsp?id=" + subtable + "\")' style='background:#dfa'> Editar " + data.subTableMap[subtable] + (superAdmin ? " (" + subtable + ")" : "") + "</button>");
+                html.push("<button onclick='newTab(\"admin.jsp?id=" + subtable + "\")' style='background:#dfa'> " + data.subTableMap[subtable] + (superAdmin ? " (" + subtable + ")" : "") + "</button>");
             }
         }
-        if (superAdmin && data.id === 'ROOT') {
-            html.push("<br><br><button onclick='restore(this)' style='background:#88ff88;' id='restoreAll'> Restaurar Web </button>");
-            html.push("<button style='background:#ffff88;'> <a style='text-decoration:none;color:black' target='_blank' href='" + server + "?backup'> Respaldar Web </a> </button>");
-        }
+
         element.innerHTML = html.join("");
 
         if (document.getElementById("colIdx"))
