@@ -78,7 +78,7 @@
             
 
             <button style="position:relative;top:5px;right:16px;background:#aaffaa;padding:3px 12px;margin-left:64px">
-                <a style='text-decoration:none;color:black' target='_blank' href='?backup'>
+                <a style='text-decoration:none;color:black' target='_blank' href='/kreadi/set?backup'>
                     <img src="respaldar.png" style="position: relative; margin-bottom:-2px"> RESPALDAR 
                 </a>
             </button>
