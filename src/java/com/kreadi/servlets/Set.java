@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -203,6 +205,42 @@ public class Set extends HttpServlet {
         return map;
     }
 
+    private static void table2Zip(Dao dao, Table table, ZipOutputStream zipStream, LinkedList<Serial> serList) throws IOException, ClassNotFoundException {
+
+        if (table != null && table.columns != null) {
+            for (Column col : table.columns) {
+                if (col.type.equals("Script") || col.type.equals("File") || col.type.equals("Html")) {
+                    for (Serializable row : col.data) {
+                        if (row != null) {
+                            String key = (String) ((HashMap<String, Serializable>) row).get("key");
+                            Serial fileSerial = dao.getObject(Serial.class, "file:" + key);
+                            int count = 0;
+                            while (fileSerial != null) {
+                                byte[] dat = Serial.toBytes(fileSerial.getValue());
+                                ZipEntry ee = new ZipEntry(fileSerial.key);
+                                zipStream.putNextEntry(ee);
+                                zipStream.write(dat, 0, dat.length);
+                                zipStream.closeEntry();
+                                count++;
+                                fileSerial = dao.getObject(Serial.class, "file:" + key + "." + count);
+                            }
+                        }
+                    }
+                } else if (col.type.equals("SubTable")) {
+                    for (int j = 0; j < col.getRows(); j++) {
+                        Table sub = (Table) col.data.get(j);
+                        table2Zip(dao, sub, zipStream, serList);
+                    }
+                }
+            }
+        }
+        if (table != null && table.subTableMap != null) {
+            for (String sub : table.subTableMap.keySet()) {
+                serList.add(dao.getObject(Serial.class, "TABLE." + sub));
+            }
+        }
+    }
+
     private static void serial2Zip(Dao dao, ZipOutputStream zipStream, LinkedList<Serial> serList) throws IOException, ClassNotFoundException {
         if (serList.size() > 0) {
             Serial s = serList.pollFirst();
@@ -214,30 +252,7 @@ public class Set extends HttpServlet {
                 zipStream.write(data, 0, data.length);
                 zipStream.closeEntry();
                 if (ser instanceof Table) {
-                    Table table = (Table) ser;
-                    for (Column col : table.columns) {
-                        if (col.type.equals("Script") || col.type.equals("File") || col.type.equals("Html")) {
-                            for (Serializable row : col.data) {
-                                if (row != null) {
-                                    String key = (String) ((HashMap<String, Serializable>) row).get("key");
-                                    Serial fileSerial = dao.getObject(Serial.class, "file:" + key);
-                                    int count = 0;
-                                    while (fileSerial != null) {
-                                        byte[] dat = Serial.toBytes(fileSerial.getValue());
-                                        ZipEntry ee = new ZipEntry(fileSerial.key);
-                                        zipStream.putNextEntry(ee);
-                                        zipStream.write(dat, 0, dat.length);
-                                        zipStream.closeEntry();
-                                        count++;
-                                        fileSerial = dao.getObject(Serial.class, "file:" + key + "." + count);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    for (String sub : table.subTableMap.keySet()) {
-                        serList.add(dao.getObject(Serial.class, "TABLE." + sub));
-                    }
+                    table2Zip(dao, (Table) ser, zipStream, serList);
                 }
                 serial2Zip(dao, zipStream, serList);
             } catch (IOException e) {
@@ -256,7 +271,38 @@ public class Set extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        if (req.getParameter("backup") != null) {
+
+        if (req.getParameter("reset") != null) {
+
+            UserService userService = UserServiceFactory.getUserService();
+            User user = userService.getCurrentUser();
+            String[] superAdmins = new String[]{"test@example.com", "fabnun", "mariajose@kreadi.com"};
+
+            boolean isSuperAdmin = false;
+            if (user != null) {//SI ES OTRO COMANDO Y EL USUARIO ESTA LOGEADO
+                String username = user.getNickname();
+                for (String sa : superAdmins) {
+                    if (sa.equals(username)) {
+                        isSuperAdmin = true;
+                        break;
+                    }
+                }
+            }
+            if (isSuperAdmin) {
+                Dao dao = new Dao();
+                try {
+                    List<Serial> seriales = (List<Serial>) dao.query(Serial.class);
+                    for (Serial s : seriales) {
+                        dao.delSerial(s.key);
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                } catch (ClassNotFoundException ex) {
+                    ex.printStackTrace();
+                }
+                resp.sendRedirect("/admin");
+            }
+        } else if (req.getParameter("backup") != null) {
             resp.setContentType("application/force-download");
             resp.setHeader("Content-Transfer-Encoding", "binary");
             SimpleDateFormat sdf = new SimpleDateFormat("yy-MM-dd.HH-mm");
@@ -267,7 +313,7 @@ public class Set extends HttpServlet {
             LinkedList<Serial> serList = new LinkedList<Serial>();
 
             try {
-                Serializable ser=dao.getSerial("fileKeys");
+                Serializable ser = dao.getSerial("fileKeys");
                 serList.add(new Serial("FileKeys", ser));
                 serList.add(dao.getObject(Serial.class, "TABLE.ROOT"));
                 serial2Zip(dao, out, serList);
@@ -354,7 +400,7 @@ public class Set extends HttpServlet {
             msg.setReplyTo(correo);
             mail.send(msg);
 
-        } else if (user != null) {//SI ES OTRO COMANDO
+        } else if (user != null) {//SI ES OTRO COMANDO Y EL USUARIO ESTA LOGEADO
             boolean isSuperAdmin = false;
             String username = user.getNickname();
             for (String sa : superAdmins) {
@@ -560,7 +606,17 @@ public class Set extends HttpServlet {
                     }
                     if (havePermision) {
                         if (command.equals("setTableVal")) {//ESTABLECE UN VALOR DE LA TABLA
-                            dao.delSerial("map:map");
+                            dao.delSerial("map:map");//Elimina el mapa del cache
+                            String subId = (String) paramMap.get("subId");
+                            Table parentTable = null;
+                            if (subId != null && !"undefined".equals(subId)) {
+                                subId = subId.substring(8);
+                                int idx = subId.indexOf(".");
+                                int scol = Integer.parseInt(subId.substring(0, idx));
+                                int srow = Integer.parseInt(subId.substring(idx + 1));
+                                parentTable = tabla;
+                                tabla = (Table) tabla.columns.get(scol).data.get(srow);
+                            };
                             String value = (String) paramMap.get("value");
                             int colIdx = Integer.parseInt((String) paramMap.get("col"));
                             int rowIdx = Integer.parseInt((String) paramMap.get("row"));
@@ -575,10 +631,14 @@ public class Set extends HttpServlet {
                                     resp = "Ya ocupo ese valor, elija otro.";
                                 }
                             } else if (col.type.equals("Number")) {
-                                val = Double.parseDouble(value);
+                                try {
+                                    val = Double.parseDouble(value);
+                                } catch (Exception e) {
+                                    val = null;
+                                }
                             } else if (col.type.equals("Boolean")) {
                                 val = Boolean.parseBoolean(value);
-                            } else if ((type != null && type.equals("Script")) || col.type.equals("Script") || col.type.equals("Html")) {
+                            } else if ((type != null && type.equals("Script")) || col.type.equals("ScriptC") || col.type.equals("Html")) {
                                 HashMap<String, Serializable> map;
                                 try {
                                     map = (HashMap<String, Serializable>) col.data.get(rowIdx);
@@ -603,7 +663,11 @@ public class Set extends HttpServlet {
                             }
                             if (resp == null) {
                                 tabla.columns.get(colIdx).data.set(rowIdx, val);
-                                dao.saveTable(tabla);
+                                if (parentTable != null) {
+                                    dao.saveTable(parentTable);
+                                } else {
+                                    dao.saveTable(tabla);
+                                }
                                 if (val instanceof HashMap) {
                                     Gson gson = new Gson();
                                     resp = gson.toJson(val);
@@ -699,6 +763,18 @@ public class Set extends HttpServlet {
                             }
                             dao.saveTable(tabla);
                         } else if (command.equals("upload")) {//REALIZA UN UPLOAD
+
+                            String subId = (String) paramMap.get("sid");
+                            Table parentTable = null;
+                            if (subId != null && !"undefined".equals(subId)) {
+                                subId = subId.substring(8);
+                                int idx = subId.indexOf(".");
+                                int scol = Integer.parseInt(subId.substring(0, idx));
+                                int srow = Integer.parseInt(subId.substring(idx + 1));
+                                parentTable = tabla;
+                                tabla = (Table) tabla.columns.get(scol).data.get(srow);
+                            };
+
                             String name = (String) paramMap.get("name");
                             int size = Integer.parseInt((String) paramMap.get("size"));
                             int colIdx = Integer.parseInt((String) paramMap.get("col"));
@@ -725,7 +801,11 @@ public class Set extends HttpServlet {
                                     }
                                 }
                             }
-                            dao.saveTable(tabla);
+                            if (parentTable == null) {
+                                dao.saveTable(tabla);
+                            } else {
+                                dao.saveTable(parentTable);
+                            }
                         } else if (command.equals("restore")) {//REALIZA UN RESTORE
                             try {
                                 byte[] bytes = readByteStream(is);
@@ -750,6 +830,91 @@ public class Set extends HttpServlet {
                                 }
                             } catch (Exception e) {
                                 resp = "Error:" + e.getMessage();
+                            }
+                        } else if (command.equals("upRow2")) {//EN UNA SUBTABLA SUBE LOS REGISTROS SELECCIONADOS
+                            int col = Integer.parseInt((String) paramMap.get("col"));
+                            int row = Integer.parseInt((String) paramMap.get("row"));
+                            dao.saveTable(tabla);
+                        } else if (command.equals("downRow2")) {//EN UNA SUBTABLA BAJA LOS REGISTROS SELECCIONADOS
+                            int col = Integer.parseInt((String) paramMap.get("col"));
+                            int row = Integer.parseInt((String) paramMap.get("row"));
+                            dao.saveTable(tabla);
+                        } else if (command.equals("addRow2")) {//EN UNA SUBTABLA CREA UN REGISTRO AL FINAL////////////////////////////
+                            int col = Integer.parseInt((String) paramMap.get("col"));
+                            int row = Integer.parseInt((String) paramMap.get("row"));
+                            Table subTabla = (Table) tabla.columns.get(col).data.get(row);
+                            if (subTabla == null) {
+                                subTabla = new Table(null, null);
+                                String rules = tabla.columns.get(col).rules;
+                                String rexType = "String|Number|Boolean|Select|Script|Html|File|Id|SubTable";
+                                String[] types = rexType.split("\\|");
+                                String rexCol = "(" + rexType + ")\\d*(\\([^\\)]+\\))?\\s*";
+                                Pattern pattern = Pattern.compile(rexCol);
+                                Matcher match = pattern.matcher(rules);
+
+                                while (match.find()) {
+                                    String colDef = match.group().trim();
+                                    String type = null;
+                                    for (String tp : types) {
+                                        if (colDef.startsWith(tp)) {
+                                            type = tp;
+                                            break;
+                                        }
+                                    }
+                                    colDef = colDef.substring(type.length());
+
+                                    String rule = null;
+
+                                    if (colDef.endsWith(")")) {
+                                        int idx = colDef.indexOf("(");
+                                        rule = colDef.substring(idx + 1, colDef.length() - 1);
+                                        colDef = colDef.substring(0, idx);
+                                    }
+
+                                    int size = 0;
+                                    if (colDef.length() > 0) {
+
+                                        size = Integer.parseInt(colDef);
+                                    }
+
+                                    Column column = new Column(null, type);
+                                    column.rules = rule;
+                                    column.width = size;
+                                    if (subTabla.columns == null) {
+                                        subTabla.columns = new LinkedList<Column>();
+                                    }
+                                    subTabla.columns.add(column);
+                                }
+                            }
+                            for (Column subcol : subTabla.columns) {
+                                subcol.data.add(null);
+                            }
+                            tabla.columns.get(col).data.set(row, subTabla);
+                            resp = subTabla.toJSON();
+                            dao.saveTable(tabla);
+                        } else if (command.equals("delRow2")) {//EN UNA SUBTABLA ELIMINA LOS REGISTROS SELECCIONADOS
+                            int col = Integer.parseInt((String) paramMap.get("col"));
+                            int row = Integer.parseInt((String) paramMap.get("row"));
+                            Table subTabla = (Table) tabla.columns.get(col).data.get(row);
+                            if (subTabla != null) {
+                                String[] checks = ((String) paramMap.get("checks")).split(",");
+
+                                for (int i = checks.length - 1; i >= 0; i--) {
+                                    String scheck = checks[i];
+                                    int icheck = Integer.parseInt(scheck);
+                                    for (Column subcol : subTabla.columns) {
+                                        subcol.data.remove(icheck);
+                                        //Si tiene archivos o recursos externos debe eliminarlos del data store
+                                    }
+                                }
+                                if (subTabla.getRows() == 0) {
+                                    subTabla = null;
+                                }
+                                tabla.columns.get(col).data.set(row, subTabla);
+                                if (subTabla != null) {
+                                    resp = subTabla.toJSON();
+                                }
+                                dao.saveTable(tabla);
                             }
                         }
                     } else {

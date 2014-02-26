@@ -33,7 +33,7 @@
 <!DOCTYPE html>
 <html lang="es">
     <head>
-        <title><%=tabla.name%></title>
+        <title><%=(tabla.name!=null && tabla.name.trim().length()>0)?tabla.name:tabla.id%></title>
         <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <link href="css/admin.css" rel="stylesheet" type="text/css">
         <link rel="icon" href="favicon.ico" type="image/x-icon" />
@@ -75,32 +75,37 @@
             </button>
             <%if (isSuperAdmin && tableID.equals("ROOT")) {%>
 
-            
-
-            <button style="position:relative;top:5px;right:16px;background:#aaffaa;padding:3px 12px;margin-left:64px">
+            <button style="position:relative;top:5px;right:16px;background-color:#aaffaa;padding:3px 12px;margin-left:64px">
                 <a style='text-decoration:none;color:black' target='_blank' href='/kreadi/set?backup'>
                     <img src="respaldar.png" style="position: relative; margin-bottom:-2px"> RESPALDAR 
                 </a>
             </button>
             
-            <button style="position:relative;top:5px;right:16px;background:#ffaaaa;padding:3px 12px" onclick="restore(this);">
+            <button style="position:relative;top:5px;right:16px;background-color:#ffffaa;padding:3px 12px" onclick="restore(this);">
                 <img src="restaurar.png" style="position: relative; margin-bottom:-2px"> RESTAURAR 
             </button>
             <%}%>
+            
             <span style="float:right;position: relative;top:5px"><%=isSuperAdmin ? "(SUPER/ADMIN) " : ""%><%=username%> <a style="margin-right:12px" id="logout" href="<%=userService.createLogoutURL(request.getRequestURI())%>">Salir</a>&nbsp;</span>
+            <div id="rowButtons" style="display:none;float:right;margin-right:16px">
+                <button id='upRowButton' onclick='upRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/up.png'></button>
+                <button id='downRowButton' onclick='downRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/down.png'></button>
+                <button onclick='addRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/add.png'></button>
+                <button onclick='delRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/del.png'></button>
+            </div>
         </div>
         <div id='data'></div>
-        <%if (isSuperAdmin && tableID.equals("ROOT")) {%>
-        <!--div>
-            ACA LA DEBE IR CONFIGURACION DE LOS USUARIOS Y PERFILES!!!
-        </div-->
-        <%}%>
+
         <div id="scriptDiv">
             <textarea id="script"></textarea>
-            <input type="text" id="scriptname" style="width:100px;position:fixed;right:92px;top:64px;z-index: 20000;" title="filename">
-            <img src="css/run.png" onclick="newTab('/' + (data.id !== '' ? data.id + '/' : '') + document.getElementById('scriptname').value)" style="position:fixed;right:66px;top:68px;z-index: 20000;cursor:pointer" title="execute">
-            <img src="css/save.png" onclick="saveScript(document.getElementById('scriptname').value)" style="position:fixed;right:44px;top:68px;z-index: 20000;cursor:pointer"  title="save">
-            <img src="css/del.png" onclick="showScript(false);" style="position:fixed;right:22px;top:68px;z-index: 20000;cursor:pointer"  title="close">
+            <div style="position:fixed;right:20px;top:68px;background:rgba(164,164,164,.75);z-index:30000;-webkit-border-radius: 8px 8px 8px 8px; border-radius: 8px 8px 8px 8px;">
+                <input type="text" id="scriptname" style="width:100px;top:-6px;position:relative;background:white;margin-left:8px" title="filename">
+                <img src="css/run.png" onclick="newTab('/' + (data.id !== '' ? data.id + '/' : '') + document.getElementById('scriptname').value)" style="cursor:pointer;top:2px;position:relative;" title="execute">
+                <img src="css/save.png" onclick="saveScript(document.getElementById('scriptname').value)" style="cursor:pointer;top:2px;position:relative;"  title="save">
+                <img src="css/del.png" onclick="showScript(false);" style="cursor:pointer;margin-right:8px;top:2px;position:relative;margin-top:5px"  title="close">
+            </div>
+            
+            
         </div>
         <script>
             var script = document.getElementById("script");
@@ -126,7 +131,7 @@
             data = <%=tabla.toJSON()%>;
             subtables = [<%=tabla.subTables(username, dao)%>];
             superAdmin =<%=isSuperAdmin%>;
-            buildTable();
+            buildTable(data);
             CKEDITOR.plugins.registered['save'] = {
                 init: function(editor)
                 {

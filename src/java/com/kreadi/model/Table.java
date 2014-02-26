@@ -56,11 +56,6 @@ public class Table implements Serializable {
         this.name = nombre;
     }
 
-    public Table(String id, String nombre, Column... columns) {
-        this.id = id;
-        this.name = nombre;
-    }
-
     /**
      * Obtiene la cantidad de registros de la tabla
      *
@@ -212,18 +207,6 @@ public class Table implements Serializable {
     }
 
     /**
-     * Agrega un nuevo registro al final
-     *
-     * @param valores
-     */
-    @SuppressWarnings("ManualArrayToCollectionCopy")
-    public void addRow(Serializable... valores) {
-        for (int i = 0; i < valores.length; i++) {
-            columns.get(i).data.add(valores[i]);
-        }
-    }
-
-    /**
      * Agrega una nueva columna al fina
      *
      * @param nombre
@@ -233,6 +216,20 @@ public class Table implements Serializable {
     public Column addCol(String nombre, String tipo) {
         Column columna = new Column(nombre, tipo);
         columns.add(columna);
+        return columna;
+    }
+
+    /**
+     * Agrega una nueva columna al fina
+     *
+     * @param nombre
+     * @param tipo
+     * @return
+     */
+    public Column addCol(String nombre, String tipo, String rules) {
+        Column columna = new Column(nombre, tipo);
+        columns.add(columna);
+        columna.rules = rules;
         return columna;
     }
 

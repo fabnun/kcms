@@ -1,7 +1,10 @@
+* {
+    outline: none;
+}
 body{
     margin: 0;
     padding: 0;
-    background: black;
+    background: #040401;
     color: white;
     font-family: sans-serif;
     font-size: 14px;
@@ -19,35 +22,33 @@ a, a:visited{
     width:100%;
     background: #444;
 }
-button{
-    cursor: pointer;
-}
+
 #data{
-    margin: 78px 10px 10px;
+    margin: 78px 10px 0;
 }
 .table{
     width: 100%;
 }
 .table td{
-    padding:2px 6px 2px 2px;
+    padding:6px 6px 2px 2px;
     height:22px;
-    -webkit-border-radius: 2px 2px 2px 2px;
-    border-radius: 2px 2px 2px 2px;
-    -webkit-box-shadow:inset 4 4 8px 2px rgba(255,255,0,.15);
-    box-shadow:inset 4 4 8px 2px rgba(255,255,0,.15);
-    -webkit-box-shadow: 0 0 8px 2px rgba(128,128,128,.5);
-    box-shadow: 0 0 8px 2px rgba(128,128,128,.5);
+    -webkit-border-radius: 3px 3px 2px 2px;
+    border-radius: 3px 3px 2px 2px;
+    -webkit-box-shadow: 0 0 8px 2px rgba(72,72,72,.5);
+    box-shadow: 0 0 8px 2px rgba(72,72,72,.5);
+    vertical-align: top;
 }
+
 .tableHeader{
     font-weight: bold;
     background: #333;
     padding: 12px;
-
 }
+
 .tableData{
     background: #332;
-
 }
+
 input{
     outline: 0;
     width: 100%;
@@ -70,14 +71,18 @@ select{
     font-family: sans-serif;
     font-size: 14px;
 }
-
 button{
-    -webkit-border-radius: 4px 4px 4px 4px;
-    border-radius: 4px 4px 4px 4px;
+    cursor: pointer;
+    -webkit-box-shadow: 1px 2px 4px 1px rgba(0,0,0,.35);
+    box-shadow: 1px 2px 4px 1px rgba(0,0,0,.35);
+    -webkit-border-radius: 5px 5px 5px 5px;
+    border-radius: 5px 5px 5px 5px;
     margin-left: 4px;
     font-family: sans-serif;
     font-size:14px;
-    background: white;
+    background-color: #ddd;
+    background-image: url(/kreadi/brillo.png);
+    background-repeat: repeat-x;
     padding:3px;
     border:1px solid #222;
 }
@@ -91,7 +96,6 @@ button{
     width:12px;margin-left: 4px;
 }
 .editable{
-    background: #221;
     cursor:pointer;
 }
 a.tooltip {

@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -22,9 +20,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class FiltroUrl implements Filter {
-    
+
     Dao dao;
-    
+
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
@@ -54,7 +52,7 @@ public class FiltroUrl implements Filter {
                             idxDiv = 1;
                         }
                         String tableId = idxDiv > 0 ? uri.substring(1, idxDiv) : "";
-                        
+
                         Table table = dao.loadTable(tableId);
                         if (table != null) {
                             filename = uri.substring(idxDiv + 1);
@@ -76,7 +74,7 @@ public class FiltroUrl implements Filter {
                         index = (Integer) map.get("#n");
                         String type = (String) map.get("type");
                         String expires = req.getParameter("expires");
-                        if (!type.equals("Script")) {                            
+                        if (!type.equals("Script")) {
                             String down = req.getParameter("down");
                             if (down != null) {
                                 resp.setContentType("application/octet-stream");
@@ -93,17 +91,17 @@ public class FiltroUrl implements Filter {
                                         : "webm".equals(ext) ? "video/webm"
                                         : "js".equals(ext) ? "application/javascript"
                                         : sc.getMimeType(filename));
-                                
+
                                 resp.setContentType(mimeType);
                                 resp.setHeader("Accept-Ranges", "bytes");
                             }
                             resp.setHeader("content-disposition", "inline; filename=\"" + filename + "\"");
-                            
+
                             long now = System.currentTimeMillis();
                             long expireTime = expires != null ? (Long.parseLong(expires)) : 0;
                             resp.setDateHeader("Expires", now + expireTime);
                             resp.setHeader("Cache-Control", "public, max-age=" + expireTime);
-                            
+
                             OutputStream os = resp.getOutputStream();
                             byte[] bytes;
                             int idx = 0;
@@ -119,11 +117,11 @@ public class FiltroUrl implements Filter {
                                         size = size + bytes.length;
                                     }
                                 } while (bytes != null);
-                                
+
                                 int idxDot = filename.lastIndexOf(".");
                                 String ext = idxDot > -1 ? filename.substring(idxDot + 1).toLowerCase() : "";
                                 ServletContext sc = getFilterConfig().getServletContext();
-                                
+
                                 String mimeType = ("woff".equals(ext) ? "application/font-woff"
                                         : "ttf".equals(ext) ? "font/ttf"
                                         : "mp4".equals(ext) ? "video/mp4"
@@ -134,17 +132,17 @@ public class FiltroUrl implements Filter {
 
                                 resp.setContentType(mimeType);
                                 resp.setHeader("ETag", uri + size);
-                                
+
                             } catch (ClassNotFoundException ex) {
                                 throw new ServletException(ex);
                             }
                             os.close();
                         } else {
                             ServletContext sc = getFilterConfig().getServletContext();
-                            
+
                             int idxDot = filename.lastIndexOf(".");
                             String ext = idxDot > -1 ? filename.substring(idxDot + 1).toLowerCase() : "html";
-                            
+
                             String mimeType = ("woff".equals(ext) ? "application/font-woff"
                                     : "ttf".equals(ext) ? "font/ttf"
                                     : "mp4".equals(ext) ? "video/mp4"
@@ -152,18 +150,18 @@ public class FiltroUrl implements Filter {
                                     : "webm".equals(ext) ? "video/webm"
                                     : "js".equals(ext) ? "application/javascript"
                                     : sc.getMimeType(filename));//Obtiene el mime type
-                            
+
                             long now = System.currentTimeMillis();
                             long expireTime = expires != null ? (Long.parseLong(expires)) : 0;
                             resp.setDateHeader("Expires", now + expireTime);
                             resp.setHeader("Cache-Control", "public, max-age=" + expireTime);
-                            
+
                             resp.setContentType(mimeType);
                             resp.setHeader("Accept-Ranges", "bytes");
-                            
-                            String cache = (String) map.get("cache");
+
+                            String cache = filename.startsWith("_") ? null : (String) map.get("cache");
                             if (cache == null) {
-                                
+
                                 ByteArrayOutputStream baos = new Set.Baos();
                                 byte[] bytes;
                                 String subId = "";
@@ -179,7 +177,9 @@ public class FiltroUrl implements Filter {
                                 } while (bytes != null);
                                 String code = baos.toString("UTF-8");
                                 String process = new Scriptlet(code).process(req, resp, dao, index);
-                                map.put("cache", process);
+                                if (!filename.startsWith("_")) {
+                                    map.put("cache", process);
+                                }
                                 resp.getOutputStream().write(process.getBytes("UTF-8"));
                             } else {
                                 resp.getOutputStream().write(cache.getBytes("UTF-8"));
@@ -191,7 +191,7 @@ public class FiltroUrl implements Filter {
                     } else {
                         chain.doFilter(request, response);
                     }
-                    
+
                 } catch (ClassNotFoundException ex) {
                     ex.printStackTrace();
                 } catch (EvalError ex) {
@@ -200,24 +200,24 @@ public class FiltroUrl implements Filter {
             }
         }
     }
-    
+
     public void init(FilterConfig fc) throws ServletException {
         dao = new Dao();
         setFilterConfig(fc);
     }
-    
+
     public void destroy() {
         dao = null;
     }
-    
+
     FilterConfig config;
-    
+
     public void setFilterConfig(FilterConfig config) {
         this.config = config;
     }
-    
+
     public FilterConfig getFilterConfig() {
         return config;
     }
-    
+
 }

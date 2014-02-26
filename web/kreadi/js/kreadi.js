@@ -16,20 +16,33 @@ function keyNumberFilter(evt) {
  * @param row
  * @param value
  * @param type*/
-function initEdit(element, col, row, value, type) {
+function initEdit(element, col, row, value, type, subId) {
+    if (subId) {
+        subId = ",\"" + subId + "\"";
+    } else
+        subId = "";
     if (currentEdit !== element) {
         currentEdit = element;
         if (type === "String" || type === "Id") {
-            var html = "<input type='text' value='" + value + "' onkeydown='endEdit(this, " + col + ", " + row + ", event, \"" + value + "\")' onblur='endEdit(this, " + col + ", " + row + ", undefined, \"" + value + "\")'>";
+            var html = "<input type='text' value='" + value + "' onkeydown='endEdit(this, " + col + ", " + row + ", event, \"" + value + "\"" + subId + " )' onblur='endEdit(this, " + col + ", " + row + ", undefined, \"" + value + "\"" + subId + ")'>";
             element.innerHTML = html;
             element.childNodes[0].focus();
         } else if (type === "Number") {
-            var html = "<input type='text' value='" + value + "' onkeydown='if (keyNumberFilter(event)) endEdit(this, " + col + ", " + row + ", event, \"" + value + "\")' onblur='endEdit(this, " + col + ", " + row + ", undefined, \"" + value + "\")'>";
+            var html = "<input type='text' value='" + value + "' onkeydown='if (keyNumberFilter(event)) endEdit(this, " + col + ", " + row + ", event, \"" + value + "\"" + subId + ")' onblur='endEdit(this, " + col + ", " + row + ", undefined, \"" + value + "\"" + subId + ")'>";
             element.innerHTML = html;
             element.childNodes[0].focus();
         } else if (type === "Select") {
-            var html = "<select value='" + value + "' onblur='endEdit(this, " + col + ", " + row + ", undefined, \"" + value + "\")'>";
-            var types = data.columns[col].rules.split(",");
+            var html = "<select value='" + value + "' onblur='endEdit(this, " + col + ", " + row + ", undefined, \"" + value + "\"" + subId + ")'>";
+            var types = [];
+            if (subId) {
+                var val = subId.substring(10);
+                var idx = val.indexOf(".");
+                var scol = parseInt(val.substring(0, idx));
+                var srow = parseInt(val.substring(idx + 1));
+                types = data.columns[scol].data[srow].columns[col].rules.split(",");
+            } else {
+                types = data.columns[col].rules.split(",");
+            }
             for (var i = 0; i < types.length; i++) {
                 html = html + "<option" + (value === types[i] ? " selected" : "") + ">" + types[i] + "</option>";
             }
@@ -39,7 +52,7 @@ function initEdit(element, col, row, value, type) {
         } else if (type === "Boolean") {
 
         } else if (type === "File") {
-            var html = '<input style="display:none" type="file" id="files" onchange="fileSelect(this, ' + col + ', ' + row + ')" name="files[]" />';
+            var html = "<input style=\"display:none\" type=\"file\" id=\"files\" onchange='fileSelect(this, " + col + ', ' + row + (subId ? subId : "") + ')\' name="files[]" />';
             element.innerHTML = element.innerHTML + html;
             element.childNodes[element.childNodes.length - 1].click();
             currentEdit = null;
@@ -63,17 +76,24 @@ function setWait(msg) {
         wd.style.display = "none";
 }
 
-function fileSelect(elem, col, row) {//Upload de archivos y respaldo
+function fileSelect(elem, col, row, subId) {//Upload de archivos y respaldo
     if (col !== undefined && col !== null) {
         var f = elem.files[0];
         setWait("Upload " + f.name);
-        ajax(server, {command: 'upload', id: data.id, row: row, col: col, name: f.name, size: f.size, data: f},
+        ajax(server, {command: 'upload', id: data.id, row: row, col: col, name: f.name, size: f.size, sid: subId, data: f},
         function(resp) {
             if (resp.startsWith("Error:")) {
             } else {
                 resp = JSON.parse(resp);
-                data.columns[col].data[row] = resp;
-                buildTable();
+                if (subId) {
+                    var val = subId.substring(8);
+                    var idx = val.indexOf(".");
+                    var scol = parseInt(val.substring(0, idx));
+                    var srow = parseInt(val.substring(idx + 1));
+                    data.columns[scol].data[srow].columns[col].data[row] = resp;
+                } else
+                    data.columns[col].data[row] = resp;
+                buildTable(data);
             }
             setWait();
         });
@@ -90,15 +110,6 @@ function fileSelect(elem, col, row) {//Upload de archivos y respaldo
         }, function(error) {
             // onerror callback
         });
-
-//        ajax(server, {command: 'restore', data: f},
-//        function() {
-//            currentEdit = undefined;
-//            ajax(server, {command: "getData", id: data.id}, function(resp) {
-//                eval("data = " + resp);
-//                buildTable();
-//            });
-//        }, document.getElementById("restoreAll"));
     }
 }
 
@@ -123,7 +134,7 @@ function sendSerializable(entries, first, size) {
                         ajax(server, {command: "getData", id: data.id}, function(resp) {
                             currentEdit = undefined;
                             eval("data = " + resp);
-                            buildTable();
+                            buildTable(data);
                             setWait();
                         });
                     }
@@ -137,12 +148,12 @@ String.prototype.endsWith = function(s) {
     return this.length >= s.length && this.substr(this.length - s.length) === s;
 };
 
-function getFileUploadedCode(col, row, key, name, size, num, admin, type) {
+function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId) {
     var lname = (name ? name.toLowerCase() : "");
     var isImage = lname.endsWith('.jpg') || lname.endsWith('.jpeg') || lname.endsWith('.png') || lname.endsWith('.gif');
     var isText = lname.endsWith('.html') || lname.endsWith('.txt') || lname.endsWith('.css')
-            || lname.endsWith('.js') || lname.endsWith('.jsp') || lname.indexOf('.') === 0 || lname.endsWith('.json');
-    var html = "<img title='Upload' src='css/upload.png' style='cursor:pointer;top:5px;position:relative;' onclick='initEdit(this.parentNode, " + col + "," + row + ", \"\",\"File\")'>";
+            || lname.endsWith('.js') || lname.endsWith('.jsp') || lname.indexOf('.') === 0 || lname.endsWith('.json');//initEdit(element, col, row, value, type, subId) {
+    var html = "<img title='Upload' src='css/upload.png' style='cursor:pointer;top:5px;position:relative;' onclick='initEdit(this.parentNode, " + col + "," + row + ", \"\", \"File\"" + (subId ? (', "' + subId + '"') : "") + " )'>";
     if (admin && isText)
         html = html + "<img title='Edit Script' src='css/script.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='setScript(" + row + "," + col + ")'>";
     html = html + "<img title='Rename' src='css/edit.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='rename(" + row + "," + col + ")'>";
@@ -242,11 +253,11 @@ function progressHandler(event, element) {
     }
 }
 
-function getSelRows() {
-    var inputs = document.getElementsByClassName("checkInput");
+function getSelRows(subId) {
+    var inputs = document.getElementsByClassName(subId ? ("check_" + subId) : "checkInput");
     var selected = [];
     for (var i = 0; i < inputs.length; i++) {
-        if (inputs[i].id.substring(0, 3) === "sel" && inputs[i].checked)
+        if ((inputs[i].id.substring(0, 3) === "sel" || inputs[i].id.substring(0, 8) === "subTable") && inputs[i].checked)
             selected.push(i);
     }
     return selected;
@@ -267,7 +278,7 @@ function delRow() {
                                 data.columns[i].data.splice(sel[j], 1);
                             }
                         }
-                        buildTable();
+                        buildTable(data);
                     } else
                         alert(resp);
                 });
@@ -284,7 +295,7 @@ function addRow() {
                 for (var i = 0; i < data.columns.length; i++) {
                     data.columns[i].data.push("");
                 }
-                buildTable();
+                buildTable(data);
             } else
                 alert(resp);
         });
@@ -301,7 +312,7 @@ function rename(row, col) {
             function(resp) {
                 if (resp === "") {
                     data.columns[col].data[row].name = newname;
-                    buildTable();
+                    buildTable(data);
                 } else
                     alert(resp);
             });
@@ -335,7 +346,8 @@ function downRow() {
                         data.columns[i].data[index + 1] = val0;
                     }
                 }
-                buildTable();
+                buildTable(data);
+                button.disabled = false;
                 setSel(1, sel);
                 if (resp === "") {
                 } else
@@ -363,7 +375,8 @@ function upRow() {
                         data.columns[i].data[index - 1] = val0;
                     }
                 }
-                buildTable();
+                buildTable(data);
+                button.disabled = false;
                 setSel(-1, sel);
                 if (resp === "") {
                 } else
@@ -382,10 +395,10 @@ function restore(element) {
     }
 }
 
-function setBoolean(element, row, col) {
+function setBoolean(element, row, col, subId) {
     var value = element.checked;
     element.disabled = true;
-    ajax(server, {command: "setTableVal", id: data.id, col: col, row: row, value: value}, function(resp) {
+    ajax(server, {command: "setTableVal", id: data.id, col: col, row: row, value: value, subId: subId}, function(resp) {
         element.disabled = false;
     });
 }
@@ -402,13 +415,17 @@ function saveHtml() {
 }
 
 function showScript(visible, row, col) {
+
     document.getElementById('scriptDiv').style.display = visible ? 'block' : 'none';
     editor.setOption("fullScreen", visible);
     if (visible) {
+        document.title = data.columns[col].data[row].name + "[" + ((data.name !== null && data.name.trim().length > 0) ? data.name : data.id) + "]";
         _editCol = col;
         _editRow = row;
+    } else {
+        document.title = (data.name !== null && data.name.trim().length > 0) ? data.name : data.id;
     }
-    buildTable();
+    buildTable(data);
 }
 
 function setScript(row, col) {
@@ -420,6 +437,8 @@ function setScript(row, col) {
         document.getElementById("scriptname").value = val.name;
         ajax(server, {command: "getText", id: data.id, col: col, row: row}, function(resp) {
             editor.getDoc().setValue(resp);
+
+
         });
     }
 }
@@ -434,6 +453,7 @@ function saveScript(name) {
     });
 }
 
+
 function setHtml(row, col) {
     _editCol = col;
     _editRow = row;
@@ -444,68 +464,134 @@ function setHtml(row, col) {
         document.getElementById('html').innerHTML = "<textarea id='tinyeditor' style='width:100%;resize: none;'></textarea>" +
                 "<img src='css/cancel.png' style='position:absolute;right:12px;top:9px;cursor:pointer' onclick='html.style.display=\"none\"' title='Cancel'>";
         document.getElementById('tinyeditor').value = resp;
+
         CKEDITOR.replace('tinyeditor');
     });
 
+}
+function over(over, element) {
+    var tds = element.children;
+    for (var i = 0; i < tds.length; i++) {
+        tds[i].style.background = over ? "#554" : "#332";
+    }
+}
+
+function togleRow2(col, row, button) {
+    
+    var div = document.getElementById("subTable" + col + "." + row);
+    if (div.style.display === "none"){
+        div.style.display = "block";
+        button.style.background="#888";
+    } else {
+        div.style.display = "none";
+        button.style.background="#DDD";
+    }
+}
+
+function upRow2(col, row) {
+    console.log("upRow2 " + col + " " + row);
+    ajax(server, {command: "upRow2", id: data.id, col: col, row: row}, function(resp) {
+        
+    });
+}
+
+function downRow2(col, row) {
+    console.log("downRow2 " + col + " " + row);
+    ajax(server, {command: "downRow2", id: data.id, col: col, row: row}, function(resp) {
+
+    });
+}
+
+function addRow2(col, row) {
+    ajax(server, {command: "addRow2", id: data.id, col: col, row: row}, function(resp) {
+        var sd = {};
+        eval("sd = " + resp);
+        data.columns[col].data[row] = sd;
+        buildTable(sd, undefined, "subTable" + col + "." + row);
+    });
+}
+
+function delRow2(col, row) {
+    var sel = getSelRows("subTable" + col + "." + row);
+    if (sel.length > 0) {
+        if (confirm("Desea eliminar " + sel.length + " registros?")) {
+            ajax(server, {command: "delRow2", id: data.id, col: col, row: row, checks: sel.join(",")}, function(resp) {
+                var sd = undefined;
+                if (resp !== "")
+                    eval("sd = " + resp);
+                data.columns[col].data[row] = sd;
+                if (sd)
+                    buildTable(sd, undefined, "subTable" + col + "." + row);
+                else
+                    buildTable(data);
+            });
+        }
+    }
 }
 
 noBuild = false;
 /**Construye una tabla a partir de un json
  * @param {Numbrer} colIndex indice de la columna seleccionada*/
-function buildTable(colIndex) {
-    if (!noBuild) {
+function buildTable(data, colIndex, subId) {
+    if (subId || !noBuild) {
+        var subTables = {};
         noBuild = true;
-        element = document.getElementById("data");
+        var idData = subId ? subId : "data";
+        var element = document.getElementById(idData);
         var html = [];
         html.push("<table class='table'");
         if (!data.columns || (data.columns && data.columns.length === 0) || (data.columns && data.columns.length > 0 && data.columns[0].data.length === 0)) {
             html.push("style='padding-right:30px'");
         }
-        html.push("><tr class='tableHeader'>",
-                "<td colspan=", data.columns.length, " id='tituloTabla'><span style='top:6px;position:relative'>", data.name,"</span>");
-
+        html.push(">");
         var cols = data.columns.length;
+        if (!subId) {
+            html.push("<tr class='tableHeader'>",
+                    "<td colspan=", data.columns.length, " id='tituloTabla'><span style='top:6px;position:relative'>", data.name, "</span>");
+            var cols = data.columns.length;
+            document.getElementById("rowButtons").style.display = (cols > 0 && (superAdmin || data.allowAdd)) ? "block" : "none";
+            html.push("</td></tr>");
 
-        if (cols > 0 && (superAdmin || data.allowAdd)) {
-            html.push("<button onclick='delRow()' style='width:26px;padding:0;float:right;margin-right:10px'><img src='css/del.png'></button>",
-                    "<button onclick='addRow()' style='width:26px;padding:0;float:right;margin-right:10px'><img src='css/add.png'></button>");
-            html.push("<button id='downRowButton' onclick='downRow()' style='width:26px;padding:0;float:right;margin-right:10px'><img src='css/down.png'></button>",
-                    "<button id='upRowButton' onclick='upRow()' style='width:26px;padding:0;float:right;margin-right:10px'><img src='css/up.png'></button>");
-        }
+            if (cols > 0) {
+                html.push("<tr class='tableHeader'>");
 
-        html.push("</td></tr>");
-        if (cols > 0) {
-            html.push("<tr class='tableHeader'>");
-
-            for (var i = 0; i < cols; i++) {
-                var columna = data.columns[i];
-                html.push("<td", columna.width > 0 ? " width='" + columna.width + "'" : "");
-                html.push(">", columna.name);
-//        if (superAdmin || data.allowAdd) {
-//            html.push("<button style='width:26px;padding:0;float:left'><img src='css/up.png'></button>",
-//                    "<button style='width:26px;padding:0;float:left;margin-right:6px'><img src='css/down.png'></button>");
-//        }
-                html.push("</td>");
+                for (var i = 0; i < cols; i++) {
+                    var columna = data.columns[i];
+                    html.push("<td", columna.width > 0 ? (" width='" + columna.width + "'") : "");
+                    html.push(">", columna.name);
+                    html.push("</td>");
+                }
+                html.push("</tr>");
             }
-            html.push("</tr>");
         }
         if (data.columns && data.columns.length > 0) {
             var rows = data.columns[0].data.length;
+
             for (var i = 0; i < rows; i++) {
-                html.push("<tr class='tableData'>");
+                html.push("<tr class='tableData' onmouseover='over(true,this)' onmouseout='over(false,this)'>");
                 for (var j = 0; j < cols; j++) {
                     var columna = data.columns[j];
                     var value = columna.data[i];
                     html.push("<td");
+                    if (subId && i === 0 && columna.width > 0) {
+                        html.push(" width='" + columna.width + "'");
+                    }
                     if (columna.editable && (columna.type === 'Number' || columna.type === 'Select' || columna.type === 'String' || columna.type === 'Id')) {
                         html.push(" class='editable'");
                         if (columna.type !== "File") {
                             html.push(" onclick=\"initEdit(this, ", j, ",", i);
                             html.push(", '", value);
-                            html.push("','", columna.type, "')\"");
+                            html.push("','", columna.type, "'", (subId ? (",'" + subId + "'") : ""), ")\"");
                         }
                     }
                     html.push(">");
+                    if (!subId && columna.type === "SubTable") {
+                        html.push("<div style='float:right'><button onclick='togleRow2(" + j + "," + i + ",this)' style='padding:0;'><img src='css/rest.png'></button>");
+                        html.push("<button onclick='upRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/up.png'></button>");
+                        html.push("<button onclick='downRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/down.png'></button>");
+                        html.push("<button onclick='addRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/add.png'></button>");
+                        html.push("<button onclick='delRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/del.png'></button></div>");
+                    }
                     if (columna.type === "File") {
                         if (value) {
                             var count = 1;
@@ -513,31 +599,36 @@ function buildTable(colIndex) {
                                 if (columna.data[k] && columna.data[k].name === value.name)
                                     count++;
                             }
-                            html.push(getFileUploadedCode(j, i, value.key, value.name, value.size, count, true, value.type));
+                            html.push(getFileUploadedCode(j, i, value.key, value.name, value.size, count, true, value.type, subId));
 
                         } else
-                            html.push(getFileUploadedCode(j, i, null, null, null));
+                            html.push(getFileUploadedCode(j, i, null, null, null, null, null, null, subId));
                     } else if (columna.type === "Boolean") {
-                        html.push("<input type='checkbox' " + (value ? "checked" : "") + " style='margin-left:10px;width:12px' onchange='setBoolean(this," + i + "," + j + ")'>");
+                        html.push("<input type='checkbox' " + (value ? "checked" : "") + " style='margin-left:10px;width:12px' onchange='setBoolean(this," + i + "," + j + (subId ? (",\"" + subId + "\"") : "") + ")'>");
                     } else if (columna.type === "Html") {
                         html.push("<button style='width:90px' onclick='setHtml(" + i + "," + j + ")'> Edit Html </button>");
                     } else if (columna.type === "Script") {
-                        html.push("<button style='width:90px' onclick='setScript(" + i + "," + j + ")'> Edit Script </button> "+value.name);
+                        html.push("<button style='width:90px' onclick='setScript(" + i + "," + j + ")'> Edit Script </button> " + (value ? value.name : ""));
+                    } else if (columna.type === "SubTable") {
+                        html.push("<div id='subTable" + j + "." + i + "' style='display:none'></div> ");
+                        if (value !== null)
+                            subTables["subTable" + j + "." + i] = value;
                     } else
                         html.push(value);
                     html.push("</td>");
                 }
                 if (superAdmin || data.allowAdd) {
-                    html.push("<td style='width:20px'><input id='sel" + i + "' type='checkbox' class='checkInput'></td>");
+                    html.push("<td style='width:20px'><input id='" + (subId ? (subId + ".") : "sel") + i + "' type='checkbox' class='" + (subId ? ("check_" + subId) : "checkInput") + "'></td>");
                 }
                 html.push("</tr>");
             }
+
+
+
         }
-        if (superAdmin) {
+        if (superAdmin && !subId) {
             html.push("<tr class='tableHeader'><td onclick='toogleProps()' id='propertiesSwitch' colspan=", data.columns.length, ">");
             html.push("&darr;Show Properties &darr;");
-
-
 
             html.push("</td></tr><tr class='tableHeader prop'>",
                     "<td colspan=", data.columns.length, " style='text-align:left'><span style='color:yellow'>Table Properties</span><br><br>",
@@ -584,8 +675,8 @@ function buildTable(colIndex) {
         } else {
             html.push("</table>");
         }
-
-        html.push("<br>");
+        if (!subId)
+            html.push("<br>");
         for (var subtable in data.subTableMap) {
             var loContiene = subtables.contains(subtable);
             if (superAdmin || loContiene) {
@@ -594,6 +685,11 @@ function buildTable(colIndex) {
         }
 
         element.innerHTML = html.join("");
+
+        for (var id in subTables) {
+            if (subTables[id])
+                buildTable(subTables[id], undefined, id);
+        }
 
         if (document.getElementById("colIdx"))
             if (colIndex)
@@ -639,7 +735,7 @@ function rightCol() {
                 var col0 = data.columns[idx0];
                 data.columns[idx] = col0;
                 data.columns[idx0] = col;
-                buildTable();
+                buildTable(data);
                 changeColIndex(idx0);
             } else
                 alert(resp);
@@ -659,7 +755,7 @@ function leftCol() {
                 var col0 = data.columns[idx0];
                 data.columns[idx] = col0;
                 data.columns[idx0] = col;
-                buildTable();
+                buildTable(data);
                 changeColIndex(idx0);
             } else
                 alert(resp);
@@ -672,7 +768,7 @@ function delCol() {
         ajax(server, {command: "delCol", id: data.id, idx: document.getElementById("colIdx").value}, function(resp, json) {
             if (resp === "") {
                 data.columns.splice(json.idx, 1);
-                buildTable();
+                buildTable(data);
             } else
                 alert(resp);
         });
@@ -696,7 +792,7 @@ function newCol() {
                 }
             }
             data.columns.push(jsonCol);
-            buildTable();
+            buildTable(data);
             changeColIndex(data.columns.length - 1);
         } else
             alert(resp);
@@ -716,13 +812,13 @@ function changeColVal(elem) {
                 if (json.param === "coltype") {
                     ajax(server, {command: "getData", id: data.id, idx: json.idx}, function(resp) {
                         eval("data = " + resp);
-                        buildTable(json.idx);
+                        buildTable(data, json.idx);
                     });
                 } else
-                    buildTable(json.idx);
+                    buildTable(data, json.idx);
             } else {
                 alert(resp);
-                buildTable(json.idx);
+                buildTable(data, json.idx);
             }
         });
     }
@@ -784,7 +880,7 @@ function newTable() {
             if (!data.subTableMap)
                 data.subTableMap = {};
             data.subTableMap[json.key] = json.value;
-            buildTable();
+            buildTable(data);
         } else {
             alert(resp);
         }
@@ -797,7 +893,7 @@ function newTable() {
  * @param row
  * @param oldValue
  * @param evt */
-function endEdit(elem, col, row, evt, oldValue) {
+function endEdit(elem, col, row, evt, oldValue, subId) {
 
     if (!elem.disabled && (evt === undefined || evt.keyCode === 13 || evt.keyCode === 27)) {
         if (evt && evt.keyCode === 27) {
@@ -806,7 +902,7 @@ function endEdit(elem, col, row, evt, oldValue) {
         } else {
             elem.disabled = true;
             if (elem.value !== oldValue) {
-                ajax(server, {command: "setTableVal", id: data.id, col: col, row: row, value: elem.value},
+                ajax(server, {command: "setTableVal", id: data.id, col: col, row: row, value: elem.value, subId: subId},
                 function(resp, json) {
                     var newValue = resp === "" ? elem.value : oldValue;
                     if (resp !== "") {
@@ -815,7 +911,9 @@ function endEdit(elem, col, row, evt, oldValue) {
                         data.columns[json.col].data[json.row] = newValue;
                     }
                     elem.parentNode.onclick = function() {
-                        eval("initEdit(this, " + json.col + "," + json.row + ", '" + newValue + "','" + data.columns[json.col].type + "')");
+                        var command = "initEdit(this, " + json.col + "," + json.row + ", '" + newValue + "','" + data.columns[json.col].type + "'" + (subId ? (",'" + subId + "'") : "") + ")";
+                        console.log(command);
+                        eval(command);
                     };
                     elem.parentNode.innerHTML = newValue;
                     currentEdit = undefined;
@@ -835,7 +933,7 @@ function delTable() {
             if (resp === "") {
                 if (window.opener) {
                     delete window.opener.data.subTableMap[data.id];
-                    window.opener.buildTable();
+                    window.opener.buildTable(data);
                 }
                 if (data.id === "ROOT")
                     window.location.href = window.location.href;
@@ -854,14 +952,14 @@ function changeTableVal(elem, oldValue) {
             var value = window.opener.data.subTableMap[data.id];
             delete window.opener.data.subTableMap[data.id];
             window.opener.data.subTableMap[newId] = value;
-            window.opener.buildTable();
+            window.opener.buildTable(data);
         }
     }
 
     function setParentSubName(newName) {
         if (window.opener) {
             window.opener.data.subTableMap[data.id] = newName;
-            window.opener.buildTable();
+            window.opener.buildTable(data);
         }
     }
 
@@ -882,7 +980,7 @@ function changeTableVal(elem, oldValue) {
             if (json.key === "name")
                 setParentSubName(json.value);
             data[json.key] = json.value;
-            buildTable();
+            buildTable(data);
         }
         elem.disabled = false;
     });

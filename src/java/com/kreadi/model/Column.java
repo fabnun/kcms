@@ -2,9 +2,7 @@ package com.kreadi.model;
 
 import bsh.EvalError;
 import com.kreadi.compiler.Scriptlet;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -40,6 +38,7 @@ public class Column implements Serializable {
      * Reglas
      */
     public String rules = "";
+    
 
     public Column(String nombre, String tipo) {
         this.name = nombre;
@@ -59,10 +58,10 @@ public class Column implements Serializable {
         HashMap<String, Serializable> map = (HashMap<String, Serializable>) data.get(row);
         if (map != null) {
             String key = (String) map.get("key");
-            int n=row;
+            int n = row;
             if (key != null) {
                 byte[] bytes = (byte[]) dao.getSerial("file:" + key);
-                String result = new String(bytes,"UTF-8");
+                String result = new String(bytes, "UTF-8");
                 if ("Script".equals(map.get("type"))) {
                     try {
                         return new Scriptlet(result).process(request, response, dao, n);
