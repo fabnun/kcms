@@ -29,6 +29,7 @@ public class FiltroUrl implements Filter {
         req.setCharacterEncoding("UTF-8");
         resp.setCharacterEncoding("UTF-8");
         String uri = req.getRequestURI();
+        String param = req.getQueryString();
         if (uri.startsWith("/kreadi/") || uri.startsWith("/_ah/")) {
             chain.doFilter(request, response);
         } else {
@@ -158,10 +159,9 @@ public class FiltroUrl implements Filter {
 
                             resp.setContentType(mimeType);
                             resp.setHeader("Accept-Ranges", "bytes");
-
-                            String cache = filename.startsWith("_") ? null : (String) map.get("cache");
+                            
+                            String cache = filename.startsWith("_") ? null : (String) map.get("cache."+param);
                             if (cache == null) {
-
                                 ByteArrayOutputStream baos = new Set.Baos();
                                 byte[] bytes;
                                 String subId = "";
@@ -178,7 +178,8 @@ public class FiltroUrl implements Filter {
                                 String code = baos.toString("UTF-8");
                                 String process = new Scriptlet(code).process(req, resp, dao, index);
                                 if (!filename.startsWith("_")) {
-                                    map.put("cache", process);
+                                    map.put("cache."+param, process);
+                                    storeMaps=true;
                                 }
                                 resp.getOutputStream().write(process.getBytes("UTF-8"));
                             } else {
@@ -187,6 +188,7 @@ public class FiltroUrl implements Filter {
                         }
                         if (storeMaps) {
                             dao.setSerial("map:map", keyCodes);
+                            System.out.println(uri+" "+param+" save Script result!!!");
                         }
                     } else {
                         chain.doFilter(request, response);

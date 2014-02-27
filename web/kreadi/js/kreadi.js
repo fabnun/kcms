@@ -162,7 +162,7 @@ function showPreview(row, col, num, key, name, isImage, subId) {
             img.onload = function() {
                 var spanDim = document.getElementById("img" + key);
                 var image = document.getElementById("image" + key);
-                image.style.maxWidth=this.width+"px";
+                image.style.maxWidth = this.width + "px";
                 if (spanDim)
                     spanDim.innerHTML = "<span style='color:#FF8;margin-left:32px'> DIMENSIONES : </span> " + this.width + ":" + this.height;
             };
@@ -454,7 +454,7 @@ function setScript(row, col) {
         ajax(server, {command: "getText", id: data.id, col: col, row: row}, function(resp) {
             editor.getDoc().setValue(resp);
 
-
+            document.getElementById('rowButtons').style.display ="none";
         });
     }
 }
@@ -477,11 +477,17 @@ function setHtml(row, col) {
 
         document.getElementsByTagName("body")[0].style.overflow = "hidden";
         document.getElementById('html').style.display = "block";
-        document.getElementById('html').innerHTML = "<textarea id='tinyeditor' style='width:100%;resize: none;'></textarea>" +
+        document.getElementById('html').innerHTML = "<textarea id='tinyeditor' onkeydown='return keyprocess(event);' style='width:100%;resize: none;'></textarea>" +
                 "<img src='css/cancel.png' style='position:absolute;right:12px;top:9px;cursor:pointer' onclick='html.style.display=\"none\"' title='Cancel'>";
         document.getElementById('tinyeditor').value = resp;
-
+        
         CKEDITOR.replace('tinyeditor');
+        
+        document.getElementById('rowButtons').style.display ="none";
+        
+        // SET THE KEYSTROKE TO SAVE CTRL+S
+        //setTimeout('var iframe=document.getElementsByClassName("cke_wysiwyg_frame");alert(iframe);if (iframe) iframe.onkeydown=function(){alert("chapala!!!");};',3000);
+        
     });
 
 }
@@ -635,7 +641,7 @@ function buildTable(data, colIndex, subId) {
                         html.push(value);
                     html.push("</td>");
                 }
-                if (superAdmin || data.allowAdd) {
+                if (subId || superAdmin || data.allowAdd) {
                     html.push("<td style='width:20px'><input id='" + (subId ? (subId + ".") : "sel") + i + "' type='checkbox' class='" + (subId ? ("check_" + subId) : "checkInput") + "'></td>");
                 }
                 html.push("</tr>");

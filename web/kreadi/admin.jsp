@@ -33,7 +33,7 @@
 <!DOCTYPE html>
 <html lang="es">
     <head>
-        <title><%=(tabla.name!=null && tabla.name.trim().length()>0)?tabla.name:tabla.id%></title>
+        <title><%=(tabla.name != null && tabla.name.trim().length() > 0) ? tabla.name : tabla.id%></title>
         <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <link href="css/admin.css" rel="stylesheet" type="text/css">
         <link rel="icon" href="favicon.ico" type="image/x-icon" />
@@ -80,12 +80,12 @@
                     <img src="respaldar.png" style="position: relative; margin-bottom:-2px"> RESPALDAR 
                 </a>
             </button>
-            
+
             <button style="position:relative;top:5px;right:16px;background-color:#ffffaa;padding:3px 12px" onclick="restore(this);">
                 <img src="restaurar.png" style="position: relative; margin-bottom:-2px"> RESTAURAR 
             </button>
             <%}%>
-            
+
             <span style="float:right;position: relative;top:5px"><%=isSuperAdmin ? "(SUPER/ADMIN) " : ""%><%=username%> <a style="margin-right:12px" id="logout" href="<%=userService.createLogoutURL(request.getRequestURI())%>">Salir</a>&nbsp;</span>
             <div id="rowButtons" style="display:none;float:right;margin-right:16px">
                 <button id='upRowButton' onclick='upRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/up.png'></button>
@@ -161,14 +161,41 @@
                     document.getElementsByClassName('cke_contents')[0].style.height = (h - 88 - document.getElementsByClassName('cke_top')[0].offsetHeight) + "px";
                 }
             };
-            
-            onkeydown = function(val){
-                if (val.keyCode===27) {
-                    document.getElementById("preview").style.display="none";
-                    document.getElementById("html").style.display="none";
-                    document.getElementById("scriptDiv").style.display="none";
+
+            function save() {
+                var scriptDiv = document.getElementById("scriptDiv");
+                var htmlDiv = document.getElementById("html");
+                if (scriptDiv.style.display === "block") {
+                    saveScript(document.getElementById('scriptname').value);
+                } else if (htmlDiv.style.display === "block") {
+                    alert("Guardando html");
+                }
+            }
+
+            function view() {
+                window.open('/', 'test', 'toolbar=0,titlebar=0,menubar=0,location=0,status=0,scrollbars=1,width=1200,height=600');
+            }
+
+            onkeydown = function(val) {
+                if (val.keyCode === 27) {
+                    document.getElementById("preview").style.display = "none";
+                    document.getElementById("html").style.display = "none";
+                    document.getElementById("scriptDiv").style.display = "none";
+                    if (superAdmin || data.allowAdd) {
+                        document.getElementById('rowButtons').style.display = "inline-block";
+                    }
+                } else if (val.ctrlKey && val.keyCode !== 17) {
+                    console.log(val.keyCode);
+                    if (val.keyCode === 83) {// CTRL+S
+                        save();
+                        return false;
+                    } else if (val.keyCode === 69) {//CTRL+E
+                        view();
+                        return false;
+                    }
                 }
             };
+
         </script>
         <div id="waitDiv" style="z-index:99999;display:none;background:#15191f;opacity:.9;position:fixed;top:0;bottom:0;left:0;right:0;background-image: url(load.gif);background-repeat:no-repeat;background-position:center;">
             <div id="waitMsg" style="color:white;position:fixed;bottom:8px;right:8px"></div>
