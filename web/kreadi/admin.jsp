@@ -104,8 +104,6 @@
                 <img src="css/save.png" onclick="saveScript(document.getElementById('scriptname').value)" style="cursor:pointer;top:2px;position:relative;"  title="save">
                 <img src="css/del.png" onclick="showScript(false);" style="cursor:pointer;margin-right:8px;top:2px;position:relative;margin-top:5px"  title="close">
             </div>
-            
-            
         </div>
         <script>
             var script = document.getElementById("script");
@@ -124,6 +122,7 @@
         </script>
 
         <div id='html' style="position:fixed;width: 100%;height: 100%;background: white;top:58px;display:none"></div>
+        <div id='preview' style="text-align:center;position:fixed;width: 100%;height: 100%;background: rgba(0,0,0,.75);color:white;font-size:16px;top:56px;display:none"></div>
         <script src="ckeditor/ckeditor.js"></script>
 
         <script type="text/javascript" src="js/kreadi.js"></script>
@@ -160,6 +159,14 @@
                     te.style.height = (h - 124) + "px";
                     document.getElementById('cke_tinyeditor').style.height = (h - 124) + "px";
                     document.getElementsByClassName('cke_contents')[0].style.height = (h - 88 - document.getElementsByClassName('cke_top')[0].offsetHeight) + "px";
+                }
+            };
+            
+            onkeydown = function(val){
+                if (val.keyCode===27) {
+                    document.getElementById("preview").style.display="none";
+                    document.getElementById("html").style.display="none";
+                    document.getElementById("scriptDiv").style.display="none";
                 }
             };
         </script>

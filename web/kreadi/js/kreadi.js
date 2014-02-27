@@ -148,6 +148,37 @@ String.prototype.endsWith = function(s) {
     return this.length >= s.length && this.substr(this.length - s.length) === s;
 };
 
+function showPreview(row, col, num, key, name, isImage, subId) {
+    if (row === undefined) {
+        var div = document.getElementById("preview");
+        div.innerHTML = "";
+        div.style.display = "none";
+    } else {
+        var html = "<div style='margin:12px'><span style='color:#FF8'> URL ESTATICA:</span> /" + data.id + "/" + name + (num > 1 ? "?n=" + num : "") +
+                " <span style='margin-left:32px'> <span style='color:#FF8'> URL DINAMICA :</span> " + server + "?id=" + key + "&name=" + name + "</span>";
+        if (isImage) {
+            var img = new Image();
+            img.src = server + "?id=" + key + "&name=" + name;
+            img.onload = function() {
+                var spanDim = document.getElementById("img" + key);
+                var image = document.getElementById("image" + key);
+                image.style.maxWidth=this.width+"px";
+                if (spanDim)
+                    spanDim.innerHTML = "<span style='color:#FF8;margin-left:32px'> DIMENSIONES : </span> " + this.width + ":" + this.height;
+            };
+            html = html + "<span id='img" + key + "' style='white-space: nowrap'></span></div>";
+            html = html + "<button style='float:right;margin-top:-36px;margin-right:16px;' onclick='showPreview()'> [ESC] </button>";
+
+            html = html + "<img id='image" + key + "' src=\"" + server + "?id=" + key + "&name=" + name + "\" style='width:96%;border:1px dotted white;padding:4px'>";
+        } else {
+            html = html + "<button style='float:right;' onclick='showPreview()'> [ESC] </button>";
+        }
+        var div = document.getElementById("preview");
+        div.innerHTML = html;
+        div.style.display = "block";
+    }
+}
+
 function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId) {
     var lname = (name ? name.toLowerCase() : "");
     var isImage = lname.endsWith('.jpg') || lname.endsWith('.jpeg') || lname.endsWith('.png') || lname.endsWith('.gif');
@@ -158,22 +189,7 @@ function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId)
         html = html + "<img title='Edit Script' src='css/script.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='setScript(" + row + "," + col + ")'>";
     html = html + "<img title='Rename' src='css/edit.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='rename(" + row + "," + col + ")'>";
     if (key) {
-        html = html + "<a class='tooltip'> <img src='css/see.png' style='cursor:pointer;top:5px;position:relative;'> " +
-                "<div onclick='return false'><span style='white-space: nowrap'> <span style='color:white'> URL ESTATICA:</span> /" + data.id + "/" + name + (num > 1 ? "?n=" + num : "") + "</span><br>" +
-                " <span style='white-space: nowrap'> <span style='color:white'> URL DINAMICA :</span> " + server + "?id=" + key + "&name=" + name + "</span><br>";
-        if (isImage) {
-            var img = new Image();
-            img.src = server + "?id=" + key + "&name=" + name;
-            img.onload = function() {
-                var spanDim = document.getElementById("img" + row + "." + col);
-                if (spanDim)
-                    spanDim.innerHTML = " <span style='color:white'> DIMENSIONES : </span> " + this.width + ":" + this.height;
-            };
-            html = html + " <span id='img" + row + "." + col + "' style='white-space: nowrap'></span><br><br>";
-            html = html + "<img src=\"" + server + "?id=" + key + "&name=" + name + "\">";
-        }
-
-        html = html + "</div></a>";
+        html = html + "<img title='Preview' src='css/see.png' style='cursor:pointer;top:5px;position:relative;'  onclick='showPreview(" + row + "," + col + "," + num + ",\"" + key + "\",\"" + name + "\", " + isImage + ",\"" + subId + "\")'> ";
 
         html = html + " &nbsp; <a title='Download' style='position:relative;top:-2px;text-decoration:none' href='" + server + "?id=" + key + "&name=" + name + "&download=" + size + "'>" +
                 name + (admin ? (" [" + type + "]") : "") + " </a> &nbsp; <span style='color:white;display: inline-block;text-align:right;top:-2px;position:relative'>(" + Math.round(size / 1024) + " kb)</span>";
@@ -477,26 +493,27 @@ function over(over, element) {
 }
 
 function togleRow2(col, row, button) {
-    
-    var div = document.getElementById("subTable" + col + "." + row);
-    if (div.style.display === "none"){
+    var subId = "subTable" + col + "." + row;
+    var div = document.getElementById(subId);
+    var btn_div = document.getElementById("btn_" + subId);
+    if (div.style.display === "none") {
         div.style.display = "block";
-        button.style.background="#888";
+        btn_div.style.display = "inline-block";
+        button.style.background = "#888";
     } else {
         div.style.display = "none";
-        button.style.background="#DDD";
+        btn_div.style.display = "none";
+        button.style.background = "#DDD";
     }
 }
 
 function upRow2(col, row) {
-    console.log("upRow2 " + col + " " + row);
     ajax(server, {command: "upRow2", id: data.id, col: col, row: row}, function(resp) {
-        
+
     });
 }
 
 function downRow2(col, row) {
-    console.log("downRow2 " + col + " " + row);
     ajax(server, {command: "downRow2", id: data.id, col: col, row: row}, function(resp) {
 
     });
@@ -586,11 +603,12 @@ function buildTable(data, colIndex, subId) {
                     }
                     html.push(">");
                     if (!subId && columna.type === "SubTable") {
-                        html.push("<div style='float:right'><button onclick='togleRow2(" + j + "," + i + ",this)' style='padding:0;'><img src='css/rest.png'></button>");
+                        html.push("<div style='float:right'><span id='btn_subTable" + j + "." + i + "' style='display:none;'>");
                         html.push("<button onclick='upRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/up.png'></button>");
                         html.push("<button onclick='downRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/down.png'></button>");
                         html.push("<button onclick='addRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/add.png'></button>");
-                        html.push("<button onclick='delRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/del.png'></button></div>");
+                        html.push("<button onclick='delRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/del.png'></button></span>");
+                        html.push("<button onclick='togleRow2(" + j + "," + i + ",this)' style='padding:0;margin-left:12px;margin-right:6px'><img src='css/rest.png'></button></div>");
                     }
                     if (columna.type === "File") {
                         if (value) {
@@ -912,7 +930,6 @@ function endEdit(elem, col, row, evt, oldValue, subId) {
                     }
                     elem.parentNode.onclick = function() {
                         var command = "initEdit(this, " + json.col + "," + json.row + ", '" + newValue + "','" + data.columns[json.col].type + "'" + (subId ? (",'" + subId + "'") : "") + ")";
-                        console.log(command);
                         eval(command);
                     };
                     elem.parentNode.innerHTML = newValue;
