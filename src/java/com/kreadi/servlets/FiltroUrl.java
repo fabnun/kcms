@@ -188,7 +188,6 @@ public class FiltroUrl implements Filter {
                         }
                         if (storeMaps) {
                             dao.setSerial("map:map", keyCodes);
-                            System.out.println(uri+" "+param+" save Script result!!!");
                         }
                     } else {
                         chain.doFilter(request, response);

@@ -421,7 +421,7 @@ function setBoolean(element, row, col, subId) {
 
 function saveHtml() {
     setWait("Saving Html...");
-    var value = document.getElementById("tinyeditor").value;
+    var value = CKEDITOR.instances.tinyeditor.getData();
     ajax(server, {command: "setTableVal", id: data.id, col: _editCol, row: _editRow, value: value},
     function(resp, json) {
         data.columns[json.col].data[json.row] = JSON.parse(resp);
@@ -454,7 +454,7 @@ function setScript(row, col) {
         ajax(server, {command: "getText", id: data.id, col: col, row: row}, function(resp) {
             editor.getDoc().setValue(resp);
 
-            document.getElementById('rowButtons').style.display ="none";
+            document.getElementById('rowButtons').style.display = "none";
         });
     }
 }
@@ -480,14 +480,32 @@ function setHtml(row, col) {
         document.getElementById('html').innerHTML = "<textarea id='tinyeditor' onkeydown='return keyprocess(event);' style='width:100%;resize: none;'></textarea>" +
                 "<img src='css/cancel.png' style='position:absolute;right:12px;top:9px;cursor:pointer' onclick='html.style.display=\"none\"' title='Cancel'>";
         document.getElementById('tinyeditor').value = resp;
-        
-        CKEDITOR.replace('tinyeditor');
-        
-        document.getElementById('rowButtons').style.display ="none";
-        
+
+        var editor = CKEDITOR.replace('tinyeditor');
+
+        editor.on('key', function(val) {
+            if (val.data.keyCode === 27) {
+                document.getElementById("preview").style.display = "none";
+                document.getElementById("html").style.display = "none";
+                document.getElementById("scriptDiv").style.display = "none";
+                if (superAdmin || data.allowAdd) {
+                    document.getElementById('rowButtons').style.display = "inline-block";
+                }
+            } else
+            if (val.data.keyCode === CKEDITOR.CTRL + 83) {
+                save();
+                return false;
+            } else if (val.data.keyCode === CKEDITOR.CTRL + 69) {//CTRL+E
+                view();
+                return false;
+            }
+        });
+
+        document.getElementById('rowButtons').style.display = "none";
+
         // SET THE KEYSTROKE TO SAVE CTRL+S
         //setTimeout('var iframe=document.getElementsByClassName("cke_wysiwyg_frame");alert(iframe);if (iframe) iframe.onkeydown=function(){alert("chapala!!!");};',3000);
-        
+
     });
 
 }

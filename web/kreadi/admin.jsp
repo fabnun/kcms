@@ -98,8 +98,8 @@
 
         <div id="scriptDiv">
             <textarea id="script"></textarea>
-            <div style="position:fixed;right:20px;top:68px;background:rgba(164,164,164,.75);z-index:30000;-webkit-border-radius: 8px 8px 8px 8px; border-radius: 8px 8px 8px 8px;">
-                <input type="text" id="scriptname" style="width:100px;top:-6px;position:relative;background:white;margin-left:8px" title="filename">
+            <div style="position:fixed;right:12px;top:24px;background:rgba(164,164,164,.75);z-index:30000;-webkit-border-radius: 8px 8px 8px 8px; border-radius: 8px 8px 8px 8px;">
+                <input type="text" id="scriptname" style="width:164px;top:-6px;position:relative;background:white;margin-left:8px" title="filename">
                 <img src="css/run.png" onclick="newTab('/' + (data.id !== '' ? data.id + '/' : '') + document.getElementById('scriptname').value)" style="cursor:pointer;top:2px;position:relative;" title="execute">
                 <img src="css/save.png" onclick="saveScript(document.getElementById('scriptname').value)" style="cursor:pointer;top:2px;position:relative;"  title="save">
                 <img src="css/del.png" onclick="showScript(false);" style="cursor:pointer;margin-right:8px;top:2px;position:relative;margin-top:5px"  title="close">
@@ -168,7 +168,7 @@
                 if (scriptDiv.style.display === "block") {
                     saveScript(document.getElementById('scriptname').value);
                 } else if (htmlDiv.style.display === "block") {
-                    alert("Guardando html");
+                    saveHtml();
                 }
             }
 
