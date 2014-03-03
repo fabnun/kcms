@@ -58,8 +58,9 @@
                 dao.saveTable(tabla);
             }
             if (tabla != null) {
-
-                String[] roles = ((String) dao.getSerial("user:rol")).split(" ");
+                String rol=(String) dao.getSerial("user:rol");
+                rol=rol==null?"":rol;
+                String[] roles = rol.split(" ");
                 String usr = username;
                 username = "";
 

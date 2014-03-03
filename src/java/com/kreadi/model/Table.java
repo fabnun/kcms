@@ -248,7 +248,9 @@ public class Table implements Serializable {
         StringBuilder sb = new StringBuilder();
         Set<String> set = subTableMap.keySet();
         Table table;
-        String[] roles = ((String) dao.getSerial("user:rol")).split(" ");
+        String rol=(String) dao.getSerial("user:rol");
+        rol=rol==null?"":rol;
+        String[] roles = rol.split(" ");
         String user = username;
         username = null;
 

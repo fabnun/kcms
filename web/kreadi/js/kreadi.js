@@ -134,6 +134,7 @@ function sendSerializable(entries, first, size) {
                         ajax(server, {command: "getData", id: data.id}, function(resp) {
                             currentEdit = undefined;
                             eval("data = " + resp);
+                            delUser(-1);
                             buildTable(data);
                             setWait();
                         });

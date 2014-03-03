@@ -624,7 +624,11 @@ public class Set extends HttpServlet {
                     Dao dao = new Dao();
                     Table tabla = dao.loadTable(id);
                     boolean havePermision = isSuperAdmin;
-                    String[] roles = ((String) dao.getSerial("user:rol")).split(" ");
+
+                    String rol = (String) dao.getSerial("user:rol");
+                    rol = rol == null ? "" : rol;
+                    String[] roles = rol.split(" ");
+
                     String usr = username;
                     username = null;
 
