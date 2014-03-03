@@ -248,13 +248,25 @@ public class Table implements Serializable {
         StringBuilder sb = new StringBuilder();
         Set<String> set = subTableMap.keySet();
         Table table;
-        for (String idSubTable : set) {
-            table = dao.loadTable(idSubTable);
-            String[] users = table.admins.split(",");
-            for (String user : users) {
-                user = user.trim().toLowerCase();
-                if (user.equals(username)) {
-                    sb.append(table.id).append("\",\"");
+        String[] roles = ((String) dao.getSerial("user:rol")).split(" ");
+        String user = username;
+        username = null;
+
+        for (int i = 0; i < roles.length; i = i + 2) {
+            if (user.equals(roles[i])) {
+                username = roles[i + 1];
+                break;
+            }
+        }
+        if (username != null) {
+            for (String idSubTable : set) {
+                table = dao.loadTable(idSubTable);
+                String[] users = table.admins.split(",");
+                for (String usr : users) {
+                    usr = usr.trim().toLowerCase();
+                    if (usr.equals(username)) {
+                        sb.append(table.id).append("\",\"");
+                    }
                 }
             }
         }

@@ -58,6 +58,18 @@
                 dao.saveTable(tabla);
             }
             if (tabla != null) {
+
+                String[] roles = ((String) dao.getSerial("user:rol")).split(" ");
+                String usr = username;
+                username = "";
+
+                for (int i = 0; i < roles.length; i = i + 2) {
+                    if (usr.equals(roles[i])) {
+                        username = roles[i + 1];
+                        break;
+                    }
+                }
+
                 String[] usrs = tabla.admins.split(",");
                 for (String us : usrs) {
                     us = us.trim().toLowerCase();
@@ -66,6 +78,7 @@
                         break;
                     }
                 }
+                username=usr;
             }
             if (isAdmin || isSuperAdmin) {%>
         <div id="top">
@@ -83,6 +96,17 @@
 
             <button style="position:relative;top:5px;right:16px;background-color:#ffffaa;padding:3px 12px" onclick="restore(this);">
                 <img src="restaurar.png" style="position: relative; margin-bottom:-2px"> RESTAURAR 
+            </button>
+
+            <button style="position:relative;top:5px;right:16px;background-color:#aaffff;padding:3px 12px" onclick="users('show');">
+                <img src="user.png" style="position: relative; margin-bottom:-2px"> USUARIOS 
+                <div id="users" style="background:#aaffff;position:fixed;width:380px;padding:3px;margin:-32px 0 0 -16px;-webkit-box-shadow:  0px 0px 1px 2px rgba(0, 0, 0, .42);
+                     box-shadow:  0px 0px 1px 2px rgba(0,0,0, .42);text-align: left;
+                     -webkit-border-radius: 3px 3px 3px 3px;cursor: default;display:none;
+                     border-radius: 3px 3px 3px 3px;">
+                    &nbsp;&nbsp;<img src="user.png" style="position: relative; margin-bottom:-2px"> USUARIOS <span style='float:right'>[ESC para Salir]</span>
+                    <br><br><table id='userTable'></table>
+                </div>
             </button>
             <%}%>
 
@@ -123,78 +147,80 @@
 
         <div id='html' style="position:fixed;width: 100%;height: 100%;background: white;top:58px;display:none"></div>
         <div id='preview' style="text-align:center;position:fixed;width: 100%;height: 100%;background: rgba(0,0,0,.75);color:white;font-size:16px;top:56px;display:none"></div>
-        <script src="ckeditor/ckeditor.js"></script>
 
+        <script src="ckeditor/ckeditor.js"></script>
         <script type="text/javascript" src="js/kreadi.js"></script>
         <script type = "text/javascript">
-            data = <%=tabla.toJSON()%>;
-            subtables = [<%=tabla.subTables(username, dao)%>];
-            superAdmin =<%=isSuperAdmin%>;
-            buildTable(data);
-            CKEDITOR.plugins.registered['save'] = {
-                init: function(editor)
-                {
-                    editor.addCommand('save',
-                            {
-                                modes: {wysiwyg: 1, source: 1},
-                                exec: function(editor) {
-                                    editor.updateElement();
-                                    saveHtml();
+            <%if (isSuperAdmin && tableID.equals("ROOT")) {%>addUser();<%}%>
+                data = <%=tabla.toJSON()%>;
+                subtables = [<%=tabla.subTables(username, dao)%>];
+                superAdmin =<%=isSuperAdmin%>;
+                buildTable(data);
+                CKEDITOR.plugins.registered['save'] = {
+                    init: function(editor)
+                    {
+                        editor.addCommand('save',
+                                {
+                                    modes: {wysiwyg: 1, source: 1},
+                                    exec: function(editor) {
+                                        editor.updateElement();
+                                        saveHtml();
+                                    }
                                 }
-                            }
-                    );
-                    editor.ui.addButton('Save', {label: 'Guardar', command: 'save'});
-                }
-            };
-
-            // Hook each textarea with its editor
-            CKEDITOR.on('instanceReady', function(e) {
-                onresize();
-            });
-
-            onresize = function() {
-                var te = document.getElementById('cke_tinyeditor');
-                if (te) {
-                    var h = document.getElementById('html').offsetHeight;
-                    te.style.height = (h - 124) + "px";
-                    document.getElementById('cke_tinyeditor').style.height = (h - 124) + "px";
-                    document.getElementsByClassName('cke_contents')[0].style.height = (h - 88 - document.getElementsByClassName('cke_top')[0].offsetHeight) + "px";
-                }
-            };
-
-            function save() {
-                var scriptDiv = document.getElementById("scriptDiv");
-                var htmlDiv = document.getElementById("html");
-                if (scriptDiv.style.display === "block") {
-                    saveScript(document.getElementById('scriptname').value);
-                } else if (htmlDiv.style.display === "block") {
-                    saveHtml();
-                }
-            }
-
-            function view() {
-                window.open('/', 'test', 'toolbar=0,titlebar=0,menubar=0,location=0,status=0,scrollbars=1,width=1200,height=600');
-            }
-
-            onkeydown = function(val) {
-                if (val.keyCode === 27) {
-                    document.getElementById("preview").style.display = "none";
-                    document.getElementById("html").style.display = "none";
-                    document.getElementById("scriptDiv").style.display = "none";
-                    if (superAdmin || data.allowAdd) {
-                        document.getElementById('rowButtons').style.display = "inline-block";
+                        );
+                        editor.ui.addButton('Save', {label: 'Guardar', command: 'save'});
                     }
-                } else if (val.ctrlKey && val.keyCode !== 17) {
-                    console.log(val.keyCode);
-                    if (val.keyCode === 83) {// CTRL+S
-                        save();
-                        return false;
-                    } else if (val.keyCode === 69) {//CTRL+E
-                        view();
-                        return false;
+                };
+
+                // Hook each textarea with its editor
+                CKEDITOR.on('instanceReady', function(e) {
+                    onresize();
+                });
+
+                onresize = function() {
+                    var te = document.getElementById('cke_tinyeditor');
+                    if (te) {
+                        var h = document.getElementById('html').offsetHeight;
+                        te.style.height = (h - 124) + "px";
+                        document.getElementById('cke_tinyeditor').style.height = (h - 124) + "px";
+                        document.getElementsByClassName('cke_contents')[0].style.height = (h - 88 - document.getElementsByClassName('cke_top')[0].offsetHeight) + "px";
+                    }
+                };
+
+                function save() {
+                    var scriptDiv = document.getElementById("scriptDiv");
+                    var htmlDiv = document.getElementById("html");
+                    if (scriptDiv.style.display === "block") {
+                        saveScript(document.getElementById('scriptname').value);
+                    } else if (htmlDiv.style.display === "block") {
+                        saveHtml();
                     }
                 }
-            };
+
+                function view() {
+                    window.open('/', 'test', 'toolbar=0,titlebar=0,menubar=0,location=0,status=0,scrollbars=1,width=1200,height=600');
+                }
+
+                onkeydown = function(val) {
+                    if (val.keyCode === 27) {
+                        document.getElementById("preview").style.display = "none";
+                        document.getElementById("html").style.display = "none";
+                        document.getElementById("scriptDiv").style.display = "none";
+                        document.getElementById("users").style.display = "none";
+                        if (superAdmin || data.allowAdd) {
+                            document.getElementById('rowButtons').style.display = "inline-block";
+                        }
+                    } else if (val.ctrlKey && val.keyCode !== 17) {
+                        console.log(val.keyCode);
+                        if (val.keyCode === 83) {// CTRL+S
+                            save();
+                            return false;
+                        } else if (val.keyCode === 69) {//CTRL+E
+                            view();
+                            return false;
+                        }
+                    }
+                };
 
         </script>
         <div id="waitDiv" style="z-index:99999;display:none;background:#15191f;opacity:.9;position:fixed;top:0;bottom:0;left:0;right:0;background-image: url(load.gif);background-repeat:no-repeat;background-position:center;">

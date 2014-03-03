@@ -313,8 +313,8 @@ public class Set extends HttpServlet {
             LinkedList<Serial> serList = new LinkedList<Serial>();
 
             try {
-                Serializable ser = dao.getSerial("fileKeys");
-                serList.add(new Serial("FileKeys", ser));
+                serList.add(new Serial("FileKeys", dao.getSerial("fileKeys")));
+                serList.add(new Serial("user:rol", dao.getSerial("user:rol")));
                 serList.add(dao.getObject(Serial.class, "TABLE.ROOT"));
                 serial2Zip(dao, out, serList);
             } catch (IOException e) {
@@ -413,7 +413,7 @@ public class Set extends HttpServlet {
                 if (isSuperAdmin //CHEQUEA COMANDOS DE SUPERUSUARIO
                         && (command.equals("newTable") || command.equals("setTable") || command.equals("delTable")
                         || command.equals("setCol") || command.equals("leftCol") || command.equals("rightCol")
-                        || command.equals("delCol") || command.equals("newCol") || command.equals("backup")
+                        || command.equals("delCol") || command.equals("newCol") || command.equals("backup") || command.equals("addUser") || command.equals("delUser")
                         || command.equals("serialdelete") || command.equals("serial"))) {
                     if (command.equals("newTable")) {//NUEVA TABLA (SUPERUSER)
                         String key = (String) paramMap.get("key");
@@ -477,6 +477,35 @@ public class Set extends HttpServlet {
                         for (Serial s : seriales) {
                             dao.delSerial(s.key);
                         }
+                    } else if (command.equals("addUser")) {
+                        Dao dao = new Dao();
+                        String name = (String) paramMap.get("userName");
+                        name = name.trim();
+                        String rol = (String) paramMap.get("userRol");
+                        rol = rol.trim();
+                        String roles = (String) dao.getSerial("user:rol");
+                        roles = (roles == null ? "" : roles);
+                        if (name.length() > 0 && name.indexOf(" ") == -1 && rol.length() > 0 && rol.indexOf(" ") == -1) {
+                            roles = roles + " " + name + " " + rol;
+                            roles = roles.trim();
+                            dao.setSerial("user:rol", roles);
+                        }
+                        resp = roles.trim();
+                    } else if (command.equals("delUser")) {
+                        Dao dao = new Dao();
+                        int idx = Integer.parseInt((String) paramMap.get("idx"));
+                        String roles = (String) dao.getSerial("user:rol");
+                        roles = roles == null ? "" : roles;
+                        String[] rolArray = roles.split(" ");
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < rolArray.length; i = i + 2) {
+                            if (i / 2 != idx) {
+                                sb.append(" ").append(rolArray[i]).append(" ").append(rolArray[i + 1]);
+                            }
+                        }
+                        roles = sb.toString().trim();
+                        dao.setSerial("user:rol", roles);
+                        resp = roles;
                     } else if (command.equals("serial")) {
                         Dao dao = new Dao();
                         byte[] bytes = readByteStream(is);
@@ -595,6 +624,16 @@ public class Set extends HttpServlet {
                     Dao dao = new Dao();
                     Table tabla = dao.loadTable(id);
                     boolean havePermision = isSuperAdmin;
+                    String[] roles = ((String) dao.getSerial("user:rol")).split(" ");
+                    String usr = username;
+                    username = null;
+
+                    for (int i = 0; i < roles.length; i = i + 2) {
+                        if (usr.equals(roles[i])) {
+                            username = roles[i + 1];
+                            break;
+                        }
+                    }
                     if (!havePermision) {
                         String[] usuarios = tabla.admins.split(",");
                         for (String usuario : usuarios) {

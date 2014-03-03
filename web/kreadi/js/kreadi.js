@@ -148,6 +148,14 @@ String.prototype.endsWith = function(s) {
     return this.length >= s.length && this.substr(this.length - s.length) === s;
 };
 
+function users(command) {
+    if (command === 'show') {
+        document.getElementById("users").style.display = 'block';
+    } else if (command === 'close') {
+        document.getElementById("users").style.display = 'none';
+    }
+}
+
 function showPreview(row, col, num, key, name, isImage, subId) {
     if (row === undefined) {
         var div = document.getElementById("preview");
@@ -163,13 +171,14 @@ function showPreview(row, col, num, key, name, isImage, subId) {
                 var spanDim = document.getElementById("img" + key);
                 var image = document.getElementById("image" + key);
                 image.style.maxWidth = this.width + "px";
+                image.style.display="inline-block";
                 if (spanDim)
                     spanDim.innerHTML = "<span style='color:#FF8;margin-left:32px'> DIMENSIONES : </span> " + this.width + ":" + this.height;
             };
             html = html + "<span id='img" + key + "' style='white-space: nowrap'></span></div>";
             html = html + "<button style='float:right;margin-top:-36px;margin-right:16px;' onclick='showPreview()'> [ESC] </button>";
 
-            html = html + "<img id='image" + key + "' src=\"" + server + "?id=" + key + "&name=" + name + "\" style='width:96%;border:1px dotted white;padding:4px'>";
+            html = html + "<img id='image" + key + "' src=\"" + server + "?id=" + key + "&name=" + name + "\" style='display:none;width:96%;border:1px dotted white;padding:4px'>";
         } else {
             html = html + "<button style='float:right;' onclick='showPreview()'> [ESC] </button>";
         }
@@ -427,6 +436,37 @@ function saveHtml() {
         data.columns[json.col].data[json.row] = JSON.parse(resp);
         document.getElementsByTagName("body")[0].style.overflow = "auto";
         setWait();
+    });
+}
+
+function delUser(idx) {
+    ajax(server, {command: "delUser", idx: idx},
+    function(resp, json) {
+        updateUsers(resp);
+    });
+}
+
+function updateUsers(resp) {
+    var html = "<tr><td style='padding:4px'>USUARIO</td><td colspan='2'>ROL</td></tr>";
+    var users = resp.split(' ');
+    if (users.length > 1)
+        for (var i = 0; i < users.length; i = i + 2) {
+            html = html + "<tr><td style='padding:4px'><input type='text' value='" + users[i] + "'></td>" +
+                    "<td><input type='text' value='" + users[i + 1] + "'></td><td><button style='height:20px;width:20px' onclick='delUser(" + (i / 2) + ")'> - </button></td></tr>";
+        }
+    html = html + "<tr><td style='padding:4px'><input type='text' id='userName'></td>" +
+            "<td width='60'><input type='text' id='userRol'></td><td width='30'><button style='height:20px;width:20px' onclick='addUser()'> + </button></td></tr>";
+    document.getElementById('userTable').innerHTML = html;
+}
+
+function addUser() {
+    var userName = document.getElementById("userName");
+    userName = userName ? userName.value : "";
+    var userRol = document.getElementById("userRol");
+    userRol = userRol ? userRol.value : "";
+    ajax(server, {command: "addUser", userName: userName, userRol: userRol},
+    function(resp, json) {
+        updateUsers(resp);
     });
 }
 
