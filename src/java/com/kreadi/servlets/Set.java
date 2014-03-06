@@ -352,7 +352,7 @@ public class Set extends HttpServlet {
             }
             resp.setHeader("content-disposition", "inline; filename=\"" + name + "\"");
 
-            long time = 2592000000l;
+            long time = 2592000000l;//por defecto expiran en 1 mes los recursos estaticos
             long now = System.currentTimeMillis() + time;
             resp.setDateHeader("Expires", now);
             resp.setHeader("Cache-Control", "public, max-age=" + time);
@@ -383,7 +383,7 @@ public class Set extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         UserService userService = UserServiceFactory.getUserService();
         User user = userService.getCurrentUser();
-        String[] superAdmins = new String[]{"test@example.com", "fabnun", "mariajose@kreadi.com"};
+        String[] superAdmins = new String[]{"test@example.com", "fabnun"};
 
         InputStream is = req.getInputStream();
         res.setContentType("text/plain");
@@ -641,7 +641,7 @@ public class Set extends HttpServlet {
                     if (!havePermision) {
                         String[] usuarios = tabla.admins.split(",");
                         for (String usuario : usuarios) {
-                            if (usuario.equals(user.getNickname())) {
+                            if (usuario.equals(username)) {
                                 havePermision = true;
                                 break;
                             }

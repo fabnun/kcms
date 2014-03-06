@@ -9,7 +9,7 @@
     UserService userService = UserServiceFactory.getUserService();
     User user = userService.getCurrentUser();
     String[] superAdmins = new String[]{
-        "test@example.com", "fabnun", "mariajose@kreadi.com"};
+        "test@example.com", "fabnun"};
     boolean isSuperAdmin = false;
     boolean isAdmin = false;
     String username = "";
