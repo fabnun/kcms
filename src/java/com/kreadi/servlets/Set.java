@@ -393,11 +393,13 @@ public class Set extends HttpServlet {
         String command = (String) paramMap.get("command");//OBTIENE EL COMANDO
         if (command.equals("mail")) {//SI SOLICITA ENVIAR UN CORREO
             String mensaje = (String) paramMap.get("msg");
-            String correo = (String) paramMap.get("correo");
+            String to = (String) paramMap.get("to");
+            String from = (String) paramMap.get("from");
+            String subject = (String) paramMap.get("subject");
 
             MailService mail = MailServiceFactory.getMailService();
-            MailService.Message msg = new MailService.Message("contacto@verdeoriginal.cl", "contacto@verdeoriginal.cl", "Formulario de Contacto", mensaje);
-            msg.setReplyTo(correo);
+            MailService.Message msg = new MailService.Message(from, to, subject, mensaje);
+            msg.setReplyTo(to);
             mail.send(msg);
 
         } else if (user != null) {//SI ES OTRO COMANDO Y EL USUARIO ESTA LOGEADO
