@@ -30,7 +30,7 @@ public class FiltroUrl implements Filter {
         resp.setCharacterEncoding("UTF-8");
         String uri = req.getRequestURI();
         String param = req.getQueryString();
-        String server =  req.getServerName();
+        String server = req.getServerName();
         if (uri.startsWith("/kreadi/") || uri.startsWith("/_ah/")) {
             chain.doFilter(request, response);
         } else {
@@ -38,6 +38,7 @@ public class FiltroUrl implements Filter {
                 resp.sendRedirect("/kreadi/admin.jsp");
             } else {
                 try {
+                    //KeyCodes guarda los datos de los archivos y scripts
                     HashMap<String, HashMap<String, Serializable>> keyCodes = (HashMap<String, HashMap<String, Serializable>>) dao.getSerial("map:map");
                     HashMap<String, Serializable> map = null;
                     if (keyCodes == null) {
@@ -49,15 +50,18 @@ public class FiltroUrl implements Filter {
                     boolean storeMaps = false;
                     if (map == null) {
                         int idxDiv = uri.lastIndexOf("/");
-                        if (idxDiv == 0) {
+                        if (idxDiv == -1) {
                             uri = "/" + uri;
-                            idxDiv = 1;
+                            idxDiv = 0;
                         }
-                        String tableId = idxDiv > 0 ? uri.substring(1, idxDiv) : "";
+                        String tableId = idxDiv>0 ? uri.substring(1, idxDiv):uri.substring(0, idxDiv);
 
                         Table table = dao.loadTable(tableId);
                         if (table != null) {
                             filename = uri.substring(idxDiv + 1);
+                            if (filename.endsWith("*")){
+                                
+                            }
                             String col = req.getParameter("col");
                             String n = req.getParameter("n");
                             int num = n != null ? Integer.parseInt(n) : 1;
@@ -160,8 +164,8 @@ public class FiltroUrl implements Filter {
 
                             resp.setContentType(mimeType);
                             resp.setHeader("Accept-Ranges", "bytes");
-                            
-                            String cache = filename.startsWith("_") ? null : (String) map.get("cache."+server+"/"+param);
+
+                            String cache = filename.startsWith("_") ? null : (String) map.get("cache." + server + "/" + param);
                             if (cache == null) {
                                 ByteArrayOutputStream baos = new Set.Baos();
                                 byte[] bytes;
@@ -179,8 +183,8 @@ public class FiltroUrl implements Filter {
                                 String code = baos.toString("UTF-8");
                                 String process = new Scriptlet(code).process(req, resp, dao, index);
                                 if (!filename.startsWith("_")) {
-                                    map.put("cache."+server+"/"+param, process);
-                                    storeMaps=true;
+                                    map.put("cache." + server + "/" + param, process);
+                                    storeMaps = true;
                                 }
                                 resp.getOutputStream().write(process.getBytes("UTF-8"));
                             } else {

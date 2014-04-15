@@ -1,3 +1,4 @@
+<%@page import="java.util.LinkedList"%>
 <%@page import="com.kreadi.model.Column"%>
 <%@page import="com.kreadi.model.Table"%>
 <%@page import="com.kreadi.model.Dao"%>
@@ -6,14 +7,27 @@
 <%@page import="com.google.appengine.api.users.UserService"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%
+    
     UserService userService = UserServiceFactory.getUserService();
     User user = userService.getCurrentUser();
-    String[] superAdmins = new String[]{
-        "test@example.com", "fabnun"};
+    LinkedList<String> superAdmins = new LinkedList();
+    superAdmins.add("test@example.com");
+    superAdmins.add("fabnun");
+
     boolean isSuperAdmin = false;
     boolean isAdmin = false;
     String username = "";
     Dao dao = new Dao();
+
+    String rls = (String) dao.getSerial("user:rol");
+    rls = rls == null ? "" : rls;
+    String[] role = rls.split(" ");
+    for (int i = 0; i < role.length; i = i + 2) {
+        if ("_super_".equals(role[i + 1])) {
+            superAdmins.add(role[i]);
+        }
+    }
+
     if (user != null) {
         username = user.getNickname();
         for (String sa : superAdmins) {
@@ -58,8 +72,8 @@
                 dao.saveTable(tabla);
             }
             if (tabla != null) {
-                String rol=(String) dao.getSerial("user:rol");
-                rol=rol==null?"":rol;
+                String rol = (String) dao.getSerial("user:rol");
+                rol = rol == null ? "" : rol;
                 String[] roles = rol.split(" ");
                 String usr = username;
                 username = "";
@@ -79,7 +93,7 @@
                         break;
                     }
                 }
-                username=usr;
+                username = usr;
             }
             if (isAdmin || isSuperAdmin) {%>
         <div id="top">

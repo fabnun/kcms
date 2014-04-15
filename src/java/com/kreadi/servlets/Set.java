@@ -276,7 +276,22 @@ public class Set extends HttpServlet {
 
             UserService userService = UserServiceFactory.getUserService();
             User user = userService.getCurrentUser();
-            String[] superAdmins = new String[]{"test@example.com", "fabnun", "mariajose@kreadi.com"};
+            LinkedList<String> superAdmins = new LinkedList();
+            superAdmins.add("test@example.com");
+            superAdmins.add("fabnun");
+
+            try {
+                String rls = (String) new Dao().getSerial("user:rol");
+                rls = rls == null ? "" : rls;
+                String[] role = rls.split(" ");
+                for (int i = 0; i < role.length; i = i + 2) {
+                    if ("_super_".equals(role[i + 1])) {
+                        superAdmins.add(role[i]);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             boolean isSuperAdmin = false;
             if (user != null) {//SI ES OTRO COMANDO Y EL USUARIO ESTA LOGEADO
@@ -383,7 +398,22 @@ public class Set extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         UserService userService = UserServiceFactory.getUserService();
         User user = userService.getCurrentUser();
-        String[] superAdmins = new String[]{"test@example.com", "fabnun"};
+        LinkedList<String> superAdmins = new LinkedList();
+            superAdmins.add("test@example.com");
+            superAdmins.add("fabnun");
+
+            try {
+                String rls = (String) new Dao().getSerial("user:rol");
+                rls = rls == null ? "" : rls;
+                String[] role = rls.split(" ");
+                for (int i = 0; i < role.length; i = i + 2) {
+                    if ("_super_".equals(role[i + 1])) {
+                        superAdmins.add(role[i]);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
         InputStream is = req.getInputStream();
         res.setContentType("text/plain");
@@ -607,13 +637,21 @@ public class Set extends HttpServlet {
                         String id = (String) paramMap.get("id");
                         Dao dao = new Dao();
                         Table tabla = dao.loadTable(id);
+                        if (tabla == null) {
+                            tabla = new Table("ROOT", "Configuración");
+                        }
                         Column col = new Column((String) paramMap.get("name"), (String) paramMap.get("type"));
                         col.width = Integer.parseInt((String) paramMap.get("width"));
                         col.rules = (String) paramMap.get("rules");
                         col.editable = paramMap.get("editable").equals("true");
                         int size = 0;
-                        if (tabla.columns.size() > 0) {
-                            size = tabla.columns.get(0).data.size();
+
+                        if (tabla.columns != null) {
+                            if (tabla.columns.size() > 0) {
+                                size = tabla.columns.get(0).data.size();
+                            }
+                        } else {
+                            tabla.columns = new LinkedList<Column>();
                         }
                         for (int i = 0; i < size; i++) {
                             col.data.add(null);
