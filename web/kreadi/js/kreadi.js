@@ -523,6 +523,7 @@ function setHtml(row, col) {
         document.getElementById('tinyeditor').value = resp;
 
         var editor = CKEDITOR.replace('tinyeditor');
+        CKEDITOR.config.startupOutlineBlocks=true;
 
         editor.on('key', function(val) {
             if (val.data.keyCode === 27) {

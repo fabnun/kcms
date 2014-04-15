@@ -173,6 +173,7 @@
                 subtables = [<%=tabla.subTables(username, dao)%>];
                 superAdmin =<%=isSuperAdmin%>;
                 buildTable(data);
+                
                 CKEDITOR.plugins.registered['save'] = {
                     init: function(editor)
                     {

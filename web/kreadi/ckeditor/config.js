@@ -20,7 +20,7 @@ CKEDITOR.editorConfig = function(config) {
         {name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize']},
         {name: 'colors', items: ['TextColor', 'BGColor']}
     ];
-
+    
 // Toolbar groups configuration.
     config.toolbarGroups = [
         {name: 'document', groups: ['mode', 'document', 'doctools']},
