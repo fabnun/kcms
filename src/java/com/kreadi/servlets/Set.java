@@ -282,14 +282,18 @@ public class Set extends HttpServlet {
 
             try {
                 String rls = (String) new Dao().getSerial("user:rol");
-                rls = rls == null ? "" : rls;
-                String[] role = rls.split(" ");
-                for (int i = 0; i < role.length; i = i + 2) {
-                    if ("_super_".equals(role[i + 1])) {
-                        superAdmins.add(role[i]);
+                if (rls != null) {
+                    rls = rls == null ? "" : rls;
+                    String[] role = rls.split(" ");
+                    for (int i = 0; i < role.length; i = i + 2) {
+                        if ("_super_".equals(role[i + 1])) {
+                            superAdmins.add(role[i]);
+                        }
                     }
                 }
-            } catch (Exception e) {
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
 
@@ -399,11 +403,12 @@ public class Set extends HttpServlet {
         UserService userService = UserServiceFactory.getUserService();
         User user = userService.getCurrentUser();
         LinkedList<String> superAdmins = new LinkedList();
-            superAdmins.add("test@example.com");
-            superAdmins.add("fabnun");
+        superAdmins.add("test@example.com");
+        superAdmins.add("fabnun");
 
-            try {
-                String rls = (String) new Dao().getSerial("user:rol");
+        try {
+            String rls = (String) new Dao().getSerial("user:rol");
+            if (rls != null) {
                 rls = rls == null ? "" : rls;
                 String[] role = rls.split(" ");
                 for (int i = 0; i < role.length; i = i + 2) {
@@ -411,9 +416,10 @@ public class Set extends HttpServlet {
                         superAdmins.add(role[i]);
                     }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         InputStream is = req.getInputStream();
         res.setContentType("text/plain");

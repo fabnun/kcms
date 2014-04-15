@@ -7,7 +7,7 @@
 <%@page import="com.google.appengine.api.users.UserService"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%
-    
+
     UserService userService = UserServiceFactory.getUserService();
     User user = userService.getCurrentUser();
     LinkedList<String> superAdmins = new LinkedList();
@@ -20,11 +20,13 @@
     Dao dao = new Dao();
 
     String rls = (String) dao.getSerial("user:rol");
-    rls = rls == null ? "" : rls;
-    String[] role = rls.split(" ");
-    for (int i = 0; i < role.length; i = i + 2) {
-        if ("_super_".equals(role[i + 1])) {
-            superAdmins.add(role[i]);
+    if (rls != null) {
+        rls = rls == null ? "" : rls;
+        String[] role = rls.split(" ");
+        for (int i = 0; i < role.length; i = i + 2) {
+            if ("_super_".equals(role[i + 1])) {
+                superAdmins.add(role[i]);
+            }
         }
     }
 
