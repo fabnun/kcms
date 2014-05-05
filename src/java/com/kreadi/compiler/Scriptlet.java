@@ -42,11 +42,11 @@ public class Scriptlet {
             + "};"
             + ""
             + "include(){"//Incluye el texto de otro script que es indicado con el metodo content
-            + " append(includeObj[0]);"
+            + " append(include);"
             + "};"
             + ""
             + "content(String url){"//Indica la url del script contenedor
-            + " includeObj[0]=url;"
+            + " include=url;"
             + "};";
 
     private static String buildCode(String scriptlet) {
@@ -129,11 +129,10 @@ public class Scriptlet {
         } else {
             bsh.setOut(pst);
         }
-        Object[] includeObj = new Object[]{include};
         boolean nullInclude = include == null;
         StringBuilder sb = new StringBuilder();
         bsh.set("sb", sb);
-        bsh.set("includeObj", includeObj);
+        bsh.set("include", include);
         bsh.set("dao", dao);
         bsh.set("request", request);
         bsh.set("response", response);
@@ -142,8 +141,8 @@ public class Scriptlet {
         bsh.run();
         pst.close();
         baos.close();
-        if (includeObj[0] != null && nullInclude) {//Si indico la posicion del include
-            String base = (String) includeObj[0];
+        if (include != null && nullInclude) {//Si indico la posicion del include
+            String base =  include;
             int idxTable = base.lastIndexOf("/");
             String tableId = base.substring(0, idxTable);
             String scriptName = base.substring(idxTable + 1);

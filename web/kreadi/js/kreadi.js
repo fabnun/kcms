@@ -1016,7 +1016,7 @@ function delTable() {
             if (resp === "") {
                 if (window.opener) {
                     delete window.opener.data.subTableMap[data.id];
-                    window.opener.buildTable(data);
+                    window.opener.buildTable(window.opener.data);
                 }
                 if (data.id === "ROOT")
                     window.location.href = window.location.href;
@@ -1035,14 +1035,14 @@ function changeTableVal(elem, oldValue) {
             var value = window.opener.data.subTableMap[data.id];
             delete window.opener.data.subTableMap[data.id];
             window.opener.data.subTableMap[newId] = value;
-            window.opener.buildTable(data);
+            window.opener.buildTable(window.opener.data);
         }
     }
 
     function setParentSubName(newName) {
         if (window.opener) {
             window.opener.data.subTableMap[data.id] = newName;
-            window.opener.buildTable(data);
+            window.opener.buildTable(window.opener.data);
         }
     }
 

@@ -459,6 +459,10 @@ public class Set extends HttpServlet {
                         String parent = (String) paramMap.get("parent");
                         Dao dao = new Dao();
                         Table tabla = dao.loadTable(parent);
+                        if (tabla==null){
+                            tabla=new Table("ROOT", "Configuración");
+                            dao.saveTable(tabla);
+                        }
                         if (dao.loadTable(key) != null) {
                             resp = "Ya ocupo ese id de tabla, elija otro";
                         } else {

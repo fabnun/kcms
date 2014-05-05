@@ -224,6 +224,7 @@ public class Table implements Serializable {
      *
      * @param nombre
      * @param tipo
+     * @param rules
      * @return
      */
     public Column addCol(String nombre, String tipo, String rules) {

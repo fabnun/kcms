@@ -229,7 +229,6 @@
                             document.getElementById('rowButtons').style.display = "inline-block";
                         }
                     } else if (val.ctrlKey && val.keyCode !== 17) {
-                        console.log(val.keyCode);
                         if (val.keyCode === 83) {// CTRL+S
                             save();
                             return false;
