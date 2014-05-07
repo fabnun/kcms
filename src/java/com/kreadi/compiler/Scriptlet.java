@@ -23,6 +23,10 @@ public class Scriptlet {
             + " return index;"
             + "};"
             + ""
+            + "log(Object s){"//log
+            + " System.out.println(s);"
+            + "};"
+            + ""
             + "setTable(table){"//Persiste la tabla
             + " return dao.saveTable(table);"
             + "};"
@@ -50,6 +54,7 @@ public class Scriptlet {
             + "};";
 
     private static String buildCode(String scriptlet) {
+        
         StringBuilder sb = new StringBuilder();
         sb.append(Methods);
         LinkedList<String> sections = new LinkedList<String>();

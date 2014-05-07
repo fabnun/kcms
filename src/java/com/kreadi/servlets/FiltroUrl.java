@@ -23,6 +23,7 @@ public class FiltroUrl implements Filter {
 
     Dao dao;
 
+    @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
@@ -42,7 +43,7 @@ public class FiltroUrl implements Filter {
                     HashMap<String, HashMap<String, Serializable>> keyCodes = (HashMap<String, HashMap<String, Serializable>>) dao.getSerial("map:map");
                     HashMap<String, Serializable> map = null;
                     if (keyCodes == null) {
-                        keyCodes = new HashMap<String, HashMap<String, Serializable>>();
+                        keyCodes = new HashMap<>();
                     } else {
                         map = keyCodes.get(uri);
                     }
@@ -54,13 +55,13 @@ public class FiltroUrl implements Filter {
                             uri = "/" + uri;
                             idxDiv = 0;
                         }
-                        String tableId = idxDiv>0 ? uri.substring(1, idxDiv):uri.substring(0, idxDiv);
+                        String tableId = idxDiv > 0 ? uri.substring(1, idxDiv) : uri.substring(0, idxDiv);
 
                         Table table = dao.loadTable(tableId);
                         if (table != null) {
                             filename = uri.substring(idxDiv + 1);
-                            if (filename.endsWith("*")){
-                                
+                            if (filename.endsWith("*")) {
+
                             }
                             String col = req.getParameter("col");
                             String n = req.getParameter("n");
@@ -108,41 +109,42 @@ public class FiltroUrl implements Filter {
                             resp.setDateHeader("Expires", now + expireTime);
                             resp.setHeader("Cache-Control", "public, max-age=" + expireTime);
 
-                            OutputStream os = resp.getOutputStream();
-                            byte[] bytes;
-                            int idx = 0;
-                            String subId = "";
-                            try {
-                                int size = 0;
-                                do {
-                                    bytes = (byte[]) dao.getSerial("file:" + (String) map.get("key") + subId);
-                                    if (bytes != null && bytes.length > 0) {
-                                        os.write(bytes);
-                                        idx++;
-                                        subId = "." + idx;
-                                        size = size + bytes.length;
-                                    }
-                                } while (bytes != null);
+                            try (OutputStream os = resp.getOutputStream()) {
+                                byte[] bytes;
+                                int idx = 0;
+                                String subId = "";
+                                try {
+                                    int size = 0;
+                                    do {
+                                        String id = (String) map.get("key") + subId;
+                                        bytes = (byte[]) dao.getSerial("file:" + id);
+                                        if (bytes != null && bytes.length > 0) {
+                                            os.write(bytes);
+                                            idx++;
+                                            subId = "." + idx;
+                                            size = size + bytes.length;
+                                        }
+                                    } while (bytes != null);
 
-                                int idxDot = filename.lastIndexOf(".");
-                                String ext = idxDot > -1 ? filename.substring(idxDot + 1).toLowerCase() : "";
-                                ServletContext sc = getFilterConfig().getServletContext();
+                                    int idxDot = filename.lastIndexOf(".");
+                                    String ext = idxDot > -1 ? filename.substring(idxDot + 1).toLowerCase() : "";
+                                    ServletContext sc = getFilterConfig().getServletContext();
 
-                                String mimeType = ("woff".equals(ext) ? "application/font-woff"
-                                        : "ttf".equals(ext) ? "font/ttf"
-                                        : "mp4".equals(ext) ? "video/mp4"
-                                        : "ogv".equals(ext) ? "video/ogg"
-                                        : "webm".equals(ext) ? "video/webm"
-                                        : "js".equals(ext) ? "application/javascript"
-                                        : sc.getMimeType(filename));//Obtiene el mime type
+                                    String mimeType = ("woff".equals(ext) ? "application/font-woff"
+                                            : "ttf".equals(ext) ? "font/ttf"
+                                            : "mp4".equals(ext) ? "video/mp4"
+                                            : "ogv".equals(ext) ? "video/ogg"
+                                            : "webm".equals(ext) ? "video/webm"
+                                            : "js".equals(ext) ? "application/javascript"
+                                            : sc.getMimeType(filename));//Obtiene el mime type
 
-                                resp.setContentType(mimeType);
-                                resp.setHeader("ETag", uri + size);
+                                    resp.setContentType(mimeType);
+                                    resp.setHeader("ETag", uri + size);
 
-                            } catch (ClassNotFoundException ex) {
-                                throw new ServletException(ex);
+                                } catch (ClassNotFoundException ex) {
+                                    throw new ServletException(ex);
+                                }
                             }
-                            os.close();
                         } else {
                             ServletContext sc = getFilterConfig().getServletContext();
 
@@ -155,7 +157,7 @@ public class FiltroUrl implements Filter {
                                     : "ogv".equals(ext) ? "video/ogg"
                                     : "webm".equals(ext) ? "video/webm"
                                     : "js".equals(ext) ? "application/javascript"
-                                    : sc.getMimeType(filename));//Obtiene el mime type
+                                    : sc.getMimeType("a." + ext));//Obtiene el mime type
 
                             long now = System.currentTimeMillis();
                             long expireTime = expires != null ? (Long.parseLong(expires)) : 0;
@@ -165,7 +167,11 @@ public class FiltroUrl implements Filter {
                             resp.setContentType(mimeType);
                             resp.setHeader("Accept-Ranges", "bytes");
 
-                            String cache = filename.startsWith("_") ? null : (String) map.get("cache." + server + "/" + param);
+                            // Get an UserAgentStringParser and analyze the requesting client
+                            String cacheKey = server + "."+filename+(param != null ? ("?" + param) : "") + "." + req.getHeader("User-Agent");
+                            
+                            String cache = filename.startsWith("_") ? null : (String) map.get(cacheKey);
+
                             if (cache == null) {
                                 ByteArrayOutputStream baos = new Set.Baos();
                                 byte[] bytes;
@@ -183,7 +189,7 @@ public class FiltroUrl implements Filter {
                                 String code = baos.toString("UTF-8");
                                 String process = new Scriptlet(code).process(req, resp, dao, index);
                                 if (!filename.startsWith("_")) {
-                                    map.put("cache." + server + "/" + param, process);
+                                    map.put(cacheKey, process);
                                     storeMaps = true;
                                 }
                                 resp.getOutputStream().write(process.getBytes("UTF-8"));
@@ -207,11 +213,13 @@ public class FiltroUrl implements Filter {
         }
     }
 
+    @Override
     public void init(FilterConfig fc) throws ServletException {
         dao = new Dao();
         setFilterConfig(fc);
     }
 
+    @Override
     public void destroy() {
         dao = null;
     }
