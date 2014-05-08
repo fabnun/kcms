@@ -60,9 +60,6 @@ public class FiltroUrl implements Filter {
                         Table table = dao.loadTable(tableId);
                         if (table != null) {
                             filename = uri.substring(idxDiv + 1);
-                            if (filename.endsWith("*")) {
-
-                            }
                             String col = req.getParameter("col");
                             String n = req.getParameter("n");
                             int num = n != null ? Integer.parseInt(n) : 1;
