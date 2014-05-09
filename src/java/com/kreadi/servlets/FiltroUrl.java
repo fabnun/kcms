@@ -1,6 +1,8 @@
 package com.kreadi.servlets;
 
 import bsh.EvalError;
+import com.google.appengine.api.mail.MailService;
+import com.google.appengine.api.mail.MailServiceFactory;
 import com.kreadi.compiler.Scriptlet;
 import com.kreadi.model.Dao;
 import com.kreadi.model.Table;
@@ -39,7 +41,7 @@ public class FiltroUrl implements Filter {
                 resp.sendRedirect("/kreadi/admin.jsp");
             } else {
                 try {
-                    //KeyCodes guarda los datos de los archivos y scripts
+                    //KeyCodes guarda los datos de los archivos y scripts (Ver otra posibilad... usar el mapping de google para esto)
                     HashMap<String, HashMap<String, Serializable>> keyCodes = (HashMap<String, HashMap<String, Serializable>>) dao.getSerial("map:map");
                     HashMap<String, Serializable> map = null;
                     if (keyCodes == null) {
@@ -195,7 +197,12 @@ public class FiltroUrl implements Filter {
                             }
                         }
                         if (storeMaps) {
-                            dao.setSerial("map:map", keyCodes);
+                            try {
+                                dao.setSerial("map:map", keyCodes);
+                            } catch (IOException | ClassNotFoundException e) {
+                                System.err.println("ERROR DE MAPA KEYCODES (Solucionar modificando el cache asi el api de cache de google): "+e);
+                                dao.setSerial("map:map", new HashMap<>() );
+                            }
                         }
                     } else {
                         chain.doFilter(request, response);
