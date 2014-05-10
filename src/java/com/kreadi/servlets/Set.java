@@ -10,6 +10,7 @@ import com.kreadi.model.Column;
 import com.kreadi.model.Dao;
 import com.kreadi.model.Serial;
 import com.kreadi.model.Table;
+import eu.bitwalker.useragentutils.Browser;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -100,44 +101,52 @@ public class Set extends HttpServlet {
 
         byte[][] buffer = new byte[2][];
         int r;
+        int pos = 0;
+        buffer[0] = new byte[1024 * 16];//Buffer de lectura
+        buffer[1] = new byte[BUFFER_SIZE];//Buffer de almacenado
         do {
-            buffer[1] = buffer[0];//Le asigna la lectura anterior
-            buffer[0] = new byte[BUFFER_SIZE];//inicializa el buffer en su tamaño maximo
             r = is.read(buffer[0]);//Lee los bytes
             if (r > -1) {//Si ha leido algo
-                if (r < BUFFER_SIZE) {//Si es menor al tamaño
-                    byte[] EndBuff = new byte[r];
-                    System.arraycopy(buffer[0], 0, EndBuff, 0, r);
-                    buffer[0] = EndBuff;
+                if (pos + r < BUFFER_SIZE) {//Si es menor al tamaño maximo
+                    System.arraycopy(buffer[0], 0, buffer[1], pos, r);
+                    pos = pos + r;
+                } else {
+                    byte[] bytes = new byte[pos];
+                    System.arraycopy(buffer[1], 0, bytes, 0, pos);
+                    dao.setSerial("file:" + key + subIndex, bytes);
+                    index++;
+                    subIndex = "." + index;
+                    buffer[1] = new byte[BUFFER_SIZE];
+                    System.arraycopy(buffer[0], 0, buffer[1], 0, r);
+                    pos = r;
                 }
                 boolean match = true;
                 for (int i = 0; match && i < boundarySize; i++) {
                     if (r - i - 1 >= 0 && buffer[0][r - i - 1] != boundaryCode[boundarySize - i - 1]) {
                         match = false;
-                    } else if (r - i - 1 < 0 && buffer[1][buffer[1].length + r - i - 1] != boundaryCode[boundarySize - i - 1]) {
+                    } else if (r - i - 1 < 0 && buffer[1][pos - i - 1] != boundaryCode[boundarySize - i - 1]) {
                         match = false;
                     }
                 }
                 if (match) {
-                    if (r > boundarySize) {
-                        byte[] EndBuff = new byte[r - boundarySize];
-                        System.arraycopy(buffer[0], 0, EndBuff, 0, r - boundarySize);
-                        buffer[0] = EndBuff;
-                        dao.setSerial("file:" + key + "" + subIndex, buffer[0]);
+                    if (pos > boundarySize) {
+                        byte[] bytes = new byte[pos - boundarySize];
+                        System.arraycopy(buffer[1], 0, bytes, 0, pos - boundarySize);
+
+                        dao.setSerial("file:" + key + subIndex, bytes);
+                        index++;
+                        subIndex = "." + index;
+
                     } else if (r < boundarySize) {
                         byte[] EndBuff = new byte[buffer[1].length - (r - boundarySize)];
                         System.arraycopy(buffer[1], 0, EndBuff, 0, EndBuff.length);
                         buffer[1] = EndBuff;
                         index--;
                         subIndex = "." + index;
-                        dao.setSerial("file:" + key + "" + subIndex, buffer[1]);
+                        dao.setSerial("file:" + key + subIndex, buffer[1]);
                     }
-                } else {
-                    dao.setSerial("file:" + key + "" + subIndex, buffer[0]);
-                    index++;
-                    subIndex = "." + index;
                 }
-            }
+            } 
         } while (r > -1);
         return key;
     }
@@ -743,7 +752,8 @@ public class Set extends HttpServlet {
                         switch (command) {
                             case "setTableVal": {
                                 //ESTABLECE UN VALOR DE LA TABLA
-                                dao.delSerial("map:map");//Elimina el mapa del cache
+                                String browser = Browser.parseUserAgentString(req.getHeader("User-Agent")).toString();
+                                dao.delSerial("map:map:"+browser);//Elimina el mapa del cache
                                 String subId = (String) paramMap.get("subId");
                                 Table parentTable = null;
                                 if (subId != null && !"undefined".equals(subId)) {

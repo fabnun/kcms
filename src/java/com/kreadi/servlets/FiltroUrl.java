@@ -1,11 +1,10 @@
 package com.kreadi.servlets;
 
 import bsh.EvalError;
-import com.google.appengine.api.mail.MailService;
-import com.google.appengine.api.mail.MailServiceFactory;
 import com.kreadi.compiler.Scriptlet;
 import com.kreadi.model.Dao;
 import com.kreadi.model.Table;
+import eu.bitwalker.useragentutils.Browser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -25,6 +24,7 @@ public class FiltroUrl implements Filter {
 
     Dao dao;
 
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
@@ -40,9 +40,10 @@ public class FiltroUrl implements Filter {
             if (uri.startsWith("/admin")) {
                 resp.sendRedirect("/kreadi/admin.jsp");
             } else {
+                String browser = Browser.parseUserAgentString(req.getHeader("User-Agent")).toString();
                 try {
                     //KeyCodes guarda los datos de los archivos y scripts (Ver otra posibilad... usar el mapping de google para esto)
-                    HashMap<String, HashMap<String, Serializable>> keyCodes = (HashMap<String, HashMap<String, Serializable>>) dao.getSerial("map:map");
+                    HashMap<String, HashMap<String, Serializable>> keyCodes = (HashMap<String, HashMap<String, Serializable>>) dao.getSerial("map:map:"+browser);
                     HashMap<String, Serializable> map = null;
                     if (keyCodes == null) {
                         keyCodes = new HashMap<>();
@@ -167,8 +168,9 @@ public class FiltroUrl implements Filter {
                             resp.setHeader("Accept-Ranges", "bytes");
 
                             // Get an UserAgentStringParser and analyze the requesting client
-                            String cacheKey = server + "."+filename+(param != null ? ("?" + param) : "") + "." + req.getHeader("User-Agent");
                             
+                            String cacheKey = server + "."+filename+(param != null ? ("?" + param) : "") + "." +browser;
+                            System.out.println(cacheKey);
                             String cache = filename.startsWith("_") ? null : (String) map.get(cacheKey);
 
                             if (cache == null) {
@@ -198,10 +200,10 @@ public class FiltroUrl implements Filter {
                         }
                         if (storeMaps) {
                             try {
-                                dao.setSerial("map:map", keyCodes);
+                                dao.setSerial("map:map:"+browser, keyCodes);
                             } catch (IOException | ClassNotFoundException e) {
                                 System.err.println("ERROR DE MAPA KEYCODES (Solucionar modificando el cache asi el api de cache de google): "+e);
-                                dao.setSerial("map:map", new HashMap<>() );
+                                dao.setSerial("map:map:"+browser, new HashMap<>() );
                             }
                         }
                     } else {

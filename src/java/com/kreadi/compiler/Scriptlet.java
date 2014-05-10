@@ -3,6 +3,7 @@ package com.kreadi.compiler;
 import bsh.EvalError;
 import bsh.Interpreter;
 import com.kreadi.model.Dao;
+import eu.bitwalker.useragentutils.Browser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -54,10 +55,10 @@ public class Scriptlet {
             + "};";
 
     private static String buildCode(String scriptlet) {
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append(Methods);
-        LinkedList<String> sections = new LinkedList<String>();
+        LinkedList<String> sections = new LinkedList<>();
         int lastPos = 0, state = 0;
         char c0 = '\0', c1;
         for (int pos = 0; pos < scriptlet.length(); pos++) {
@@ -125,29 +126,28 @@ public class Scriptlet {
         if (request == null && response == null && dao == null) {
             return null;
         }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PrintStream pst = new PrintStream(baos);
-        if (bsh == null) {
-            String code = buildCode(script);
-            StringReader reader = new StringReader(code);
-            bsh = new Interpreter(reader, pst, System.err, false);
-        } else {
-            bsh.setOut(pst);
+        boolean nullInclude;
+        StringBuilder sb;
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); PrintStream pst = new PrintStream(baos)) {
+            if (bsh == null) {
+                String code = buildCode(script);
+                StringReader reader = new StringReader(code);
+                bsh = new Interpreter(reader, pst, System.err, false);
+            } else {
+                bsh.setOut(pst);
+            }   nullInclude = include == null;
+            sb = new StringBuilder();
+            bsh.set("agent", Browser.parseUserAgentString(request.getHeader("User-Agent")).toString());
+            bsh.set("sb", sb);
+            bsh.set("include", include);
+            bsh.set("dao", dao);
+            bsh.set("request", request);
+            bsh.set("response", response);
+            bsh.set("index", index);
+            bsh.run();
         }
-        boolean nullInclude = include == null;
-        StringBuilder sb = new StringBuilder();
-        bsh.set("sb", sb);
-        bsh.set("include", include);
-        bsh.set("dao", dao);
-        bsh.set("request", request);
-        bsh.set("response", response);
-        bsh.set("index", index);
-
-        bsh.run();
-        pst.close();
-        baos.close();
         if (include != null && nullInclude) {//Si indico la posicion del include
-            String base =  include;
+            String base = include;
             int idxTable = base.lastIndexOf("/");
             String tableId = base.substring(0, idxTable);
             String scriptName = base.substring(idxTable + 1);
@@ -159,6 +159,6 @@ public class Scriptlet {
         } else {
             return sb.toString();
         }
-        
+
     }
 }
