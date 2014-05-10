@@ -517,7 +517,7 @@ function setHtml(row, col) {
     ajax(server, {command: "getText", id: data.id, col: _editCol, row: _editRow}, function(resp) {
 
         document.getElementsByTagName("body")[0].style.overflow = "hidden";
-        document.getElementById('html').style.display = "block";
+        document.getElementById('htmlBox').style.display = "block";
         document.getElementById('html').innerHTML = "<textarea id='tinyeditor' onkeydown='return keyprocess(event);' style='width:100%;resize: none;'></textarea>" +
                 "<img src='css/cancel.png' style='position:absolute;right:12px;top:9px;cursor:pointer' onclick='html.style.display=\"none\"' title='Cancel'>";
         document.getElementById('tinyeditor').value = resp;
@@ -528,7 +528,7 @@ function setHtml(row, col) {
         editor.on('key', function(val) {
             if (val.data.keyCode === 27) {
                 document.getElementById("preview").style.display = "none";
-                document.getElementById("html").style.display = "none";
+                document.getElementById("htmlBox").style.display = "none";
                 document.getElementById("scriptDiv").style.display = "none";
                 if (superAdmin || data.allowAdd) {
                     document.getElementById('rowButtons').style.display = "inline-block";

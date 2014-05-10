@@ -162,7 +162,10 @@
 
         </script>
 
-        <div id='html' style="position:fixed;width: 100%;height: 100%;background: white;top:58px;display:none"></div>
+
+        <div id="htmlBox" style="position:fixed; width: 100%;height: 100%;background: rgba(0,0,0,.6);top:58px;display:none">
+            <div id='html' style="position:relative;max-width: 960px; width: 100%;margin: 0 auto;height: 100%;background: white"></div>
+        </div>
         <div id='preview' style="text-align:center;position:fixed;width: 100%;height: 100%;background: rgba(0,0,0,.75);color:white;font-size:16px;top:56px;display:none"></div>
 
         <script src="ckeditor/ckeditor.js"></script>
@@ -173,7 +176,7 @@
                 subtables = [<%=tabla.subTables(username, dao)%>];
                 superAdmin =<%=isSuperAdmin%>;
                 buildTable(data);
-                
+
                 CKEDITOR.plugins.registered['save'] = {
                     init: function(editor)
                     {
@@ -207,7 +210,7 @@
 
                 function save() {
                     var scriptDiv = document.getElementById("scriptDiv");
-                    var htmlDiv = document.getElementById("html");
+                    var htmlDiv = document.getElementById("htmlBox");
                     if (scriptDiv.style.display === "block") {
                         saveScript(document.getElementById('scriptname').value);
                     } else if (htmlDiv.style.display === "block") {
@@ -222,7 +225,7 @@
                 onkeydown = function(val) {
                     if (val.keyCode === 27) {
                         document.getElementById("preview").style.display = "none";
-                        document.getElementById("html").style.display = "none";
+                        document.getElementById("htmlBox").style.display = "none";
                         document.getElementById("scriptDiv").style.display = "none";
                         document.getElementById("users").style.display = "none";
                         if (superAdmin || data.allowAdd) {
