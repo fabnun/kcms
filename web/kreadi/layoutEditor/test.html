@@ -1,0 +1,37 @@
+<!DOCTYPE html><html><head><meta name='viewport' content='initial-scale=1.0'>
+        <style>
+            body{ 
+                font-size: 24px; 
+                text-align:center; 
+            } 
+            #main{ 
+                margin:1% auto ; 
+                max-width:1200px; 
+            } 
+            .subdiv{ 
+                border:1px solid black; 
+                padding:6px; 
+                width:100%; 
+                vertical-align:bottom; 
+            } 
+            @media all and (max-width:700px){ 
+                #a {width:100% !important;} 
+                #b {width:60% !important} 
+                #c {width:40% !important} 
+            } 
+            @media all and (max-width:370px){ 
+                #a {width:100% !important;} 
+                #b {width:100% !important} 
+                #c {width:100% !important} 
+            }</style></head><body>
+        <div id="main" style="font-family:arial;"><div id="header" style="background:red;">header</div>
+            <div id="content" style="display:table;width:100%;"><div id="a" style="width:50%;display:inline-flex;background:yellow;"><div id="" class="subdiv">null .subdiv</div>
+                </div>
+                <div id="b" style="width:30%;display:inline-flex;"><div id="" class="subdiv">null .subdiv</div>
+                </div>
+                <div id="c" style="width:20%;display:inline-flex;"><div id="" class="subdiv">null .subdiv</div>
+                </div>
+            </div>
+            <div id="footer" style="background:red;">footer</div>
+        </div>
+    </body></html> 

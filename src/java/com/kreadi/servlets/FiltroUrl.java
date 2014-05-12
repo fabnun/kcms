@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -170,7 +172,6 @@ public class FiltroUrl implements Filter {
                             // Get an UserAgentStringParser and analyze the requesting client
                             
                             String cacheKey = server + "."+filename+(param != null ? ("?" + param) : "") + "." +browser;
-                            System.out.println(cacheKey);
                             String cache = filename.startsWith("_") ? null : (String) map.get(cacheKey);
 
                             if (cache == null) {
@@ -199,9 +200,15 @@ public class FiltroUrl implements Filter {
                             }
                         }
                         if (storeMaps) {
+                            HashSet<String> list=(HashSet<String>) dao.getSerial("map:agent");
+                            list=(list!=null)?list:new HashSet<String>();
                             try {
                                 dao.setSerial("map:map:"+browser, keyCodes);
-                            } catch (IOException | ClassNotFoundException e) {
+                                if (!list.contains(browser)){
+                                   list.add(browser);
+                                   dao.setSerial("map:agent", list);
+                                }
+                            } catch (Exception e) {
                                 System.err.println("ERROR DE MAPA KEYCODES (Solucionar modificando el cache asi el api de cache de google): "+e);
                                 dao.setSerial("map:map:"+browser, new HashMap<>() );
                             }

@@ -91,9 +91,11 @@ function fileSelect(elem, col, row, subId) {//Upload de archivos y respaldo
                     var scol = parseInt(val.substring(0, idx));
                     var srow = parseInt(val.substring(idx + 1));
                     data.columns[scol].data[srow].columns[col].data[row] = resp;
-                } else
+                    buildTable(data.columns[scol].data[srow], col, subId);
+                } else{
                     data.columns[col].data[row] = resp;
-                buildTable(data);
+                    buildTable(data);
+                }
             }
             setWait();
         });
@@ -197,7 +199,8 @@ function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId)
     var html = "<img title='Upload' src='css/upload.png' style='cursor:pointer;top:5px;position:relative;' onclick='initEdit(this.parentNode, " + col + "," + row + ", \"\", \"File\"" + (subId ? (', "' + subId + '"') : "") + " )'>";
     if (admin && isText)
         html = html + "<img title='Edit Script' src='css/script.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='setScript(" + row + "," + col + ")'>";
-    html = html + "<img title='Rename' src='css/edit.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='rename(" + row + "," + col + ")'>";
+    if (!subId)
+        html = html + "<img title='Rename' src='css/edit.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='rename(" + row + "," + col + ")'>";
     if (key) {
         html = html + "<img title='Preview' src='css/see.png' style='cursor:pointer;top:5px;position:relative;'  onclick='showPreview(" + row + "," + col + "," + num + ",\"" + key + "\",\"" + name + "\", " + isImage + ",\"" + subId + "\")'> ";
 
@@ -575,7 +578,7 @@ function togleRow2(col, row, button) {
 
 function upRow2(col, row) {
     ajax(server, {command: "upRow2", id: data.id, col: col, row: row}, function(resp) {
-
+        
     });
 }
 
@@ -614,7 +617,7 @@ function delRow2(col, row) {
 
 noBuild = false;
 /**Construye una tabla a partir de un json
- * @param {Numbrer} colIndex indice de la columna seleccionada*/
+ * @param {Number} colIndex indice de la columna seleccionada*/
 function buildTable(data, colIndex, subId) {
     if (subId || !noBuild) {
         var subTables = {};
@@ -670,8 +673,6 @@ function buildTable(data, colIndex, subId) {
                     html.push(">");
                     if (!subId && columna.type === "SubTable") {
                         html.push("<div style='float:right'><span id='btn_subTable" + j + "." + i + "' style='display:none;'>");
-                        html.push("<button onclick='upRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/up.png'></button>");
-                        html.push("<button onclick='downRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/down.png'></button>");
                         html.push("<button onclick='addRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/add.png'></button>");
                         html.push("<button onclick='delRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/del.png'></button></span>");
                         html.push("<button onclick='togleRow2(" + j + "," + i + ",this)' style='padding:0;margin-left:12px;margin-right:6px'><img src='css/rest.png'></button></div>");

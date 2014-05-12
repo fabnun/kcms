@@ -114,6 +114,10 @@
             <button style="position:relative;top:5px;right:16px;background-color:#ffffaa;padding:3px 12px" onclick="restore(this);">
                 <img src="restaurar.png" style="position: relative; margin-bottom:-2px"> RESTAURAR 
             </button>
+            
+            <button style="position:relative;top:5px;right:16px;background-color:#aaffff;padding:3px 12px" onclick="window.open('/kreadi/layoutEditor/')">
+                <img src="restaurar.png" style="position: relative; margin-bottom:-2px"> LAYOUTS 
+            </button>
 
             <button style="position:relative;top:5px;right:16px;background-color:#aaffff;padding:3px 12px" onclick="users('show');">
                 <img src="user.png" style="position: relative; margin-bottom:-2px"> USUARIOS 
