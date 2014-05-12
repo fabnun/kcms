@@ -353,7 +353,7 @@ public class Set extends HttpServlet {
                 try (ZipOutputStream out = new ZipOutputStream(os)) {
                     LinkedList<Serial> serList = new LinkedList<>();
                     try {
-                        serList.add(new Serial("FileKeys", dao.getSerial("fileKeys")));
+                        serList.add(new Serial("fileKeys", dao.getSerial("fileKeys")));
                         serList.add(new Serial("user:rol", dao.getSerial("user:rol")));
                         serList.add(dao.getObject(Serial.class, "TABLE.ROOT"));
                         serial2Zip(dao, out, serList);
@@ -1058,10 +1058,7 @@ public class Set extends HttpServlet {
                                     }
                                 }
                                 dao.saveTable(tabla);
-                                    
-                                    
                                 }
-
                                 break;
                             }
                             case "addRow2": {
