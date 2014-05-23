@@ -69,10 +69,27 @@ public class Table implements Serializable {
         }
     }
 
+    /**
+     *
+     * @param col
+     * @param row
+     * @param dao
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     public String value(int col, int row, Dao dao) throws IOException, ClassNotFoundException {
         return columns.get(col).value(row, dao);
     }
 
+    /**
+     *
+     * @param col
+     * @param row
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     public Serializable value(int col, int row) throws IOException, ClassNotFoundException {
         Serializable val = columns.get(col).data.get(row);
         return val;
@@ -164,6 +181,13 @@ public class Table implements Serializable {
         }
     }
 
+    /**
+     *
+     * @param col
+     * @param filename
+     * @param n
+     * @return
+     */
     public HashMap<String, Serializable> getFileMap(int col, String filename, int n) {
         n--;
         try {
@@ -191,6 +215,12 @@ public class Table implements Serializable {
         }
     }
 
+    /**
+     *
+     * @param filename
+     * @param n
+     * @return
+     */
     public HashMap<String, Serializable> getFileMap(String filename, int n) {
         int colIdx = 0;
         while (columns.size() > colIdx && !(columns.get(colIdx).type.equals("File") || columns.get(colIdx).type.equals("Html") || columns.get(colIdx).type.equals("Script"))) {
@@ -202,6 +232,11 @@ public class Table implements Serializable {
         return null;
     }
 
+    /**
+     *
+     * @param filename
+     * @return
+     */
     public HashMap<String, Serializable> getFileMap(String filename) {
         return getFileMap(filename, 1);
     }
@@ -244,6 +279,14 @@ public class Table implements Serializable {
         return gson.toJson(this);
     }
 
+    /**
+     *
+     * @param username
+     * @param dao
+     * @return
+     * @throws ClassNotFoundException
+     * @throws IOException
+     */
     public String subTables(String username, Dao dao) throws ClassNotFoundException, IOException {
         username = username.trim().toLowerCase();
         StringBuilder sb = new StringBuilder();
