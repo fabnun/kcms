@@ -45,7 +45,6 @@ Metodos
 
 Table
 ----------------------------------------------------------------------------------
-
 Column	addCol(java.lang.String nombre, java.lang.String tipo)
 Agrega una nueva columna al fina
 
@@ -53,7 +52,9 @@ Column	addCol(java.lang.String nombre, java.lang.String tipo, java.lang.String r
 Agrega una nueva columna al fina
 
 java.util.HashMap<java.lang.String,java.io.Serializable>	getFileMap(int col, java.lang.String filename, int n) 
+
 java.util.HashMap<java.lang.String,java.io.Serializable>	getFileMap(java.lang.String filename) 
+
 java.util.HashMap<java.lang.String,java.io.Serializable>	getFileMap(java.lang.String filename, int n) 
 
 int	getRows()
@@ -77,13 +78,19 @@ java.lang.String	toJSON()
 Obtiene la representacion json de la tabla
 
 java.io.Serializable	value(int col, int row) 
+
 java.lang.String	value(int col, int row, Dao dao) 
 
 Column
 ----------------------------------------------------------------------------------
 int	getRows() 
+
 void	ordenar() 
+
 void	ordenar(boolean ascendente) 
+
 void	transformColumn(java.lang.String oldValue, java.lang.String value, Dao dao) 
+
 java.lang.String	value(int row, Dao dao) 
+
 java.lang.String	value(int row, Dao dao, javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) 
