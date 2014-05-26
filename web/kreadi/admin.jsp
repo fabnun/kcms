@@ -228,6 +228,7 @@
 
                 onkeydown = function(val) {
                     if (val.keyCode === 27) {
+                        document.title =  ((data.name !== null && data.name.trim().length > 0) ? data.name : data.id) ;
                         document.getElementById("preview").style.display = "none";
                         document.getElementById("htmlBox").style.display = "none";
                         document.getElementById("scriptDiv").style.display = "none";
