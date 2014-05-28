@@ -20,6 +20,7 @@ public final class Data implements Serializable {
 
     /**
      * Se instancia indicando los objetos de la data
+     * @param vals
      */
     public Data(Serializable... vals) {
         values = vals;
@@ -27,6 +28,8 @@ public final class Data implements Serializable {
 
     /**
      * Envia la data en un stream
+     * @param os
+     * @throws java.io.IOException
      */
     @SuppressWarnings("ConvertToTryWithResources")
     public void send2Stream(OutputStream os) throws IOException {
@@ -37,6 +40,8 @@ public final class Data implements Serializable {
 
     /**
      * Envia un requerimiento de data al servidor, no muestra el log por defecto
+     * @param url
+     * @return 
      */
     public Data requestData(String url) throws Exception {
         return requestData(url,false);
@@ -44,6 +49,10 @@ public final class Data implements Serializable {
 
     /**
      * Envia un requerimiento de data al servidor.
+     * @param url
+     * @param log
+     * @return 
+     * @throws java.lang.Exception 
      */
     @SuppressWarnings("ConvertToTryWithResources")
     public Data requestData(String url,boolean log) throws Exception {

@@ -121,13 +121,13 @@
 
             <button style="position:relative;top:5px;right:16px;background-color:#aaffff;padding:3px 12px" onclick="users('show');">
                 <img src="user.png" style="position: relative; margin-bottom:-2px"> USUARIOS 
-                <div id="users" style="background:#aaffff;position:fixed;width:380px;padding:3px;margin:-32px 0 0 -16px;-webkit-box-shadow:  0px 0px 1px 2px rgba(0, 0, 0, .42);
+                <span id="users" style="background:#aaffff;position:fixed;width:380px;padding:3px;margin:-32px 0 0 -16px;-webkit-box-shadow:  0px 0px 1px 2px rgba(0, 0, 0, .42);
                      box-shadow:  0px 0px 1px 2px rgba(0,0,0, .42);text-align: left;
                      -webkit-border-radius: 3px 3px 3px 3px;cursor: default;display:none;
                      border-radius: 3px 3px 3px 3px;">
                     &nbsp;&nbsp;<img src="user.png" style="position: relative; margin-bottom:-2px"> USUARIOS <span style='float:right'>[ESC para Salir]</span>
                     <br><br><table id='userTable'></table>
-                </div>
+                </span>
             </button>
             <%}%>
 

@@ -3,6 +3,7 @@ package com.kreadi.compiler;
 import bsh.EvalError;
 import bsh.Interpreter;
 import com.kreadi.model.Dao;
+import com.kreadi.model.Data;
 import eu.bitwalker.useragentutils.Browser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,7 +18,8 @@ import javax.servlet.http.HttpServletResponse;
 public class Scriptlet {
 
     private static final String Methods
-            = "getTable(String id){"//Obtiene la tabla asociada al id
+            = "import com.kreadi.model.Data;"
+            + "getTable(String id){"//Obtiene la tabla asociada al id
             + " return dao.loadTable(id);"
             + "};"
             + "index(){"//Obtiene la tabla asociada al id
@@ -116,6 +118,27 @@ public class Scriptlet {
     public void setScript(String script) {
         this.script = script;
         bsh = null;
+    }
+    
+    public Data processData(HttpServletRequest request, HttpServletResponse response, Dao dao, Data data) throws EvalError, IOException, ClassNotFoundException {
+         if (request == null && response == null && dao == null) {
+            return null;
+        }
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); PrintStream pst = new PrintStream(baos)) {
+            if (bsh == null) {
+                String code = buildCode(script);
+                StringReader reader = new StringReader(code);
+                bsh = new Interpreter(reader, pst, System.err, false);
+            } else {
+                bsh.setOut(pst);
+            }   
+            bsh.set("dao", dao);
+            bsh.set("data", data);
+            bsh.set("request", request);
+            bsh.set("response", response);
+            bsh.run();
+        }
+        return (Data) bsh.get("data");
     }
 
     public String process(HttpServletRequest request, HttpServletResponse response, Dao dao, int index) throws EvalError, IOException, ClassNotFoundException {

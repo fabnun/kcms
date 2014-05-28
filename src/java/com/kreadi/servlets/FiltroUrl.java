@@ -3,15 +3,17 @@ package com.kreadi.servlets;
 import bsh.EvalError;
 import com.kreadi.compiler.Scriptlet;
 import com.kreadi.model.Dao;
+import com.kreadi.model.Data;
 import com.kreadi.model.Table;
 import eu.bitwalker.useragentutils.Browser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -25,7 +27,6 @@ import javax.servlet.http.HttpServletResponse;
 public class FiltroUrl implements Filter {
 
     Dao dao;
-
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -45,7 +46,7 @@ public class FiltroUrl implements Filter {
                 String browser = Browser.parseUserAgentString(req.getHeader("User-Agent")).toString();
                 try {
                     //KeyCodes guarda los datos de los archivos y scripts (Ver otra posibilad... usar el mapping de google para esto)
-                    HashMap<String, HashMap<String, Serializable>> keyCodes = (HashMap<String, HashMap<String, Serializable>>) dao.getSerial("map:map:"+browser);
+                    HashMap<String, HashMap<String, Serializable>> keyCodes = (HashMap<String, HashMap<String, Serializable>>) dao.getSerial("map:map:" + browser);
                     HashMap<String, Serializable> map = null;
                     if (keyCodes == null) {
                         keyCodes = new HashMap<>();
@@ -170,8 +171,7 @@ public class FiltroUrl implements Filter {
                             resp.setHeader("Accept-Ranges", "bytes");
 
                             // Get an UserAgentStringParser and analyze the requesting client
-                            
-                            String cacheKey = server + "."+filename+(param != null ? ("?" + param) : "") + "." +browser;
+                            String cacheKey = server + "." + filename + (param != null ? ("?" + param) : "") + "." + browser;
                             String cache = filename.startsWith("_") ? null : (String) map.get(cacheKey);
 
                             if (cache == null) {
@@ -189,35 +189,45 @@ public class FiltroUrl implements Filter {
                                     }
                                 } while (bytes != null);
                                 String code = baos.toString("UTF-8");
-                                String process = new Scriptlet(code).process(req, resp, dao, index);
-                                if (!filename.startsWith("_")) {
-                                    map.put(cacheKey, process);
-                                    storeMaps = true;
+                                if (!filename.endsWith("_")) {
+                                    String process = new Scriptlet(code).process(req, resp, dao, index);
+                                    if (!filename.startsWith("_")) {
+                                        map.put(cacheKey, process);
+                                        storeMaps = true;
+                                    }
+                                    resp.getOutputStream().write(process.getBytes("UTF-8"));
+                                } else if (req.getMethod().equals("POST")) {
+                                    Data data;
+                                    try (ObjectInputStream ois = new ObjectInputStream(req.getInputStream())) {
+                                        data = (Data) ois.readObject();
+                                        data = new Scriptlet(code).processData(req, resp, dao, data);
+                                    }
+                                    try (ObjectOutputStream oos = new ObjectOutputStream(resp.getOutputStream())) {
+                                        oos.writeObject(data);
+                                    }
                                 }
-                                resp.getOutputStream().write(process.getBytes("UTF-8"));
                             } else {
                                 resp.getOutputStream().write(cache.getBytes("UTF-8"));
                             }
                         }
                         if (storeMaps) {
-                            HashSet<String> list=(HashSet<String>) dao.getSerial("map:agent");
-                            list=(list!=null)?list:new HashSet<String>();
+                            HashSet<String> list = (HashSet<String>) dao.getSerial("map:agent");
+                            list = (list != null) ? list : new HashSet<String>();
                             try {
-                                dao.setSerial("map:map:"+browser, keyCodes);
-                                if (!list.contains(browser)){
-                                   list.add(browser);
-                                   dao.setSerial("map:agent", list);
+                                dao.setSerial("map:map:" + browser, keyCodes);
+                                if (!list.contains(browser)) {
+                                    list.add(browser);
+                                    dao.setSerial("map:agent", list);
                                 }
-                            } catch (Exception e) {
-                                System.err.println("ERROR DE MAPA KEYCODES (Solucionar modificando el cache asi el api de cache de google): "+e);
-                                dao.setSerial("map:map:"+browser, new HashMap<>() );
+                            } catch (IOException | ClassNotFoundException e) {
+                                System.err.println("ERROR DE MAPA KEYCODES (Solucionar modificando el cache asi el api de cache de google): " + e);
+                                dao.setSerial("map:map:" + browser, new HashMap<>());
                             }
                         }
                     } else {
                         chain.doFilter(request, response);
                     }
-
-                } catch (ClassNotFoundException ex) {
+                } catch (IOException | ClassNotFoundException | NumberFormatException | ServletException ex) {
                     ex.printStackTrace();
                 } catch (EvalError ex) {
                     resp.getWriter().print(ex.getMessage());

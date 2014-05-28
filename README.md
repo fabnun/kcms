@@ -94,3 +94,37 @@ void	transformColumn(java.lang.String oldValue, java.lang.String value, Dao dao)
 java.lang.String	value(int row, Dao dao) 
 
 java.lang.String	value(int row, Dao dao, javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) 
+
+DAO
+----------------------------------------------------------------------------------
+void	clearAllCache() 
+void	clearCache(java.lang.String key) 
+
+void	del(java.lang.Object objeto)
+Elimina el objeto
+
+void	delClass(java.lang.Class clase)
+Elimina todos los objetos de una clase
+
+boolean	delSerial(java.lang.String id) 
+void	delTable(java.lang.String id) 
+
+<T> T	getObject(java.lang.Class<T> clase, long id)
+Obtiene un objecto mediante su clase e id
+
+<T> T	getObject(java.lang.Class<T> clase, java.lang.String id)
+Obtiene un objecto mediante su clase e id
+
+java.io.Serializable	getSerial(java.lang.String id) 
+java.lang.String	getSHA512(java.lang.String pass) 
+java.lang.String	getValue(java.lang.String url, javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) 
+Table	loadTable(java.lang.String id) 
+
+java.util.List<?>	query(java.lang.Class<?> clase)
+Obtiene la lista de objetos de una clase
+
+void	saveTable(Table table) 
+void	setSerial(java.lang.String id, java.io.Serializable serial) 
+
+void	store(java.lang.Object objeto)
+Persiste un objeto
