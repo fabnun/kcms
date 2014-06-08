@@ -10,6 +10,7 @@ import com.kreadi.compiler.Scriptlet;
 import java.io.*;
 import java.security.MessageDigest;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -161,6 +162,17 @@ public class Dao extends DAOBase {
 
     public Table loadTable(String id) throws ClassNotFoundException, IOException {
         return (Table) getSerial("TABLE." + id);
+    }
+    
+    public void delMapMap() throws IOException, ClassNotFoundException {
+        HashSet<String> set = (HashSet<String>) getSerial("map:agent");
+        if (set != null) {
+            for (String browser : set) {
+                delSerial("map:map:" + browser);
+                System.out.println(">>> DELMAP BROWSER " + browser);
+            }
+            delSerial("map:agent");
+        }
     }
 
     public String getValue(String url, HttpServletRequest request, HttpServletResponse response) throws ClassNotFoundException, IOException, EvalError {

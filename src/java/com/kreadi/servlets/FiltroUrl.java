@@ -43,7 +43,7 @@ public class FiltroUrl implements Filter {
             if (uri.startsWith("/admin")) {
                 resp.sendRedirect("/kreadi/admin.jsp");
             } else {
-                String browser = Browser.parseUserAgentString(req.getHeader("User-Agent")).toString();
+                String browser = "all";//Browser.parseUserAgentString(req.getHeader("User-Agent")).toString();
                 try {
                     //KeyCodes guarda los datos de los archivos y scripts (Ver otra posibilad... usar el mapping de google para esto)
                     HashMap<String, HashMap<String, Serializable>> keyCodes = (HashMap<String, HashMap<String, Serializable>>) dao.getSerial("map:map:" + browser);
