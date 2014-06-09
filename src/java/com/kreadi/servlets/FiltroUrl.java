@@ -5,7 +5,6 @@ import com.kreadi.compiler.Scriptlet;
 import com.kreadi.model.Dao;
 import com.kreadi.model.Data;
 import com.kreadi.model.Table;
-import eu.bitwalker.useragentutils.Browser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;

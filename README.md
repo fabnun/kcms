@@ -3,45 +3,27 @@ kcms
 
 Kreadi Content Management System for Google App Engine (Java)
 
+----------------------------------------------------------------------------------
+
 Metodos
 ----------------------------------------------------------------------------------
-            "getTable(String id){"//Obtiene la tabla asociada al id
-            + " return dao.loadTable(id);"
-            + "};"
-            + "index(){"//Obtiene la tabla asociada al id
-            + " return index;"
-            + "};"
-            + ""
-            + "log(Object s){"//log
-            + " System.out.println(s);"
-            + "};"
-            + ""
-            + "setTable(table){"//Persiste la tabla
-            + " return dao.saveTable(table);"
-            + "};"
-            + ""
-            + "getText(html, max){"//Obtiene el texto desde html
-            + " html=html.replaceAll(\"<[^>]*>\", \"\");"
-            + " return html.substring(0,(int)Math.min(html.length(),max));"
-            + "};"
-            + ""
-            + "include(String url){"//Incluye el texto un html o de un script procesado
-            + " append(dao.getValue(url, request, response));"
-            + "}"
-            + ""
-            + "append(Object s){"//Incluye un texto
-            + " sb.append(s);"
-            + " return sb;"
-            + "};"
-            + ""
-            + "include(){"//Incluye el texto de otro script que es indicado con el metodo content
-            + " append(include);"
-            + "};"
-            + ""
-            + "content(String url){"//Indica la url del script contenedor
-            + " include=url;"
-            + "};"
+getTable(String id){//Obtiene la tabla asociada al id
 
+index(){//Obtiene la tabla asociada al id
+
+log(Object s){//log
+
+setTable(table){//Persiste la tabla
+
+getText(html, max){//Obtiene el texto desde html
+
+include(String url){//Incluye el texto un html o de un script procesado
+
+append(Object s){//Incluye un texto
+
+include(){//Incluye el texto de otro script que es indicado con el metodo content
+
+content(String url){//Indica la url del script contenedor
 
 Table
 ----------------------------------------------------------------------------------
