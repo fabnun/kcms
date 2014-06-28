@@ -402,6 +402,8 @@ public enum Browser {
 		}
 		return null;
 	}
+        
+                public static String all=null;
 	
 	/**
 	 * Iterates over all Browsers to compare the browser signature with 
@@ -415,6 +417,7 @@ public enum Browser {
 	 */
 	public static Browser parseUserAgentString(String agentString)
 	{
+                                
 		return parseUserAgentString(agentString, topLevelBrowsers);
 	}
 	

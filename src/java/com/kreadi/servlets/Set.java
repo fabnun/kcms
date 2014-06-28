@@ -468,7 +468,7 @@ public class Set extends HttpServlet {
             }
             try {
                 if (isSuperAdmin //CHEQUEA COMANDOS DE SUPERUSUARIO
-                        && (command.equals("newTable") || command.equals("setTable") || command.equals("delTable")
+                        && (command.equals("newTable") || command.equals("setTable") || command.equals("delTable") || command.equals("agentes")
                         || command.equals("setCol") || command.equals("leftCol") || command.equals("rightCol")
                         || command.equals("delCol") || command.equals("newCol") || command.equals("backup") || command.equals("addUser") || command.equals("delUser")
                         || command.equals("serialdelete") || command.equals("serial"))) {
@@ -591,6 +591,13 @@ public class Set extends HttpServlet {
                             Serializable ser = Serial.fromBytes(bytes);
                             String key = (String) paramMap.get("id");
                             dao.setSerial(key, ser);
+                            break;
+                        }
+                        case "agentes": {
+                            String s=(String)paramMap.get("list");
+                            s=s.replaceAll("\\s+", " ").trim();
+                            s=s.length()==0?null:s;
+                            Browser.all=s;
                             break;
                         }
                         case "delTable": {

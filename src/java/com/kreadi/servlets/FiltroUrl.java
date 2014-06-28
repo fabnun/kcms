@@ -5,6 +5,7 @@ import com.kreadi.compiler.Scriptlet;
 import com.kreadi.model.Dao;
 import com.kreadi.model.Data;
 import com.kreadi.model.Table;
+import eu.bitwalker.useragentutils.Browser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -42,7 +43,19 @@ public class FiltroUrl implements Filter {
             if (uri.startsWith("/admin")) {
                 resp.sendRedirect("/kreadi/admin.jsp");
             } else {
-                String browser = "all";//Browser.parseUserAgentString(req.getHeader("User-Agent")).toString();
+                //TODO ver como sacar la opcion de mapeo del browser en la configuracion online
+                //String browser = "all";
+                String browser;
+                if (Browser.all != null) {
+                    if (Browser.all.equals("ALL")) {
+                        browser = "ALL";
+                    } else {
+                        browser = Browser.parseUserAgentString(req.getHeader("User-Agent")).toString();
+                        browser = (Browser.all.contains(browser)) ? browser : "OTHER";
+                    }
+                } else {
+                    browser = Browser.parseUserAgentString(req.getHeader("User-Agent")).toString();
+                }
                 try {
                     //KeyCodes guarda los datos de los archivos y scripts (Ver otra posibilad... usar el mapping de google para esto)
                     HashMap<String, HashMap<String, Serializable>> keyCodes = (HashMap<String, HashMap<String, Serializable>>) dao.getSerial("map:map:" + browser);
@@ -189,7 +202,7 @@ public class FiltroUrl implements Filter {
                                 } while (bytes != null);
                                 String code = baos.toString("UTF-8");
                                 if (!filename.endsWith("_")) {
-                                    String process = new Scriptlet(code).process(req, resp, dao, index);
+                                    String process = new Scriptlet(code).process(req, resp, dao, index, uri);
                                     if (!filename.startsWith("_")) {
                                         map.put(cacheKey, process);
                                         storeMaps = true;

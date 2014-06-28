@@ -92,7 +92,7 @@ function fileSelect(elem, col, row, subId) {//Upload de archivos y respaldo
                     var srow = parseInt(val.substring(idx + 1));
                     data.columns[scol].data[srow].columns[col].data[row] = resp;
                     buildTable(data.columns[scol].data[srow], col, subId);
-                } else{
+                } else {
                     data.columns[col].data[row] = resp;
                     buildTable(data);
                 }
@@ -151,6 +151,12 @@ String.prototype.endsWith = function(s) {
     return this.length >= s.length && this.substr(this.length - s.length) === s;
 };
 
+function agentes(input) {
+    ajax(server, {command: "agentes", list: input.value},
+    function() {
+    });
+}
+
 function users(command) {
     if (command === 'show') {
         document.getElementById("users").style.display = 'block';
@@ -174,7 +180,7 @@ function showPreview(row, col, num, key, name, isImage, subId) {
                 var spanDim = document.getElementById("img" + key);
                 var image = document.getElementById("image" + key);
                 image.style.maxWidth = this.width + "px";
-                image.style.display="inline-block";
+                image.style.display = "inline-block";
                 if (spanDim)
                     spanDim.innerHTML = "<span style='color:#FF8;margin-left:32px'> DIMENSIONES : </span> " + this.width + ":" + this.height;
             };
@@ -526,11 +532,11 @@ function setHtml(row, col) {
         document.getElementById('tinyeditor').value = resp;
 
         var editor = CKEDITOR.replace('tinyeditor');
-        CKEDITOR.config.startupOutlineBlocks=true;
+        CKEDITOR.config.startupOutlineBlocks = true;
 
         editor.on('key', function(val) {
             if (val.data.keyCode === 27) {
-                document.title =  ((data.name !== null && data.name.trim().length > 0) ? data.name : data.id) ;
+                document.title = ((data.name !== null && data.name.trim().length > 0) ? data.name : data.id);
                 document.getElementById("preview").style.display = "none";
                 document.getElementById("htmlBox").style.display = "none";
                 document.getElementById("scriptDiv").style.display = "none";
@@ -579,7 +585,7 @@ function togleRow2(col, row, button) {
 
 function upRow2(col, row) {
     ajax(server, {command: "upRow2", id: data.id, col: col, row: row}, function(resp) {
-        
+
     });
 }
 

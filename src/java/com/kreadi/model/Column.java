@@ -64,12 +64,10 @@ public class Column implements Serializable {
                 String result = new String(bytes, "UTF-8");
                 if ("Script".equals(map.get("type"))) {
                     try {
-                        return new Scriptlet(result).process(request, response, dao, n);
+                        return new Scriptlet(result).process(request, response, dao, n, "");
                     } catch (EvalError e) {
                         return e.getMessage();
-                    } catch (IOException e) {
-                        return e.getMessage();
-                    } catch (ClassNotFoundException e) {
+                    } catch (IOException | ClassNotFoundException e) {
                         return e.getMessage();
                     }
                 }

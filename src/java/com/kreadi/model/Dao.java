@@ -182,7 +182,7 @@ public class Dao extends DAOBase {
         int n = (Integer) map.get("#n");
         if ("Script".equals(map.get("type"))) {
             String code = new String((byte[]) getSerial("file:" + map.get("key")), "UTF-8");
-            String result = new Scriptlet(code).process(request, response, this, n);
+            String result = new Scriptlet(code).process(request, response, this, n, url);
             return result;
         } else {
             return new String((byte[]) getSerial("file:" + map.get("key")));

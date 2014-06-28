@@ -119,9 +119,9 @@ public class Scriptlet {
         this.script = script;
         bsh = null;
     }
-    
+
     public Data processData(HttpServletRequest request, HttpServletResponse response, Dao dao, Data data) throws EvalError, IOException, ClassNotFoundException {
-         if (request == null && response == null && dao == null) {
+        if (request == null && response == null && dao == null) {
             return null;
         }
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); PrintStream pst = new PrintStream(baos)) {
@@ -131,7 +131,7 @@ public class Scriptlet {
                 bsh = new Interpreter(reader, pst, System.err, false);
             } else {
                 bsh.setOut(pst);
-            }   
+            }
             bsh.set("dao", dao);
             bsh.set("data", data);
             bsh.set("request", request);
@@ -141,11 +141,11 @@ public class Scriptlet {
         return (Data) bsh.get("data");
     }
 
-    public String process(HttpServletRequest request, HttpServletResponse response, Dao dao, int index) throws EvalError, IOException, ClassNotFoundException {
-        return process(request, response, dao, null, index);
+    public String process(HttpServletRequest request, HttpServletResponse response, Dao dao, int index, String url) throws EvalError, IOException, ClassNotFoundException {
+        return process(request, response, dao, null, index, url);
     }
 
-    public String process(HttpServletRequest request, HttpServletResponse response, Dao dao, String include, int index) throws EvalError, IOException, ClassNotFoundException {
+    public String process(HttpServletRequest request, HttpServletResponse response, Dao dao, String include, int index, String url) throws EvalError, IOException, ClassNotFoundException {
         if (request == null && response == null && dao == null) {
             return null;
         }
@@ -158,16 +158,32 @@ public class Scriptlet {
                 bsh = new Interpreter(reader, pst, System.err, false);
             } else {
                 bsh.setOut(pst);
-            }   nullInclude = include == null;
+            }
+            nullInclude = include == null;
             sb = new StringBuilder();
-            bsh.set("agent", Browser.parseUserAgentString(request.getHeader("User-Agent")).toString());
+
+            String browser;
+            if (Browser.all != null) {
+                if (Browser.all.equals("ALL")) {
+                    browser = "ALL";
+                } else {
+                    browser = Browser.parseUserAgentString(request.getHeader("User-Agent")).toString();
+                    browser = (Browser.all.contains(browser)) ? browser : "OTHER";
+                }
+            } else {
+                browser = Browser.parseUserAgentString(request.getHeader("User-Agent")).toString();
+            }
+
+            bsh.set("agent", browser);
             bsh.set("sb", sb);
             bsh.set("include", include);
             bsh.set("dao", dao);
             bsh.set("request", request);
             bsh.set("response", response);
             bsh.set("index", index);
+            bsh.set("url", url);
             bsh.run();
+            include = (String) bsh.get("include");
         }
         if (include != null && nullInclude) {//Si indico la posicion del include
             String base = include;
@@ -177,7 +193,7 @@ public class Scriptlet {
             HashMap<String, Serializable> map = dao.loadTable(tableId).getFileMap(scriptName);
             String code = new String((byte[]) dao.getSerial("file:" + map.get("key")));
             String includeText = sb.toString();
-            String result = new Scriptlet(code).process(request, response, dao, includeText, index);
+            String result = new Scriptlet(code).process(request, response, dao, includeText, index, url);
             return result;
         } else {
             return sb.toString();
