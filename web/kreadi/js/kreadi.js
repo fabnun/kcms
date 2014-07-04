@@ -76,6 +76,20 @@ function setWait(msg) {
         wd.style.display = "none";
 }
 
+function templateSelect(elem) {
+    setWait("Restaurando Template");
+    var f = elem.files[0];//Archivo zip
+    zip.createReader(new zip.BlobReader(f), function(reader) {
+        reader.getEntries(function(entries) {
+            sendSerializable(entries, true, entries.length, true);
+            currentEdit = undefined;
+        });
+    }, function(error) {
+        document.getElementById("restoreType").innerHTML = "";
+        console.error("ERROR 9847");
+    });
+}
+
 function fileSelect(elem, col, row, subId) {//Upload de archivos y respaldo
     if (col !== undefined && col !== null) {
         var f = elem.files[0];
@@ -108,42 +122,68 @@ function fileSelect(elem, col, row, subId) {//Upload de archivos y respaldo
             // get all entries from the zip
             reader.getEntries(function(entries) {
                 sendSerializable(entries, true, entries.length);
+                currentEdit = undefined;
             });
         }, function(error) {
-            // onerror callback 
+            document.getElementById("restoreType").innerHTML = "";
+            console.error("ERROR 8649769");
         });
     }
 }
 
-function sendSerializable(entries, first, size) {
-    if (first) {
-        ajax(server, {command: "serialdelete"}, function(resp) {//Elimina los datos anteriores
-            sendSerializable(entries, false, size);
-        });
-    } else {
-        if (size > 0)
-            var esize = entries.length;
-        if (esize > 0) {
-            esize = Math.min(2, esize);
-            entries[0].getData(new zip.BlobWriter(), function(text) {
-                ajax(server, {command: 'serial', id: entries[0].filename, data: text},
-                function() {
-                    setWait("Restaurando Web " + Math.round(100 * (size - entries.length) / size) + "%");
-                    entries.splice(0, 1);
-                    if (entries.length > 0)
-                        sendSerializable(entries, false, size);
-                    else {
-                        ajax(server, {command: "getData", id: data.id}, function(resp) {
-                            currentEdit = undefined;
-                            eval("data = " + resp);
-                            delUser(-1);
-                            buildTable(data);
-                            setWait();
-                        });
-                    }
-                });
+function sendSerializable(entries, first, size, isTemplate) {
+    if (isTemplate) {
+
+        if (first) {
+            ajax(server, {command: "serialdelete"}, function(resp) {//Elimina los datos anteriores
+                sendSerializable(entries, false, size, true);
             });
+        } else {
+            if (size > 0)
+                var esize = entries.length;
+            if (esize > 0) {
+                entries[0].getData(new zip.BlobWriter(), function(text) {
+                    ajax(server, {command: 'serial2', id: entries[0].filename, size: entries[0].uncompressedSize, data: text},
+                    function(resp, json) {
+                        console.log(json.id);
+                        setWait("Restaurando Template " + json.id);
+                        entries.splice(0, 1);
+                        if (entries.length > 0)
+                            sendSerializable(entries, false, size, true);
+                        else {
+                            window.location="/admin";
+                        }
+                    });
+                });
+            }
         }
+
+    } else {
+
+        if (first) {
+            ajax(server, {command: "serialdelete"}, function(resp) {//Elimina los datos anteriores
+                sendSerializable(entries, false, size);
+            });
+        } else {
+            if (size > 0)
+                var esize = entries.length;
+            if (esize > 0) {
+                esize = Math.min(2, esize);
+                entries[0].getData(new zip.BlobWriter(), function(text) {
+                    ajax(server, {command: 'serial', id: entries[0].filename, data: text},
+                    function() {
+                        setWait("Restaurando Web " + Math.round(100 * (size - entries.length) / size) + "%");
+                        entries.splice(0, 1);
+                        if (entries.length > 0)
+                            sendSerializable(entries, false, size);
+                        else {
+                            window.location="/admin";
+                        }
+                    });
+                });
+            }
+        }
+
     }
 }
 
@@ -200,7 +240,7 @@ function showPreview(row, col, num, key, name, isImage, subId) {
 function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId) {
     var lname = (name ? name.toLowerCase() : "");
     var isImage = lname.endsWith('.jpg') || lname.endsWith('.jpeg') || lname.endsWith('.png') || lname.endsWith('.gif');
-    var isText = lname.endsWith('.html') || lname.endsWith('.txt') || lname.endsWith('.css')
+    var isText = lname.endsWith('.html') || lname.endsWith('.txt') || lname.endsWith('.css') || lname.indexOf('.') === -1
             || lname.endsWith('.js') || lname.endsWith('.jsp') || lname.indexOf('.') === 0 || lname.endsWith('.json');//initEdit(element, col, row, value, type, subId) {
     var html = "<img title='Upload' src='css/upload.png' style='cursor:pointer;top:5px;position:relative;' onclick='initEdit(this.parentNode, " + col + "," + row + ", \"\", \"File\"" + (subId ? (', "' + subId + '"') : "") + " )'>";
     if (admin && isText)
@@ -341,8 +381,8 @@ function rename(row, col) {
     if (!currentEdit) {
         var oldname = data.columns[col].data[row].name;
         var newname = prompt('Rename', oldname);
-        newname = newname ? newname.replace(/^\s+|\s+$/g, '') : null;
-        if (newname && oldname !== newname) {
+        newname = newname ? newname.replace(/^\s+|\s+$/g, '') : "";
+        if (oldname !== newname) {
             ajax(server, {command: "rename", id: data.id, row: row, col: col, name: newname},
             function(resp) {
                 if (resp === "") {
@@ -421,12 +461,13 @@ function upRow() {
     }
 }
 
-function restore(element) {
+function restore() {
     if (!currentEdit) {
-        currentEdit = element;
-        var html = '<input style="display:none" type="file" id="files" onchange="fileSelect(this)" name="files[]" />';
-        element.innerHTML = element.innerHTML + html;
-        element.childNodes[element.childNodes.length - 1].click();
+        var element = document.getElementById("restoreType");
+        var html = '<input style="display:none" type="file" id="files" onchange="' + (element.checked ? "templateSelect" : "fileSelect") + '(this)" name="files[]" />';
+        element.innerHTML = html;
+        element.childNodes[0].click();
+        currentEdit = undefined;
     }
 }
 

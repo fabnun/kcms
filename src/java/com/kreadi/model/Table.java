@@ -199,7 +199,7 @@ public class Table implements Serializable {
                     map = (HashMap<String, Serializable>) ser;
                 } catch (Exception e) {
                 }
-                if (map != null && filename.matches((String) map.get("name"))) {
+                if (map != null && filename.matches((String) map.get("name")) || (filename.length()==0 && "index.html".matches((String) map.get("name")))) {
                     if (n > -1 && count == n) {
                         map.put("#n", idx);
                         return map;

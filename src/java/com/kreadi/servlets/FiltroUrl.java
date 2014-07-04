@@ -44,7 +44,7 @@ public class FiltroUrl implements Filter {
                 resp.sendRedirect("/kreadi/admin.jsp");
             } else {
                 //TODO ver como sacar la opcion de mapeo del browser en la configuracion online
-                //String browser = "all";
+                //String browser = "ALL";
                 String browser;
                 if (Browser.all != null) {
                     if (Browser.all.equals("ALL")) {

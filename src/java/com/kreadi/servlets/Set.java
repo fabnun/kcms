@@ -151,18 +151,6 @@ public class Set extends HttpServlet {
         return key;
     }
 
-    private static void delMapMap(Dao dao) throws IOException, ClassNotFoundException {
-        HashSet<String> set = (HashSet<String>) dao.getSerial("map:agent");
-        if (set != null) {
-            for (String browser : set) {
-                dao.delSerial("map:map:" + browser);
-                System.out.println(">>> DELMAP BROWSER " + browser);
-            }
-        }
-        dao.delSerial("map:agent");
-
-    }
-
     private static HashMap<String, Object> readParams(InputStream is) throws IOException {
         HashMap<String, Object> map = new HashMap<>();//mapa de parametros a retornar, debe incluir el codigo
         boolean readByte;//inicialmente tiene que leer mas bytes
@@ -471,7 +459,7 @@ public class Set extends HttpServlet {
                         && (command.equals("newTable") || command.equals("setTable") || command.equals("delTable") || command.equals("agentes")
                         || command.equals("setCol") || command.equals("leftCol") || command.equals("rightCol")
                         || command.equals("delCol") || command.equals("newCol") || command.equals("backup") || command.equals("addUser") || command.equals("delUser")
-                        || command.equals("serialdelete") || command.equals("serial"))) {
+                        || command.equals("serialdelete") || command.equals("serial") || command.equals("serial2"))) {
                     switch (command) {
                         case "newTable": {
                             //NUEVA TABLA (SUPERUSER)
@@ -593,11 +581,57 @@ public class Set extends HttpServlet {
                             dao.setSerial(key, ser);
                             break;
                         }
+                        case "serial2": {
+                            Dao dao = new Dao();
+                            String key = (String) paramMap.get("id");
+                            if (!key.endsWith("/")) {
+                                byte[] bytesrc = readByteStream(is);
+                                int size = Integer.parseInt((String) paramMap.get("size"));
+                                byte[] bytes = new byte[size];
+                                System.arraycopy(bytesrc, 0, bytes, 0, size);
+                                int idx = key.lastIndexOf("/");
+                                String folder = "";
+                                if (idx > -1) {
+                                    folder = key.substring(0, idx);
+                                    key = key.substring(idx + 1);
+                                }
+                                Table t = dao.loadTable(folder);
+                                if (t == null) {
+                                    t = new Table(folder, "");
+                                    t.addCol("Archivos", "File");
+                                    Table troot = dao.loadTable("ROOT");
+                                    if (troot == null) {
+                                        troot = new Table("ROOT", "");
+                                    }
+                                    troot.subTableMap.put(folder, "");
+                                    dao.saveTable(troot);
+
+                                }
+                                Column col = t.columns.get(0);
+                                HashSet<Long> fileKeys = (HashSet<Long>) dao.getSerial("fileKeys");
+                                if (fileKeys == null) {
+                                    fileKeys = new HashSet<>();
+                                }
+                                long rkey;
+                                Random rand = new Random();
+                                while (fileKeys.contains(rkey = rand.nextLong()));
+                                fileKeys.add(rkey);
+
+                                dao.setSerial("file:" + rkey, bytes);
+                                dao.setSerial("fileKeys", fileKeys);
+                                String name = key;
+                                name = name == null ? ("" + rkey) : name;
+
+                                col.data.add(map("type", "File", "name", name, "size", bytes.length, "time", System.currentTimeMillis(), "key", "" + rkey));
+                                dao.saveTable(t);
+                            }
+                            break;
+                        }
                         case "agentes": {
-                            String s=(String)paramMap.get("list");
-                            s=s.replaceAll("\\s+", " ").trim();
-                            s=s.length()==0?null:s;
-                            Browser.all=s;
+                            String s = (String) paramMap.get("list");
+                            s = s.replaceAll("\\s+", " ").trim();
+                            s = s.length() == 0 ? null : s;
+                            Browser.all = s;
                             break;
                         }
                         case "delTable": {
@@ -771,7 +805,7 @@ public class Set extends HttpServlet {
                         switch (command) {
                             case "setTableVal": {
                                 //ESTABLECE UN VALOR DE LA TABLA
-                                delMapMap(dao);
+                                dao.delMapMap();
                                 String subId = (String) paramMap.get("subId");
                                 Table parentTable = null;
                                 if (subId != null && !"undefined".equals(subId)) {
@@ -839,7 +873,7 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "delrow": {
-                                delMapMap(dao);
+                                dao.delMapMap();
                                 //ELIMINA UN REGISTRO
                                 String[] rows = ((String) paramMap.get("rows")).split(",");
                                 for (int i = rows.length - 1; i >= 0; i--) {
@@ -871,10 +905,10 @@ public class Set extends HttpServlet {
                                     col.data.add(null);
                                 }
                                 dao.saveTable(tabla);
-                                delMapMap(dao);
+                                dao.delMapMap();
                                 break;
                             case "rename": {
-                                delMapMap(dao);
+                                dao.delMapMap();
                                 //RENOMBRA UN ARCHIVO
                                 int colIdx = Integer.parseInt((String) paramMap.get("col"));
                                 int rowIdx = Integer.parseInt((String) paramMap.get("row"));
@@ -921,7 +955,7 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "downrow": {
-                                delMapMap(dao);
+                                dao.delMapMap();
                                 //MUEVO UN REGISTRO ABAJO
                                 String[] rows = ((String) paramMap.get("rows")).split(",");
                                 for (int j = rows.length - 1; j >= 0; j--) {
@@ -937,7 +971,7 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "uprow": {
-                                delMapMap(dao);
+                                dao.delMapMap();
                                 //MUEVE UN REGISTRO ARRIVA
                                 String[] rows = ((String) paramMap.get("rows")).split(",");
                                 for (String row : rows) {
@@ -953,7 +987,7 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "upload": {
-                                delMapMap(dao);
+                                dao.delMapMap();
                                 //REALIZA UN UPLOAD
                                 String subId = (String) paramMap.get("sid");
                                 Table parentTable = null;
@@ -1027,7 +1061,7 @@ public class Set extends HttpServlet {
                                 }
                                 break;
                             case "upRow2": {
-                                 delMapMap(dao);
+                                dao.delMapMap();
                                 //EN UNA SUBTABLA SUBE LOS REGISTROS SELECCIONADOS
                                 int col = Integer.parseInt((String) paramMap.get("col"));
                                 int rw = Integer.parseInt((String) paramMap.get("row"));
@@ -1048,28 +1082,28 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "downRow2": {
-                                 delMapMap(dao);
+                                dao.delMapMap();
                                 //EN UNA SUBTABLA BAJA LOS REGISTROS SELECCIONADOS
                                 int col = Integer.parseInt((String) paramMap.get("col"));
                                 int row = Integer.parseInt((String) paramMap.get("row"));
                                 Table subTabla = (Table) tabla.columns.get(col).data.get(row);
                                 if (subTabla == null) {
-                                     String[] rows = ((String) paramMap.get("rows")).split(",");
-                                for (int j = rows.length - 1; j >= 0; j--) {
-                                    int index = Integer.parseInt(rows[j]);
-                                    for (Column column : subTabla.columns) {
-                                        Serializable val0 = column.data.get(index);
-                                        Serializable val1 = column.data.get(index + 1);
-                                        column.data.set(index, val1);
-                                        column.data.set(index + 1, val0);
+                                    String[] rows = ((String) paramMap.get("rows")).split(",");
+                                    for (int j = rows.length - 1; j >= 0; j--) {
+                                        int index = Integer.parseInt(rows[j]);
+                                        for (Column column : subTabla.columns) {
+                                            Serializable val0 = column.data.get(index);
+                                            Serializable val1 = column.data.get(index + 1);
+                                            column.data.set(index, val1);
+                                            column.data.set(index + 1, val0);
+                                        }
                                     }
-                                }
-                                dao.saveTable(tabla);
+                                    dao.saveTable(tabla);
                                 }
                                 break;
                             }
                             case "addRow2": {
-                                delMapMap(dao);
+                                dao.delMapMap();
                                 //EN UNA SUBTABLA CREA UN REGISTRO AL FINAL////////////////////////////
                                 int col = Integer.parseInt((String) paramMap.get("col"));
                                 int row = Integer.parseInt((String) paramMap.get("row"));
@@ -1126,7 +1160,7 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "delRow2": {
-                                delMapMap(dao);
+                                dao.delMapMap();
                                 //EN UNA SUBTABLA ELIMINA LOS REGISTROS SELECCIONADOS
                                 int col = Integer.parseInt((String) paramMap.get("col"));
                                 int row = Integer.parseInt((String) paramMap.get("row"));
