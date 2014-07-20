@@ -44,17 +44,12 @@ public class FiltroUrl implements Filter {
                 resp.sendRedirect("/kreadi/admin.jsp");
             } else {
                 //TODO ver como sacar la opcion de mapeo del browser en la configuracion online
-                //String browser = "ALL";
                 String browser;
-                if (Browser.all != null) {
-                    if (Browser.all.equals("ALL")) {
-                        browser = "ALL";
-                    } else {
-                        browser = Browser.parseUserAgentString(req.getHeader("User-Agent")).toString();
-                        browser = (Browser.all.contains(browser)) ? browser : "OTHER";
-                    }
-                } else {
+                if (Browser.all != null && Browser.all.trim().length() > 0) {
                     browser = Browser.parseUserAgentString(req.getHeader("User-Agent")).toString();
+                    browser = (browser.contains(Browser.all)) ? browser : "OTHER";
+                } else {
+                    browser = "ALL";
                 }
                 try {
                     //KeyCodes guarda los datos de los archivos y scripts (Ver otra posibilad... usar el mapping de google para esto)
@@ -201,14 +196,15 @@ public class FiltroUrl implements Filter {
                                     }
                                 } while (bytes != null);
                                 String code = baos.toString("UTF-8");
-                                if (!filename.endsWith("_")) {
+                                System.out.println(code);
+                                if (!filename.endsWith("_")) {//Si termina en _
                                     String process = new Scriptlet(code).process(req, resp, dao, index, uri);
                                     if (!filename.startsWith("_")) {
                                         map.put(cacheKey, process);
                                         storeMaps = true;
                                     }
                                     resp.getOutputStream().write(process.getBytes("UTF-8"));
-                                } else if (req.getMethod().equals("POST")) {
+                                } else if (req.getMethod().equals("POST")) {//Si termina en _ y es un metodo post
                                     Data data;
                                     try (ObjectInputStream ois = new ObjectInputStream(req.getInputStream())) {
                                         data = (Data) ois.readObject();

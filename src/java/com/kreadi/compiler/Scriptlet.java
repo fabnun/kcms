@@ -132,6 +132,15 @@ public class Scriptlet {
             } else {
                 bsh.setOut(pst);
             }
+            String browser;
+            if (Browser.all != null && Browser.all.trim().length() > 0) {
+                browser = Browser.parseUserAgentString(request.getHeader("User-Agent")).toString();
+                browser = (browser.contains(Browser.all)) ? browser : "OTHER";
+            } else {
+                browser = "ALL";
+            }
+
+            bsh.set("agent", browser);
             bsh.set("dao", dao);
             bsh.set("data", data);
             bsh.set("request", request);
@@ -163,15 +172,11 @@ public class Scriptlet {
             sb = new StringBuilder();
 
             String browser;
-            if (Browser.all != null) {
-                if (Browser.all.equals("ALL")) {
-                    browser = "ALL";
-                } else {
-                    browser = Browser.parseUserAgentString(request.getHeader("User-Agent")).toString();
-                    browser = (Browser.all.contains(browser)) ? browser : "OTHER";
-                }
-            } else {
+            if (Browser.all != null && Browser.all.trim().length() > 0) {
                 browser = Browser.parseUserAgentString(request.getHeader("User-Agent")).toString();
+                browser = (browser.contains(Browser.all)) ? browser : "OTHER";
+            } else {
+                browser = "ALL";
             }
 
             bsh.set("agent", browser);

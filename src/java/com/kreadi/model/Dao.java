@@ -164,7 +164,7 @@ public class Dao extends DAOBase {
         return (Table) getSerial("TABLE." + id);
     }
     
-      public void delMapMap() throws IOException, ClassNotFoundException {
+      public void resetCache() throws IOException, ClassNotFoundException {
         HashSet<String> set = (HashSet<String>) getSerial("map:agent");
         if (set != null) {
             for (String browser : set) {
@@ -173,6 +173,7 @@ public class Dao extends DAOBase {
             }
         }
         delSerial("map:agent");
+        clearAllCache();
     }
     
     public String getValue(String url, HttpServletRequest request, HttpServletResponse response) throws ClassNotFoundException, IOException, EvalError {

@@ -805,7 +805,7 @@ public class Set extends HttpServlet {
                         switch (command) {
                             case "setTableVal": {
                                 //ESTABLECE UN VALOR DE LA TABLA
-                                dao.delMapMap();
+                                dao.resetCache();
                                 String subId = (String) paramMap.get("subId");
                                 Table parentTable = null;
                                 if (subId != null && !"undefined".equals(subId)) {
@@ -873,7 +873,7 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "delrow": {
-                                dao.delMapMap();
+                                dao.resetCache();
                                 //ELIMINA UN REGISTRO
                                 String[] rows = ((String) paramMap.get("rows")).split(",");
                                 for (int i = rows.length - 1; i >= 0; i--) {
@@ -905,10 +905,10 @@ public class Set extends HttpServlet {
                                     col.data.add(null);
                                 }
                                 dao.saveTable(tabla);
-                                dao.delMapMap();
+                                dao.resetCache();
                                 break;
                             case "rename": {
-                                dao.delMapMap();
+                                dao.resetCache();
                                 //RENOMBRA UN ARCHIVO
                                 int colIdx = Integer.parseInt((String) paramMap.get("col"));
                                 int rowIdx = Integer.parseInt((String) paramMap.get("row"));
@@ -955,7 +955,7 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "downrow": {
-                                dao.delMapMap();
+                                dao.resetCache();
                                 //MUEVO UN REGISTRO ABAJO
                                 String[] rows = ((String) paramMap.get("rows")).split(",");
                                 for (int j = rows.length - 1; j >= 0; j--) {
@@ -971,7 +971,7 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "uprow": {
-                                dao.delMapMap();
+                                dao.resetCache();
                                 //MUEVE UN REGISTRO ARRIVA
                                 String[] rows = ((String) paramMap.get("rows")).split(",");
                                 for (String row : rows) {
@@ -987,7 +987,7 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "upload": {
-                                dao.delMapMap();
+                                dao.resetCache();
                                 //REALIZA UN UPLOAD
                                 String subId = (String) paramMap.get("sid");
                                 Table parentTable = null;
@@ -1061,7 +1061,7 @@ public class Set extends HttpServlet {
                                 }
                                 break;
                             case "upRow2": {
-                                dao.delMapMap();
+                                dao.resetCache();
                                 //EN UNA SUBTABLA SUBE LOS REGISTROS SELECCIONADOS
                                 int col = Integer.parseInt((String) paramMap.get("col"));
                                 int rw = Integer.parseInt((String) paramMap.get("row"));
@@ -1082,7 +1082,7 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "downRow2": {
-                                dao.delMapMap();
+                                dao.resetCache();
                                 //EN UNA SUBTABLA BAJA LOS REGISTROS SELECCIONADOS
                                 int col = Integer.parseInt((String) paramMap.get("col"));
                                 int row = Integer.parseInt((String) paramMap.get("row"));
@@ -1103,7 +1103,7 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "addRow2": {
-                                dao.delMapMap();
+                                dao.resetCache();
                                 //EN UNA SUBTABLA CREA UN REGISTRO AL FINAL////////////////////////////
                                 int col = Integer.parseInt((String) paramMap.get("col"));
                                 int row = Integer.parseInt((String) paramMap.get("row"));
@@ -1160,7 +1160,7 @@ public class Set extends HttpServlet {
                                 break;
                             }
                             case "delRow2": {
-                                dao.delMapMap();
+                                dao.resetCache();
                                 //EN UNA SUBTABLA ELIMINA LOS REGISTROS SELECCIONADOS
                                 int col = Integer.parseInt((String) paramMap.get("col"));
                                 int row = Integer.parseInt((String) paramMap.get("row"));
