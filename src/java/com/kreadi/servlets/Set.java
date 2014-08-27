@@ -405,26 +405,25 @@ public class Set extends HttpServlet {
                 Dao dao = new Dao();
 
                 try {
-                    ByteArrayOutputStream os = new ByteArrayOutputStream();
-                    do {
-                        bytes = (byte[]) dao.getSerial("file:" + id + subId);
-                        if (bytes != null && bytes.length > 0) {
-                            os.write(bytes);
-                            idx++;
-                            subId = "." + idx;
-                        }
-                    } while (bytes != null);
-                    bytes = os.toByteArray();
-                    ImagesService imagesService = ImagesServiceFactory.getImagesService();
-                    Image oldImage = ImagesServiceFactory.makeImage(bytes);
-                    Transform res = ImagesServiceFactory.makeResize(resi[0], resi[1]);
-
-                    Image newImage = imagesService.applyTransform(res, oldImage);
-
-                    byte[] newImageData = newImage.getImageData();
-                    os.close();
+                    byte[] newImageData;
+                    try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+                        do {
+                            bytes = (byte[]) dao.getSerial("file:" + id + subId);
+                            if (bytes != null && bytes.length > 0) {
+                                os.write(bytes);
+                                idx++;
+                                subId = "." + idx;
+                            }
+                        } while (bytes != null);
+                        bytes = os.toByteArray();
+                        ImagesService imagesService = ImagesServiceFactory.getImagesService();
+                        Image oldImage = ImagesServiceFactory.makeImage(bytes);
+                        Transform res = ImagesServiceFactory.makeResize(resi[0], resi[1]);
+                        Image newImage = imagesService.applyTransform(res, oldImage);
+                        newImageData = newImage.getImageData();
+                    }
                     resp.getOutputStream().write(newImageData);
-                    
+
                 } catch (ClassNotFoundException ex) {
                     throw new ServletException(ex);
                 }
@@ -1075,6 +1074,48 @@ public class Set extends HttpServlet {
                                     }
                                 }
                                 dao.saveTable(tabla);
+                                break;
+                            }
+                            case "sortrow": {
+                                dao.resetCache();
+                                //MUEVE UN REGISTRO ARRIVA
+                                String[] rows = ((String) paramMap.get("sort")).split(",");
+                                int col = 0, colIdx = -1;
+
+                                for (Column column : tabla.columns) {
+                                    if (column.type.equals("File")) {
+                                        colIdx = col;
+                                        break;
+                                    }
+                                    col++;
+                                }
+                                LinkedList<Integer> sortResult = new LinkedList<>();
+                                boolean ok = true;
+                                for (String s : rows) {
+                                    int idx = tabla.getFileMapIndex(colIdx, s);
+                                    if (idx == -1) {
+                                        resp = "ERROR: " + s + " no encontrado";
+                                        ok = false;
+                                        break;
+                                    }
+                                    sortResult.add(idx);
+                                }
+                                if (ok) {
+                                    resp = "";
+                                    Table tabla2 = dao.loadTable(id);
+                                    for(Column col2:tabla.columns){
+                                        col2.data.clear();
+                                    }
+                                    for(int i:sortResult){
+                                        int colId=0;
+                                        for(Column col2:tabla.columns){
+                                            tabla.columns.get(colId).data.add(tabla2.value(colId, i));
+                                            colId++;
+                                        }
+                                    }
+                                    dao.saveTable(tabla);
+                                }
+
                                 break;
                             }
                             case "upload": {

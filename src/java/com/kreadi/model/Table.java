@@ -213,6 +213,26 @@ public class Table implements Serializable {
             return null;
         }
     }
+    
+    public int getFileMapIndex(int col, String filename) {
+        try {
+            int idx = 0;
+            for (Serializable ser : columns.get(col).data) {
+                HashMap<String, Serializable> map = null;
+                try {
+                    map = (HashMap<String, Serializable>) ser;
+                } catch (Exception e) {
+                }
+                if (map != null && filename.matches((String) map.get("name")) || (filename.length()==0 && "index.html".matches((String) map.get("name")))) {
+                        return idx;
+                }
+                idx++;
+            }
+            return -1;
+        } catch (Exception e) {
+            return -1;
+        }
+    }
 
     /**
      *

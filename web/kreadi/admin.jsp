@@ -132,6 +132,7 @@
 
             <span style="float:right;position: relative;top:5px"><%=isSuperAdmin ? "(SUPER/ADMIN) " : ""%><%=username%> <a style="margin-right:12px" id="logout" href="<%=userService.createLogoutURL(request.getRequestURI())%>">Salir</a>&nbsp;</span>
             <div id="rowButtons" style="display:none;float:right;margin-right:16px">
+                <%if(isSuperAdmin){%><button id='sortRowButton' onclick='sortRow()' style='width:26px;height:26px;padding:0;margin-right:10px'><img src='css/sort.png'></button><%}%>
                 <button id='upRowButton' onclick='upRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/up.png'></button>
                 <button id='downRowButton' onclick='downRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/down.png'></button>
                 <button onclick='addRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/add.png'></button>

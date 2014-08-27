@@ -267,7 +267,7 @@ function preview(id, name, elem) {
                 function() {
                     if (id === idPreview && idPreview !== null) {
                         prev.style.left = (elem.offsetLeft + 32) + "px";
-                        prev.style.top = (elem.offsetTop-64) + "px";
+                        prev.style.top = (elem.offsetTop - 64) + "px";
                         prev.style.display = "block";
                     }
                 }, 500);
@@ -450,30 +450,27 @@ function downRow() {
     }
 }
 
-function upRow() {
+if (typeof String.prototype.startsWith != 'function') {
+    // see below for better implementation!
+    String.prototype.startsWith = function(str) {
+        return this.indexOf(str) == 0;
+    };
+}
+
+function sortRow() {
     if (!currentEdit) {
-        var sel = getSelRows();
-        if (sel.length > 0 && data.columns && data.columns.length > 0 && sel[0] > 0) {
-            var button = document.getElementById("upRowButton");
+        var sel = prompt("Ingrese lista de nombres ordenados separados por coma");
+        if (sel.length > 0) {
+            var button = document.getElementById("sortRowButton");
             button.disabled = true;
-            ajax(server, {command: "uprow", id: data.id, rows: sel.join(",")},
+            ajax(server, {command: "sortrow", id: data.id, sort: sel},
             function(resp, json) {
-                var sel = json.rows.split(",");
-                for (var j = 0; j < sel.length; j++) {
-                    var index = parseInt(sel[j]);
-                    for (var i = 0; i < data.columns.length; i++) {
-                        var val0 = data.columns[i].data[index];
-                        var val1 = data.columns[i].data[index - 1];
-                        data.columns[i].data[index] = val1;
-                        data.columns[i].data[index - 1] = val0;
-                    }
+                if (resp.startsWith("ERROR: ")) {
+                      alert(resp);
+                } else {
+                    window.location.href = window.location.href;
                 }
-                buildTable(data);
                 button.disabled = false;
-                setSel(-1, sel);
-                if (resp === "") {
-                } else
-                    alert(resp);
             });
         }
     }
