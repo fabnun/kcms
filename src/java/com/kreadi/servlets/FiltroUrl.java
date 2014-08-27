@@ -196,7 +196,6 @@ public class FiltroUrl implements Filter {
                                     }
                                 } while (bytes != null);
                                 String code = baos.toString("UTF-8");
-                                System.out.println(code);
                                 if (!filename.endsWith("_")) {//Si termina en _
                                     String process = new Scriptlet(code).process(req, resp, dao, index, uri);
                                     if (!filename.startsWith("_")) {

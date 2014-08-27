@@ -114,10 +114,6 @@
                 <img src="restaurar.png" alt="restaurar" style="position: relative; margin-bottom:-2px">
             </button>
 
-            <button style="position:relative;top:5px;right:16px;background-color:#aaffff;padding:3px 12px" onclick="window.open('/kreadi/layoutEditor/')" title="Editar Layout">
-                <img src="layout.png" alt="restaurar" style="position: relative; margin-bottom:-2px"> 
-            </button>
-
             <button style="position:relative;top:5px;right:16px;background-color:#ddff88;padding:3px 12px" onclick="users('show');"  title="Configuración">
                 <img src="user.png" alt="config" style="position: relative; margin-bottom:-2px">
 
@@ -254,9 +250,11 @@
         <div id="waitDiv" style="z-index:99999;display:none;background:#15191f;opacity:.9;position:fixed;top:0;bottom:0;left:0;right:0;background-image: url(load.gif);background-repeat:no-repeat;background-position:center;">
             <div id="waitMsg" style="color:white;position:fixed;bottom:8px;right:8px"></div>
         </div>
+        <img id="toolpreview" style="border:2px solid white; position: absolute;top:0; left:0; background: rgba(0,0,0,.25);z-index: 999999;display:none">
         <%} else {%>
         <%=username%> no tiene permiso para administrar.
         <br><a href="<%=userService.createLogoutURL(request.getRequestURI())%>">Ingresar con otro correo</a>
+        
     </body>
 </html>
 <%}

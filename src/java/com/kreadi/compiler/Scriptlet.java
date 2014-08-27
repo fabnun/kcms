@@ -142,6 +142,7 @@ public class Scriptlet {
 
             bsh.set("agent", browser);
             bsh.set("dao", dao);
+            //bsh.set("sb", sb);
             bsh.set("data", data);
             bsh.set("request", request);
             bsh.set("response", response);

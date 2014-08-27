@@ -151,7 +151,7 @@ function sendSerializable(entries, first, size, isTemplate) {
                         if (entries.length > 0)
                             sendSerializable(entries, false, size, true);
                         else {
-                            window.location="/admin";
+                            window.location = "/admin";
                         }
                     });
                 });
@@ -177,7 +177,7 @@ function sendSerializable(entries, first, size, isTemplate) {
                         if (entries.length > 0)
                             sendSerializable(entries, false, size);
                         else {
-                            window.location="/admin";
+                            window.location = "/admin";
                         }
                     });
                 });
@@ -248,12 +248,30 @@ function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId)
     if (!subId)
         html = html + "<img title='Rename' src='css/edit.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='rename(" + row + "," + col + ")'>";
     if (key) {
-        html = html + "<img title='Preview' src='css/see.png' style='cursor:pointer;top:5px;position:relative;'  onclick='showPreview(" + row + "," + col + "," + num + ",\"" + key + "\",\"" + name + "\", " + isImage + ",\"" + subId + "\")'> ";
+        html = html + "<img src='css/see.png'  onmouseout='preview(null)' onmouseover=\"preview('" + key + "', '" + name + "',  this)\" style='cursor:pointer;top:5px;position:relative;'  onclick='showPreview(" + row + "," + col + "," + num + ",\"" + key + "\",\"" + name + "\", " + isImage + ",\"" + subId + "\")'> ";
 
         html = html + " &nbsp; <a title='Download' style='position:relative;top:-2px;text-decoration:none' href='" + server + "?id=" + key + "&name=" + name + "&download=" + size + "'>" +
                 name + (admin ? (" [" + type + "]") : "") + " </a> &nbsp; <span style='color:white;display: inline-block;text-align:right;top:-2px;position:relative'>(" + Math.round(size / 1024) + " kb)</span>";
     }
     return html;
+}
+var idPreview = null;
+function preview(id, name, elem) {
+    var prev = document.getElementById("toolpreview");
+    if (id === null || (!name.toLowerCase().endsWith(".jpg") && !name.toLowerCase().endsWith(".png") && !name.toLowerCase().endsWith(".gif"))) {
+        prev.style.display = "none";
+    } else {
+        idPreview = id;
+        prev.src = "/kreadi/set?id=" + id + "&name=" + name + "&resize=120x120";
+        setTimeout(
+                function() {
+                    if (id === idPreview && idPreview !== null) {
+                        prev.style.left = (elem.offsetLeft + 32) + "px";
+                        prev.style.top = (elem.offsetTop-64) + "px";
+                        prev.style.display = "block";
+                    }
+                }, 500);
+    }
 }
 
 var currentEdit = undefined;
@@ -769,7 +787,7 @@ function buildTable(data, colIndex, subId) {
                     " &nbsp; Name <input type='text' onchange='changeTableVal(this, \"" + data.name + "\")' id='name' class='midInput' value='" + data.name + "'>",
                     " &nbsp; Users <input type='text' onchange='changeTableVal(this, \"" + data.admins + "\")' id='admins' class='midInput' value='" + data.admins + "'>",
                     " &nbsp; <input type='checkbox' onchange='changeTableVal(this, \"" + data.allowAdd + "\")' id='allowAdd' class='checkInput'" + (data.allowAdd ? " checked " : "") + ">&nbsp; Add/Remove/Sort",
-                    " <button style='float:right;margin-top:-6px' onclick='delTable()'>Table Delete</button><br><br></td></tr>", "<tr class='tableHeader prop'>",
+                    "<button style='float:right;margin-top:-6px' onclick='movTable()'>Table Move</button> <button style='float:right;margin-top:-6px' onclick='delTable()'>Table Delete</button><br><br></td></tr>", "<tr class='tableHeader prop'>",
                     "<td colspan=", data.columns.length, " style='text-align:left'><span style='color:yellow'>Column Properties</span><br><br>", "<select onChange='changeColIndex()' id='colIdx'>");
             if (!data.columns) {
                 data.columns = [];
@@ -1074,6 +1092,29 @@ function delTable() {
             } else
                 alert(resp);
         });
+    }
+}
+
+function movTable() {
+    var id = data.id;
+    if (id === "ROOT") {
+        alert("No puede mover la carpeta raiz");
+    } else {
+        var parentId = data.parentId;
+        var newParentId = prompt('New Parent ID', parentId);
+        if (newParentId) {
+            ajax(server, {command: "movTable", id: data.id, parentId: newParentId},
+            function(resp) {
+                if (resp === "") {
+                    if (window.opener) {
+                        delete window.opener.data.subTableMap[data.id];
+                        window.opener.buildTable(window.opener.data);
+                    }
+                    window.location.href = window.location.href;
+                } else
+                    alert(resp);
+            });
+        }
     }
 }
 

@@ -38,12 +38,12 @@ public class Table implements Serializable {
     /**
      * Lista de columnas de la tabla
      */
-    public LinkedList<Column> columns = new LinkedList<Column>();
+    public LinkedList<Column> columns = new LinkedList<>();
 
     /**
      * Mapa de Id y nombres de las subtablas
      */
-    public HashMap<String, String> subTableMap = new HashMap<String, String>();
+    public HashMap<String, String> subTableMap = new HashMap<>();
 
     /**
      * Instancia una nueva tabla indicando su id y su nombre
@@ -70,7 +70,6 @@ public class Table implements Serializable {
     }
 
     /**
-     *
      * @param col
      * @param row
      * @param dao

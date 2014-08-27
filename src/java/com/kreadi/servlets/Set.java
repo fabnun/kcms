@@ -1,5 +1,9 @@
 package com.kreadi.servlets;
 
+import com.google.appengine.api.images.Image;
+import com.google.appengine.api.images.ImagesService;
+import com.google.appengine.api.images.ImagesServiceFactory;
+import com.google.appengine.api.images.Transform;
 import com.google.appengine.api.mail.MailService;
 import com.google.appengine.api.mail.MailServiceFactory;
 import com.google.appengine.api.users.User;
@@ -352,6 +356,17 @@ public class Set extends HttpServlet {
             }
         } else {
             String id = req.getParameter("id");
+            String resize = req.getParameter("resize");
+            int[] resi = null;
+            if (resize != null) {
+                try {
+                    resize = resize.trim().toLowerCase();
+                    int idx = resize.indexOf("x");
+                    resi = new int[]{Integer.parseInt(resize.substring(0, idx)), Integer.parseInt(resize.substring(idx + 1))};
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             String name = req.getParameter("name");
             String down = req.getParameter("download");
             if (down != null) {
@@ -383,12 +398,14 @@ public class Set extends HttpServlet {
             resp.setDateHeader("Expires", now);
             resp.setHeader("Cache-Control", "public, max-age=" + time);
             resp.setHeader("ETag", id);
-            try (OutputStream os = resp.getOutputStream()) {
-                byte[] bytes;
-                int idx = 0;
-                String subId = "";
+            byte[] bytes;
+            int idx = 0;
+            String subId = "";
+            if (resi != null) {
                 Dao dao = new Dao();
+
                 try {
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
                     do {
                         bytes = (byte[]) dao.getSerial("file:" + id + subId);
                         if (bytes != null && bytes.length > 0) {
@@ -397,8 +414,36 @@ public class Set extends HttpServlet {
                             subId = "." + idx;
                         }
                     } while (bytes != null);
+                    bytes = os.toByteArray();
+                    ImagesService imagesService = ImagesServiceFactory.getImagesService();
+                    Image oldImage = ImagesServiceFactory.makeImage(bytes);
+                    Transform res = ImagesServiceFactory.makeResize(resi[0], resi[1]);
+
+                    Image newImage = imagesService.applyTransform(res, oldImage);
+
+                    byte[] newImageData = newImage.getImageData();
+                    os.close();
+                    resp.getOutputStream().write(newImageData);
+                    
                 } catch (ClassNotFoundException ex) {
                     throw new ServletException(ex);
+                }
+            } else {
+                try (OutputStream os = resp.getOutputStream()) {
+
+                    Dao dao = new Dao();
+                    try {
+                        do {
+                            bytes = (byte[]) dao.getSerial("file:" + id + subId);
+                            if (bytes != null && bytes.length > 0) {
+                                os.write(bytes);
+                                idx++;
+                                subId = "." + idx;
+                            }
+                        } while (bytes != null);
+                    } catch (ClassNotFoundException ex) {
+                        throw new ServletException(ex);
+                    }
                 }
             }
         }
@@ -456,7 +501,7 @@ public class Set extends HttpServlet {
             }
             try {
                 if (isSuperAdmin //CHEQUEA COMANDOS DE SUPERUSUARIO
-                        && (command.equals("newTable") || command.equals("setTable") || command.equals("delTable") || command.equals("agentes")
+                        && (command.equals("newTable") || command.equals("setTable") || command.equals("delTable") || command.equals("movTable") || command.equals("agentes")
                         || command.equals("setCol") || command.equals("leftCol") || command.equals("rightCol")
                         || command.equals("delCol") || command.equals("newCol") || command.equals("backup") || command.equals("addUser") || command.equals("delUser")
                         || command.equals("serialdelete") || command.equals("serial") || command.equals("serial2"))) {
@@ -466,6 +511,7 @@ public class Set extends HttpServlet {
                             String key = (String) paramMap.get("key");
                             String value = (String) paramMap.get("value");
                             String parent = (String) paramMap.get("parent");
+                            System.out.println(key + " " + value + " " + parent);
                             Dao dao = new Dao();
                             Table tabla = dao.loadTable(parent);
                             if (tabla == null) {
@@ -595,19 +641,41 @@ public class Set extends HttpServlet {
                                     folder = key.substring(0, idx);
                                     key = key.substring(idx + 1);
                                 }
-                                Table t = dao.loadTable(folder);
-                                if (t == null) {
-                                    t = new Table(folder, "");
-                                    t.addCol("Archivos", "File");
-                                    Table troot = dao.loadTable("ROOT");
-                                    if (troot == null) {
-                                        troot = new Table("ROOT", "");
-                                    }
-                                    troot.subTableMap.put(folder, "");
-                                    dao.saveTable(troot);
-
+                                Table table = null, parentTable;
+                                if (!folder.contains("/") && folder.length() > 0) {
+                                    folder = "/" + folder;
                                 }
-                                Column col = t.columns.get(0);
+                                String subFolders[] = folder.split("/");
+                                String ffolder = "";
+                                for (String f : subFolders) {
+                                    parentTable = table;
+                                    ffolder = ffolder + f;
+                                    table = dao.loadTable(ffolder);
+                                    if (table == null) {
+                                        table = new Table(ffolder, ffolder);
+                                        table.addCol("Archivos", "File");
+                                        if (ffolder.length() == 0) {
+                                            table.parentId = "ROOT";
+                                            Table troot = dao.loadTable("ROOT");
+                                            if (troot == null) {
+                                                troot = new Table("ROOT", "");
+                                            }
+                                            troot.subTableMap.put(ffolder, ffolder);
+                                            dao.saveTable(troot);
+                                        }
+                                        if (parentTable != null) {
+                                            parentTable.subTableMap.put(ffolder, ffolder);
+                                            dao.saveTable(parentTable);
+                                            table.parentId = parentTable.id;
+                                        }
+                                    }
+                                    if (ffolder.length() > 0) {
+                                        ffolder = ffolder + "/";
+                                    }
+                                    dao.saveTable(table);
+                                }
+
+                                Column col = table.columns.get(0);
                                 HashSet<Long> fileKeys = (HashSet<Long>) dao.getSerial("fileKeys");
                                 if (fileKeys == null) {
                                     fileKeys = new HashSet<>();
@@ -623,7 +691,7 @@ public class Set extends HttpServlet {
                                 name = name == null ? ("" + rkey) : name;
 
                                 col.data.add(map("type", "File", "name", name, "size", bytes.length, "time", System.currentTimeMillis(), "key", "" + rkey));
-                                dao.saveTable(t);
+                                dao.saveTable(table);
                             }
                             break;
                         }
@@ -632,6 +700,29 @@ public class Set extends HttpServlet {
                             s = s.replaceAll("\\s+", " ").trim();
                             s = s.length() == 0 ? null : s;
                             Browser.all = s;
+                            break;
+                        }
+                        case "movTable": {
+                            //MUEVE UNA TABLA (SUPERUSER)
+                            String id = (String) paramMap.get("id");
+                            String parentId = ((String) paramMap.get("parentId")).trim();
+                            Dao dao = new Dao();
+                            Table tabla = dao.loadTable(id);
+                            Table parentTabla = dao.loadTable(parentId);
+
+                            if (tabla != null && parentTabla != null && !parentId.equals(tabla.parentId)) {
+                                String s = tabla.parentId;
+                                tabla.parentId = parentId;
+                                dao.saveTable(tabla);
+
+                                parentTabla.subTableMap.put(tabla.id, tabla.name);
+                                dao.saveTable(parentTabla);
+
+                                tabla = dao.loadTable(s);
+                                tabla.subTableMap.remove(id);
+                                dao.saveTable(tabla);
+
+                            }
                             break;
                         }
                         case "delTable": {
