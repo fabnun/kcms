@@ -1,0 +1,79 @@
+/*
+   styles.css
+   Colorist app
+   
+   Created by Andrew Okonetchnikov on 2010-08-09.
+   Copyright 2010 okonet.ru. All rights reserved.
+*/
+body {
+  margin: 0;
+  padding: 25px 5% 0;
+  font: 1em/1.5 'Helvetica Neue',Arial,sans-serif;
+  color: #444;
+  background: #fff;
+}
+
+h1 {
+  font-size: 1.25em;
+}
+
+section#drop {
+  display: block;
+  overflow:hidden;
+  
+  -webkit-transition-property: all;
+  -webkit-transition-duration: 0.5s;
+  -webkit-transition-timing-function: cubic-bezier(0.5, 0.2, 0.3, 1.0);
+  
+  -moz-transition-property: all;
+  -moz-transition-duration: 0.5s;
+  -moz-transition-timing-function: cubic-bezier(0.5, 0.2, 0.3, 1.0);
+  
+  -o-transition-property: all;
+  -o-transition-duration: 0.5s;
+  -o-transition-timing-function: cubic-bezier(0.5, 0.2, 0.3, 1.0);
+}
+section#drop.drag-waiting {
+  padding: 150px 1em 1em 1em;
+  font-size: 0.75em;
+  text-align: center;
+  background-color: #efefef;
+  height: 200px;
+  border: 2px dashed #999;
+  -webkit-border-radius: 12px;
+  -moz-border-radius: 12px;
+  border-radius: 12px;
+}
+section#drop.drag-hover {
+  background-color:#ff9;
+  cursor: copy;
+}
+  
+.b-palette-wrap {
+  display: block;
+  margin: 1em 0;
+  overflow: hidden;
+  zoom: 1;
+}
+  .b-palette {
+    float: left;
+    margin: 0;
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: bold;
+    border: none;
+    width: 100px;
+    height: 100px;
+    outline: none;
+  }
+
+/* Footer */
+footer {
+  display: block;
+  font-size: .75em;
+  color: #999;
+  background-color: #FFF;
+}
+  footer .disclaimer {
+    font-size: .85em;
+  }

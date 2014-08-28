@@ -113,15 +113,15 @@
             <button id="restoreButton" style="position:relative;top:5px;right:16px;background-color:#ffffaa;padding:3px 12px" onclick="restore();" title="Restaurar">
                 <img src="restaurar.png" alt="restaurar" style="position: relative; margin-bottom:-2px">
             </button>
-
+            <button id="colorButton" style="position:relative;top:5px;right:16px;background-color:#aaffff;padding:3px 12px" onclick="window.open('/kreadi/colorist/index.html')" title="Colorist">
+                <img src="palette.png" alt="restaurar" style="position: relative; margin-bottom:-2px">
+            </button>
             <button style="position:relative;top:5px;right:16px;background-color:#ddff88;padding:3px 12px" onclick="users('show');"  title="Configuración">
                 <img src="user.png" alt="config" style="position: relative; margin-bottom:-2px">
-
                 <span id="users" style="background:#ddff88;position:fixed;width:380px;padding:3px;margin:-32px 2px 0 -16px;-webkit-box-shadow:  0px 0px 1px 2px rgba(0, 0, 0, .42);
                       box-shadow:  0px 0px 1px 2px rgba(0,0,0, .42);text-align: left;
                       -webkit-border-radius: 3px 3px 3px 3px;cursor: default;display:none;
                       border-radius: 3px 3px 3px 3px;">
-
                     &nbsp;&nbsp;<img src="user.png"  alt='Usuarios' style="position: relative; margin-bottom:-2px"><span style='float:right'>[ESC para Salir]</span>
                     <hr><br><table id='userTable'></table>
                     &nbsp;AGENTES ESPECIALES <input id="agentes" type="text" style="margin: 8px;width:95%"
@@ -144,7 +144,8 @@
         <div id="scriptDiv">
             <textarea id="script"></textarea>
             <div style="position:fixed;right:12px;top:24px;background:rgba(164,164,164,.75);z-index:30000;-webkit-border-radius: 8px 8px 8px 8px; border-radius: 8px 8px 8px 8px;">
-                <input type="text" id="scriptname" style="width:164px;top:-6px;position:relative;background:white;margin-left:8px" title="filename">
+                <input type="text" id="scriptname" style="width:140px;top:-6px;position:relative;background:white;margin-left:8px" title="filename">
+                <img src="css/help.png" onclick="window.open('help.html')" style="cursor:pointer;top:2px;position:relative;"  title="documentation">
                 <img src="css/run.png" onclick="newTab('/' + (data.id !== '' ? data.id + '/' : '') + document.getElementById('scriptname').value)" style="cursor:pointer;top:2px;position:relative;" title="execute">
                 <img src="css/save.png" onclick="saveScript(document.getElementById('scriptname').value)" style="cursor:pointer;top:2px;position:relative;"  title="save">
                 <img src="css/del.png" onclick="showScript(false);" style="cursor:pointer;margin-right:8px;top:2px;position:relative;margin-top:5px"  title="close">

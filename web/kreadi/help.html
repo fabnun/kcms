@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>KCMS Documentaci&oacute;n</title>
+    </head>
+    <body>
+        <div>
+            <span style="color:#008000;">&nbsp;Documentaci&oacute;n KCMS</span></div>
+        <div>
+            <span style="color:#008000;">=================</span></div>
+        <div>
+            KCMS (Kreadi Content Management System) es un administrador de contenidos</div>
+        <div>
+            Java para Google App Engine que usa BeansShell para simular JSP. Los contenidos</div>
+        <div>
+            son almacenados en tablas que pueden contener subtablas.</div>
+        <div>
+            Tipos de dato: String, Number, Boolean, Select, Script, Html, File, Id y SubTable.</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#008000;">JSP Simulado</span></div>
+        <div>
+            <span style="color:#008000;">----------------</span></div>
+        <div>
+            cualquier archivo de tipo texto soporta scriptlets jsp del tipo</div>
+        <div>
+            &lt;%CODIGO JAVA(BEANSHELL);%&gt; o &lt;%=VALOR%&gt;</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#008000;">Metodos Incluidos &nbsp;en los scriptlets</span></div>
+        <div>
+            <span style="color:#008000;">-------------------------------------</span></div>
+        <div>
+            <span style="color:#0000ff;">getTable(String id)</span> Obtiene una tabla</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">setTable(Table table)</span> Guarda una tabla&nbsp;</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">index()</span> Obtiene la tabla asociada al id</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">log(Object s) </span>genera una entrada en el log</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">include(String url)</span> Incluye el texto del archivo o de un script procesado</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">append(Object s)</span> Inserta un texto corresponde a out.write() de jsp</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">content(String url)</span> Indica la url del script contenedor</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">include()</span> Se usa dentro del script contendor para incluir el texto de subscript</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#008000;">Metodos de un objeto Table</span></div>
+        <div>
+            <span style="color:#008000;">------------------------------</span></div>
+        <div>
+            <span style="color:#0000ff;">Column<span class="Apple-tab-span" style="white-space:pre"> </span>addCol(java.lang.String nombre, java.lang.String tipo)</span></div>
+        <div>
+            Agrega una nueva columna al fina</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">Column<span class="Apple-tab-span" style="white-space:pre"> </span>addCol(java.lang.String nombre, java.lang.String tipo, java.lang.String rules)</span></div>
+        <div>
+            Agrega una nueva columna al fina</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.util.HashMap&lt;java.lang.String,java.io.Serializable&gt;<span class="Apple-tab-span" style="white-space:pre"> </span>getFileMap(int col, java.lang.String filename, int n)&nbsp;</span></div>
+        <div>
+            Obtiene el mapa de valores de un archivo de una columna tipo File</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.util.HashMap&lt;java.lang.String,java.io.Serializable&gt;<span class="Apple-tab-span" style="white-space:pre"> </span>getFileMap(java.lang.String filename)&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.util.HashMap&lt;java.lang.String,java.io.Serializable&gt;<span class="Apple-tab-span" style="white-space:pre"> </span>getFileMap(java.lang.String filename, int n)&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">int<span class="Apple-tab-span" style="white-space:pre"> </span>getRows()</span></div>
+        <div>
+            Obtiene la cantidad de registros de la tabla</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.lang.String<span class="Apple-tab-span" style="white-space:pre"> </span>getURL(int row)</span></div>
+        <div>
+            Obtiene la url del registro de la primera columna tipo File</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.lang.String<span class="Apple-tab-span" style="white-space:pre"> </span>getURL(int col, int row)</span></div>
+        <div>
+            Obtiene la url de un registro file de una columna especifica</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.lang.String<span class="Apple-tab-span" style="white-space:pre"> </span>getURLParam(int row)</span></div>
+        <div>
+            Obtiene la url del registro de la primera columna tipo File</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.lang.String<span class="Apple-tab-span" style="white-space:pre"> </span>getURLParam(int col, int row)</span></div>
+        <div>
+            Obtiene la url de un registro file de una columna especifica</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.lang.String<span class="Apple-tab-span" style="white-space:pre"> </span>subTables(java.lang.String username, Dao dao)&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.lang.String<span class="Apple-tab-span" style="white-space:pre"> </span>toJSON()</span></div>
+        <div>
+            Obtiene la representacion json de la tabla</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.io.Serializable<span class="Apple-tab-span" style="white-space:pre"> </span>value(int col, int row)&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.lang.String<span class="Apple-tab-span" style="white-space:pre"> </span>value(int col, int row, Dao dao)&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#008000;">Metodos de un Objeto tipo Column</span></div>
+        <div>
+            <span style="color:#008000;">-------------------------------------</span></div>
+        <div>
+            <span style="color:#0000ff;">int<span class="Apple-tab-span" style="white-space:pre"> </span>getRows()&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">void<span class="Apple-tab-span" style="white-space:pre"> </span>ordenar()&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">void<span class="Apple-tab-span" style="white-space:pre"> </span>ordenar(boolean ascendente)&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">void<span class="Apple-tab-span" style="white-space:pre"> </span>transformColumn(java.lang.String oldValue, java.lang.String value, Dao dao)&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.lang.String<span class="Apple-tab-span" style="white-space:pre"> </span>value(int row, Dao dao)&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.lang.String<span class="Apple-tab-span" style="white-space:pre"> </span>value(int row, Dao dao, javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response)&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#008000;">Metodos de un objeto tipo DAO</span></div>
+        <div>
+            <span style="color:#008000;">----------------------------------</span></div>
+        <div>
+            <span style="color:#0000ff;">void<span class="Apple-tab-span" style="white-space:pre"> </span>clearAllCache()&nbsp;</span></div>
+        <div>
+            <span style="color:#0000ff;">void<span class="Apple-tab-span" style="white-space:pre"> </span>clearCache(java.lang.String key)&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">void<span class="Apple-tab-span" style="white-space:pre"> </span>del(java.lang.Object objeto)</span></div>
+        <div>
+            Elimina el objeto</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">void<span class="Apple-tab-span" style="white-space:pre"> </span>delClass(java.lang.Class clase)</span></div>
+        <div>
+            Elimina todos los objetos de una clase</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">boolean<span class="Apple-tab-span" style="white-space:pre"> </span>delSerial(java.lang.String id)&nbsp;</span></div>
+        <div>
+            <span style="color:#0000ff;">void<span class="Apple-tab-span" style="white-space:pre"> </span>delTable(java.lang.String id)&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">&lt;T&gt; T<span class="Apple-tab-span" style="white-space:pre"> </span>getObject(java.lang.Class&lt;T&gt; clase, long id)</span></div>
+        <div>
+            Obtiene un objecto mediante su clase e id</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">&lt;T&gt; T<span class="Apple-tab-span" style="white-space:pre"> </span>getObject(java.lang.Class&lt;T&gt; clase, java.lang.String id)</span></div>
+        <div>
+            Obtiene un objecto mediante su clase e id</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.io.Serializable<span class="Apple-tab-span" style="white-space:pre"> </span>getSerial(java.lang.String id)&nbsp;</span></div>
+        <div>
+            <span style="color:#0000ff;">java.lang.String<span class="Apple-tab-span" style="white-space:pre"> </span>getSHA512(java.lang.String pass)&nbsp;</span></div>
+        <div>
+            <span style="color:#0000ff;">java.lang.String<span class="Apple-tab-span" style="white-space:pre"> </span>getValue(java.lang.String url, javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response)&nbsp;</span></div>
+        <div>
+            <span style="color:#0000ff;">Table<span class="Apple-tab-span" style="white-space:pre"> </span>loadTable(java.lang.String id)&nbsp;</span></div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">java.util.List&lt;?&gt;<span class="Apple-tab-span" style="white-space:pre"> </span>query(java.lang.Class&lt;?&gt; clase)</span></div>
+        <div>
+            Obtiene la lista de objetos de una clase</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">void<span class="Apple-tab-span" style="white-space:pre"> </span>saveTable(Table table)&nbsp;</span></div>
+        <div>
+            void<span class="Apple-tab-span" style="white-space:pre"> </span>setSerial(java.lang.String id, java.io.Serializable serial)&nbsp;</div>
+        <div>
+            &nbsp;</div>
+        <div>
+            <span style="color:#0000ff;">void<span class="Apple-tab-span" style="white-space:pre"> </span>store(java.lang.Object objeto)</span></div>
+        <div>
+            Persiste un objeto</div>
+    </body>
+</html>
+
