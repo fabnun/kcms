@@ -3,4 +3,9 @@
     <application>kreadi-dev</application>
     <version>1</version> 
     <threadsafe>true</threadsafe>
+    <static-files>
+        <include path="/kreadi/**.*" />
+        <exclude path="/kreadi/admin.jsp" />
+        <exclude path="/kreadi/js/kreadi.js" />
+    </static-files>
 </appengine-web-app>

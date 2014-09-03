@@ -255,15 +255,24 @@ function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId)
     }
     return html;
 }
+
+var timeout;
+
 var idPreview = null;
 function preview(id, name, elem) {
+    console.log(id);
     var prev = document.getElementById("toolpreview");
     if (id === null || (!name.toLowerCase().endsWith(".jpg") && !name.toLowerCase().endsWith(".png") && !name.toLowerCase().endsWith(".gif"))) {
         prev.style.display = "none";
+        if (timeout) {
+            clearTimeout(timeout);
+            timeout = null;
+        }
+        prev.src = "";
     } else {
         idPreview = id;
         prev.src = "/kreadi/set?id=" + id + "&name=" + name + "&resize=120x120";
-        setTimeout(
+        timeout = setTimeout(
                 function() {
                     if (id === idPreview && idPreview !== null) {
                         prev.style.left = (elem.offsetLeft + 32) + "px";

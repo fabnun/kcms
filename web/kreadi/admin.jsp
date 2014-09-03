@@ -52,17 +52,17 @@
     <head>
         <title><%=(tabla.name != null && tabla.name.trim().length() > 0) ? tabla.name : tabla.id%></title>
         <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <link href="css/admin.css" rel="stylesheet" type="text/css">
         <link rel="icon" href="favicon.ico" type="image/x-icon" />
-        <!-- Create a simple CodeMirror instance -->
+        <!--link rel="stylesheet" href="css/admin.css" >
         <link rel="stylesheet" href="css/codemirror.css">
         <link rel="stylesheet" href="css/dialog.css">
-        <link rel="stylesheet" href="css/fullscreen.css">
-        <script src="js/codemirror.js"></script>
+        <link rel="stylesheet" href="css/fullscreen.css"-->
+        <link rel="stylesheet" href="css/all.css">
+        <!--script src="js/codemirror.js"></script>
         <script src="js/search.js"></script>
         <script src="js/searchcursor.js"></script>
         <script src="js/dialog.js"></script>
-        
+        <script src="ckeditor/ckeditor.js"></script>
         <script src="js/xml.js"></script>
         <script src="js/javascript.js"></script>
         <script src="js/css.js"></script>
@@ -70,7 +70,8 @@
         <script src="js/htmlembedded.js"></script>
         <script src="js/fullscreen.js"></script>
         <script src="js/active-line.js"></script>
-        <script src="js/zip.js"></script>
+        <script src="js/zip.js"></script-->
+        <script src="js/all.js"></script>
     </head>
     <body>
         <%
@@ -182,7 +183,7 @@
         </div>
         <div id='preview' style="text-align:center;position:fixed;width: 100%;height: 100%;background: rgba(0,0,0,.75);color:white;font-size:16px;top:56px;display:none"></div>
 
-        <script src="ckeditor/ckeditor.js"></script>
+        
         <script type="text/javascript" src="js/kreadi.js"></script>
         <script type = "text/javascript">
             <%if (isSuperAdmin && tableID.equals("ROOT")) {%>addUser();<%}%>
