@@ -56,8 +56,13 @@
         <link rel="icon" href="favicon.ico" type="image/x-icon" />
         <!-- Create a simple CodeMirror instance -->
         <link rel="stylesheet" href="css/codemirror.css">
+        <link rel="stylesheet" href="css/dialog.css">
         <link rel="stylesheet" href="css/fullscreen.css">
         <script src="js/codemirror.js"></script>
+        <script src="js/search.js"></script>
+        <script src="js/searchcursor.js"></script>
+        <script src="js/dialog.js"></script>
+        
         <script src="js/xml.js"></script>
         <script src="js/javascript.js"></script>
         <script src="js/css.js"></script>
@@ -132,11 +137,11 @@
 
             <span style="float:right;position: relative;top:5px"><%=isSuperAdmin ? "(SUPER/ADMIN) " : ""%><%=username%> <a style="margin-right:12px" id="logout" href="<%=userService.createLogoutURL(request.getRequestURI())%>">Salir</a>&nbsp;</span>
             <div id="rowButtons" style="display:none;float:right;margin-right:16px">
-                <%if(isSuperAdmin){%><button id='sortRowButton' onclick='sortRow()' style='width:26px;height:26px;padding:0;margin-right:10px'><img src='css/sort.png'></button><%}%>
-                <button id='upRowButton' onclick='upRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/up.png'></button>
-                <button id='downRowButton' onclick='downRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/down.png'></button>
-                <button onclick='addRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/add.png'></button>
-                <button onclick='delRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/del.png'></button>
+                <%if (isSuperAdmin) {%><button title="Ordenar" id='sortRowButton' onclick='sortRow()' style='width:26px;height:26px;padding:0;margin-right:10px'><img src='css/sort.png'></button><%}%>
+                <button id='upRowButton' title="Mover arriba" onclick='upRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/up.png'></button>
+                <button id='downRowButton' title="Mover abajo" onclick='downRow()' style='width:26px;padding:0;margin-right:10px'><img src='css/down.png'></button>
+                <button onclick='addRow()' title="Agregar registro" style='width:26px;padding:0;margin-right:10px'><img src='css/add.png'></button>
+                <button onclick='delRow()' title="Eliminar registros" style='width:26px;padding:0;margin-right:10px'><img src='css/del.png'></button>
             </div>
         </div>
         <div id='data'></div>
@@ -145,9 +150,13 @@
             <textarea id="script"></textarea>
             <div style="position:fixed;right:12px;top:24px;background:rgba(164,164,164,.75);z-index:30000;-webkit-border-radius: 8px 8px 8px 8px; border-radius: 8px 8px 8px 8px;">
                 <input type="text" id="scriptname" style="width:140px;top:-6px;position:relative;background:white;margin-left:8px" title="filename">
-                <img src="css/help.png" onclick="window.open('help.html')" style="cursor:pointer;top:2px;position:relative;"  title="documentation">
+                <img src="css/find.png" onclick="CodeMirror.commands['find'](editor)" style="cursor:pointer;top:2px;position:relative;"  title="find">
+                <img src="css/next.png" onclick="CodeMirror.commands['findNext'](editor)" style="cursor:pointer;top:2px;position:relative;"  title="find next">
+                <img src="css/prev.png" onclick="CodeMirror.commands['findPrev'](editor)" style="cursor:pointer;top:2px;position:relative;"  title="find prev">
+                <img src="css/replace.png" onclick="CodeMirror.commands['replaceAll'](editor)" style="cursor:pointer;top:2px;position:relative;"  title="replace all">
                 <img src="css/run.png" onclick="newTab('/' + (data.id !== '' ? data.id + '/' : '') + document.getElementById('scriptname').value)" style="cursor:pointer;top:2px;position:relative;" title="execute">
                 <img src="css/save.png" onclick="saveScript(document.getElementById('scriptname').value)" style="cursor:pointer;top:2px;position:relative;"  title="save">
+                <img src="css/help.png" onclick="window.open('help.html')" style="cursor:pointer;top:2px;position:relative;"  title="documentation">
                 <img src="css/del.png" onclick="showScript(false);" style="cursor:pointer;margin-right:8px;top:2px;position:relative;margin-top:5px"  title="close">
             </div>
         </div>
@@ -233,7 +242,8 @@
                         document.getElementById("preview").style.display = "none";
                         document.getElementById("htmlBox").style.display = "none";
                         document.getElementById("scriptDiv").style.display = "none";
-                        document.getElementById("users").style.display = "none";
+                        if (document.getElementById("users"))
+                            document.getElementById("users").style.display = "none";
                         if (superAdmin || data.allowAdd) {
                             document.getElementById('rowButtons').style.display = "inline-block";
                         }
@@ -256,7 +266,7 @@
         <%} else {%>
         <%=username%> no tiene permiso para administrar.
         <br><a href="<%=userService.createLogoutURL(request.getRequestURI())%>">Ingresar con otro correo</a>
-        
+
     </body>
 </html>
 <%}

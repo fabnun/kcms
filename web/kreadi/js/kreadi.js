@@ -466,7 +466,7 @@ function sortRow() {
             ajax(server, {command: "sortrow", id: data.id, sort: sel},
             function(resp, json) {
                 if (resp.startsWith("ERROR: ")) {
-                      alert(resp);
+                    alert(resp);
                 } else {
                     window.location.href = window.location.href;
                 }
@@ -559,7 +559,14 @@ function setScript(row, col) {
         document.getElementById("scriptname").value = val.name;
         ajax(server, {command: "getText", id: data.id, col: col, row: row}, function(resp) {
             editor.getDoc().setValue(resp);
-
+            var idxExt = val.name.lastIndexOf(".");
+            var ext = idxExt > -1 ? val.name.substring(idxExt + 1).toLowerCase() : null;
+            var mode = "application/x-ejs";
+            if (ext === "js")
+                mode = "javascript";
+            else if (ext === "css")
+                mode = "css";
+            editor.setOption("mode", mode);
             document.getElementById('rowButtons').style.display = "none";
         });
     }
@@ -636,6 +643,36 @@ function togleRow2(col, row, button) {
         div.style.display = "none";
         btn_div.style.display = "none";
         button.style.background = "#DDD";
+    }
+}
+
+
+function upRow() {
+    if (!currentEdit) {
+        var sel = getSelRows();
+        if (sel.length > 0 && data.columns && data.columns.length > 0 && sel[0] > 0) {
+            var button = document.getElementById("upRowButton");
+            button.disabled = true;
+            ajax(server, {command: "uprow", id: data.id, rows: sel.join(",")},
+            function(resp, json) {
+                var sel = json.rows.split(",");
+                for (var j = 0; j < sel.length; j++) {
+                    var index = parseInt(sel[j]);
+                    for (var i = 0; i < data.columns.length; i++) {
+                        var val0 = data.columns[i].data[index];
+                        var val1 = data.columns[i].data[index - 1];
+                        data.columns[i].data[index] = val1;
+                        data.columns[i].data[index - 1] = val0;
+                    }
+                }
+                buildTable(data);
+                button.disabled = false;
+                setSel(-1, sel);
+                if (resp === "") {
+                } else
+                    alert(resp);
+            });
+        }
     }
 }
 
