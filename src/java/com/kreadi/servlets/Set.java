@@ -85,6 +85,23 @@ public class Set extends HttpServlet {
         }
     }
 
+    @SuppressWarnings("empty-statement")
+    private static long newEmptyData(Dao dao) throws IOException, ClassNotFoundException {
+        HashSet<Long> fileKeys = (HashSet<Long>) dao.getSerial("fileKeys");//Obtiene los keys actuales
+        if (fileKeys == null) {//Si no existe 
+            fileKeys = new HashSet<>();//crea un set vacio para los keys de los archivos
+        }
+        long key;
+        Random rand = new Random();
+        String subIndex = "";
+
+        while (fileKeys.contains(key = rand.nextLong()));//Busca un key no usado
+        fileKeys.add(key);//lo agrega al set de keys
+        dao.setSerial("fileKeys", fileKeys);
+        dao.setSerial("file:" + key + subIndex, new byte[0]);
+        return key;
+    }
+
     /**
      * Almacena un stream en una secuencia de objetos serializable que tienen un array de bytes, retorna del primero
      */
@@ -1002,13 +1019,24 @@ public class Set extends HttpServlet {
                                 //RENOMBRA UN ARCHIVO
                                 int colIdx = Integer.parseInt((String) paramMap.get("col"));
                                 int rowIdx = Integer.parseInt((String) paramMap.get("row"));
-                                HashMap<String, Serializable> map = null;
+                                String name = (String) paramMap.get("name");
+                                HashMap<String, Serializable> map;
                                 try {
                                     map = (HashMap<String, Serializable>) tabla.columns.get(colIdx).data.get(rowIdx);
+                                    if (map == null) {
+                                        long key = newEmptyData(dao);
+                                        map = map("type", "File", "name", name, "size", 0, "time", System.currentTimeMillis(), "key", "" + key);
+                                        tabla.columns.get(colIdx).data.set(rowIdx, map);
+                                        Gson gson = new Gson();
+                                        resp = gson.toJson(map);
+                                    } else {
+                                        map.put("name", name);
+                                        resp = "OK";
+                                    }
+                                    dao.saveTable(tabla);
                                 } catch (Exception e) {
+                                    e.printStackTrace();
                                 }
-                                map.put("name", (String) paramMap.get("name"));
-                                dao.saveTable(tabla);
                                 break;
                             }
                             case "getData":
@@ -1103,12 +1131,12 @@ public class Set extends HttpServlet {
                                 if (ok) {
                                     resp = "";
                                     Table tabla2 = dao.loadTable(id);
-                                    for(Column col2:tabla.columns){
+                                    for (Column col2 : tabla.columns) {
                                         col2.data.clear();
                                     }
-                                    for(int i:sortResult){
-                                        int colId=0;
-                                        for(Column col2:tabla.columns){
+                                    for (int i : sortResult) {
+                                        int colId = 0;
+                                        for (Column col2 : tabla.columns) {
                                             tabla.columns.get(colId).data.add(tabla2.value(colId, i));
                                             colId++;
                                         }

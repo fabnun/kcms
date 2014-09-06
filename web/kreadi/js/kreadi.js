@@ -260,7 +260,6 @@ var timeout;
 
 var idPreview = null;
 function preview(id, name, elem) {
-    console.log(id);
     var prev = document.getElementById("toolpreview");
     if (id === null || (!name.toLowerCase().endsWith(".jpg") && !name.toLowerCase().endsWith(".png") && !name.toLowerCase().endsWith(".gif"))) {
         prev.style.display = "none";
@@ -412,8 +411,12 @@ function rename(row, col) {
         if (oldname !== newname) {
             ajax(server, {command: "rename", id: data.id, row: row, col: col, name: newname},
             function(resp) {
-                if (resp === "") {
+                if (resp === "OK") {
                     data.columns[col].data[row].name = newname;
+                    buildTable(data);
+                }  if (resp) {
+                    resp=JSON.parse(resp);
+                    data.columns[col].data[row] = resp;
                     buildTable(data);
                 } else
                     alert(resp);
