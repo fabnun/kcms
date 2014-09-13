@@ -15,6 +15,7 @@ function keyNumberFilter(evt) {
  * @param col
  * @param row
  * @param value
+ * @param subId
  * @param type*/
 function initEdit(element, col, row, value, type, subId) {
     if (subId) {
@@ -210,6 +211,13 @@ function showPreview(row, col, num, key, name, isImage, subId) {
         var div = document.getElementById("preview");
         div.innerHTML = "";
         div.style.display = "none";
+        document.title = ((data.name !== null && data.name.trim().length > 0) ? data.name : data.id);
+        document.getElementById("preview").style.display = "none";
+        document.getElementById("htmlBox").style.display = "none";
+        document.getElementById("scriptDiv").style.display = "none";
+        if (superAdmin || data.allowAdd) {
+            document.getElementById('rowButtons').style.display = "inline-block";
+        }
     } else {
         var html = "<div style='margin:12px'><span style='color:#FF8'> URL ESTATICA:</span> /" + data.id + "/" + name + (num > 1 ? "?n=" + num : "") +
                 " <span style='margin-left:32px'> <span style='color:#FF8'> URL DINAMICA :</span> " + server + "?id=" + key + "&name=" + name + "</span>";
@@ -248,7 +256,7 @@ function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId)
     if (!subId)
         html = html + "<img title='Rename' src='css/edit.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='rename(" + row + "," + col + ")'>";
     if (key) {
-        html = html + "<img src='css/see.png'  onmouseout='preview(null)' onmouseover=\"preview('" + key + "', '" + name + "',  this)\" style='cursor:pointer;top:5px;position:relative;'  onclick='showPreview(" + row + "," + col + "," + num + ",\"" + key + "\",\"" + name + "\", " + isImage + ",\"" + subId + "\")'> ";
+        html = html + "<img title='Vista Previa' src='css/see.png'  onmouseout='preview(null)' onmouseover=\"preview('" + key + "', '" + name + "',  this)\" style='cursor:pointer;top:5px;position:relative;margin-left:4px'  onclick='showPreview(" + row + "," + col + "," + num + ",\"" + key + "\",\"" + name + "\", " + isImage + ",\"" + subId + "\")'> ";
 
         html = html + " &nbsp; <a title='Download' style='position:relative;top:-2px;text-decoration:none' href='" + server + "?id=" + key + "&name=" + name + "&download=" + size + "'>" +
                 name + (admin ? (" [" + type + "]") : "") + " </a> &nbsp; <span style='color:white;display: inline-block;text-align:right;top:-2px;position:relative'>(" + Math.round(size / 1024) + " kb)</span>";
@@ -414,8 +422,9 @@ function rename(row, col) {
                 if (resp === "OK") {
                     data.columns[col].data[row].name = newname;
                     buildTable(data);
-                }  if (resp) {
-                    resp=JSON.parse(resp);
+                }
+                if (resp) {
+                    resp = JSON.parse(resp);
                     data.columns[col].data[row] = resp;
                     buildTable(data);
                 } else
@@ -603,7 +612,7 @@ function setHtml(row, col) {
         document.getElementsByTagName("body")[0].style.overflow = "hidden";
         document.getElementById('htmlBox').style.display = "block";
         document.getElementById('html').innerHTML = "<textarea id='tinyeditor' onkeydown='return keyprocess(event);' style='width:100%;resize: none;'></textarea>" +
-                "<img src='css/cancel.png' style='position:absolute;right:12px;top:9px;cursor:pointer' onclick='html.style.display=\"none\"' title='Cancel'>";
+                "<img src='css/cancel.png' style='position:absolute;right:12px;top:9px;cursor:pointer' onclick='showPreview()' title='Cancel'>";
         document.getElementById('tinyeditor').value = resp;
 
         var editor = CKEDITOR.replace('tinyeditor');
@@ -705,7 +714,14 @@ function addRow2(col, row) {
         var sd = {};
         eval("sd = " + resp);
         data.columns[col].data[row] = sd;
-        buildTable(sd, undefined, "subTable" + col + "." + row);
+        var count = document.getElementById("txt_subTable" + col + "." + row);
+        if (sd) {
+            buildTable(sd, undefined, "subTable" + col + "." + row);
+            count.innerHTML = " ( " + data.columns[col].data[row].columns[0].data.length + " ) ";
+        } else {
+            buildTable(data);
+            count.innertHTML = " ( 0 ) ";
+        }
     });
 }
 
@@ -718,10 +734,14 @@ function delRow2(col, row) {
                 if (resp !== "")
                     eval("sd = " + resp);
                 data.columns[col].data[row] = sd;
-                if (sd)
+                var count = document.getElementById("txt_subTable" + col + "." + row);
+                if (sd) {
                     buildTable(sd, undefined, "subTable" + col + "." + row);
-                else
+                    count.innerHTML = " ( " + data.columns[col].data[row].columns[0].data.length + " ) ";
+                } else {
                     buildTable(data);
+                    count.innertHTML = " ( 0 ) ";
+                }
             });
         }
     }
@@ -784,7 +804,7 @@ function buildTable(data, colIndex, subId) {
                     }
                     html.push(">");
                     if (!subId && columna.type === "SubTable") {
-                        html.push("<div style='float:right'><span id='btn_subTable" + j + "." + i + "' style='display:none;'>");
+                        html.push("<div style='float:right'><span  id='txt_subTable" + j + "." + i + "'  style='float:right;display:block;position:relative;margin:6px 8px'>( " + (value ? value.columns[0].data.length : "0") + " )</span> <span id='btn_subTable" + j + "." + i + "' style='display:none;'>");
                         html.push("<button onclick='addRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/add.png'></button>");
                         html.push("<button onclick='delRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/del.png'></button></span>");
                         html.push("<button onclick='togleRow2(" + j + "," + i + ",this)' style='padding:0;margin-left:12px;margin-right:6px'><img src='css/rest.png'></button></div>");
@@ -815,7 +835,7 @@ function buildTable(data, colIndex, subId) {
                     html.push("</td>");
                 }
                 if (subId || superAdmin || data.allowAdd) {
-                    html.push("<td style='width:20px'><input id='" + (subId ? (subId + ".") : "sel") + i + "' type='checkbox' class='" + (subId ? ("check_" + subId) : "checkInput") + "'></td>");
+                    html.push("<td style='width:20px;padding-top:16px'><input id='" + (subId ? (subId + ".") : "sel") + i + "' type='checkbox' class='" + (subId ? ("check_" + subId) : "checkInput") + "'></td>");
                 }
                 html.push("</tr>");
             }
@@ -1089,6 +1109,7 @@ function newTable() {
  * @param col
  * @param row
  * @param oldValue
+ * @param subId
  * @param evt */
 function endEdit(elem, col, row, evt, oldValue, subId) {
 
@@ -1105,7 +1126,15 @@ function endEdit(elem, col, row, evt, oldValue, subId) {
                     if (resp !== "") {
                         alert(resp);
                     } else {
-                        data.columns[json.col].data[json.row] = newValue;
+                        if (subId) {
+                            var val = subId.substring(8);
+                            var idx = val.indexOf(".");
+                            var scol = parseInt(val.substring(0, idx));
+                            var srow = parseInt(val.substring(idx + 1));
+                            data.columns[scol].data[srow].columns[json.col].data[json.row] = newValue;
+                        } else {
+                            data.columns[json.col].data[json.row] = newValue;
+                        }
                     }
                     elem.parentNode.onclick = function() {
                         var command = "initEdit(this, " + json.col + "," + json.row + ", '" + newValue + "','" + data.columns[json.col].type + "'" + (subId ? (",'" + subId + "'") : "") + ")";

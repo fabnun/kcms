@@ -58,11 +58,23 @@
         <link rel="stylesheet" href="css/dialog.css">
         <link rel="stylesheet" href="css/fullscreen.css"-->
         <link rel="stylesheet" href="css/all.css">
+        <script src="ckeditor/ckeditor.js"></script>
+        <style>
+            .editable{padding:12px 0 0 8px !important}
+            .editable input{position:relative;margin-top:-12px;margin-left: -6px;}
+            input[type=checkbox]{
+                margin-left:6px;
+                -webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+            }
+        </style>
         <!--script src="js/codemirror.js"></script>
         <script src="js/search.js"></script>
         <script src="js/searchcursor.js"></script>
         <script src="js/dialog.js"></script>
-        <script src="ckeditor/ckeditor.js"></script>
+        
+        
         <script src="js/xml.js"></script>
         <script src="js/javascript.js"></script>
         <script src="js/css.js"></script>
@@ -72,6 +84,7 @@
         <script src="js/active-line.js"></script>
         <script src="js/zip.js"></script-->
         <script src="js/all.js"></script>
+
     </head>
     <body>
         <%
@@ -183,7 +196,7 @@
         </div>
         <div id='preview' style="text-align:center;position:fixed;width: 100%;height: 100%;background: rgba(0,0,0,.75);color:white;font-size:16px;top:56px;display:none"></div>
 
-        
+
         <script type="text/javascript" src="js/kreadi.js"></script>
         <script type = "text/javascript">
             <%if (isSuperAdmin && tableID.equals("ROOT")) {%>addUser();<%}%>
