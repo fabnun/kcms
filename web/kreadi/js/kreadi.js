@@ -248,9 +248,10 @@ function showPreview(row, col, num, key, name, isImage, subId) {
 function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId) {
     var lname = (name ? name.toLowerCase() : "");
     var isImage = lname.endsWith('.jpg') || lname.endsWith('.jpeg') || lname.endsWith('.png') || lname.endsWith('.gif');
-    var isText = lname.endsWith('.html') || lname.endsWith('.txt') || lname.endsWith('.css') || lname.indexOf('.') === -1
+    var isText = lname.endsWith('.html') || lname.endsWith('.txt') || lname.endsWith('.css') || lname.endsWith('.xml')  || lname.endsWith('.*') || lname.indexOf('.') === -1
             || lname.endsWith('.js') || lname.endsWith('.jsp') || lname.indexOf('.') === 0 || lname.endsWith('.json');//initEdit(element, col, row, value, type, subId) {
     var html = "<img title='Upload' src='css/upload.png' style='cursor:pointer;top:5px;position:relative;' onclick='initEdit(this.parentNode, " + col + "," + row + ", \"\", \"File\"" + (subId ? (', "' + subId + '"') : "") + " )'>";
+    html = html + "<a title='Download' href='" + server + "?id=" + key + "&name=" + name + "&download=" + size + "'><img title='Download' src='css/download.png' style='cursor:pointer;top:5px;position:relative;'></a>";
     if (admin && isText)
         html = html + "<img title='Edit Script' src='css/script.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='setScript(" + row + "," + col + ")'>";
     if (!subId)
@@ -258,8 +259,8 @@ function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId)
     if (key) {
         html = html + "<img title='Vista Previa' src='css/see.png'  onmouseout='preview(null)' onmouseover=\"preview('" + key + "', '" + name + "',  this)\" style='cursor:pointer;top:5px;position:relative;margin-left:4px'  onclick='showPreview(" + row + "," + col + "," + num + ",\"" + key + "\",\"" + name + "\", " + isImage + ",\"" + subId + "\")'> ";
 
-        html = html + " &nbsp; <a title='Download' style='position:relative;top:-2px;text-decoration:none' href='" + server + "?id=" + key + "&name=" + name + "&download=" + size + "'>" +
-                name + (admin ? (" [" + type + "]") : "") + " </a> &nbsp; <span style='color:white;display: inline-block;text-align:right;top:-2px;position:relative'>(" + Math.round(size / 1024) + " kb)</span>";
+        html = html + " &nbsp; <span style='position:relative;top:-2px;text-decoration:none''>" +
+                name + (admin ? (" [" + type + "]") : "") + " </span> &nbsp; <span style='color:white;display: inline-block;text-align:right;top:-2px;position:relative'>(" + Math.round(size / 1024) + " kb)</span>";
     }
     return html;
 }
@@ -599,6 +600,7 @@ function saveScript(name) {
     ajax(server, {command: "setTableVal", id: data.id, col: _editCol, row: _editRow, value: value, name: name, type: "Script"},
     function(resp, json) {
         data.columns[json.col].data[json.row] = JSON.parse(resp);
+        buildTable(data);
         setWait();
     });
 }
