@@ -61,11 +61,53 @@ public class Table implements Serializable {
      *
      * @return
      */
+    @Deprecated
     public int getRows() {
         if (columns.size() > 0) {
             return columns.get(0).data.size();
         } else {
             return 0;
+        }
+    }
+    
+        /**
+     * Obtiene la cantidad de registros de la tabla
+     *
+     * @return
+     */
+    public int rows() {
+        if (columns.size() > 0) {
+            return columns.get(0).data.size();
+        } else {
+            return 0;
+        }
+    }
+    
+    /**
+     * Retorna la cantidad de columnas
+     * @return 
+     */
+    public int cols(){
+        return columns==null?0:columns.size();
+    }
+    
+    /**
+     * Agrega una registro al final
+     * @param row 
+     */
+    public void addRow(Serializable[] row){
+            addRow(row,0);
+    }
+    
+    /**
+     * Agrega un registro en una posicion especifica
+     * @param row
+     * @param idx 
+     */
+    public void addRow(Serializable[] row, int idx){
+        int cols=cols();
+        for(int i=0;i<cols;i++){
+            columns.get(i).data.add(idx, row[i]);
         }
     }
 
