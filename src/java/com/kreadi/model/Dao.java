@@ -10,7 +10,6 @@ import com.kreadi.compiler.Scriptlet;
 import java.io.*;
 import java.security.MessageDigest;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -67,6 +66,18 @@ public class Dao extends DAOBase {
      */
     public List<?> query(Class<?> clase) {
         return ofy().query(clase).list();
+    }
+    
+    public Serializable getCache(String id){
+           return (Serializable) syncCache.get(id);
+    }
+    
+    public void setCache(String id, Serializable s){
+        syncCache.put(id, s);
+    }
+    
+    public void delCache(String id){
+        syncCache.delete(id);
     }
 
     public Serializable getSerial(String id) throws IOException, ClassNotFoundException {
@@ -163,27 +174,18 @@ public class Dao extends DAOBase {
     public Table loadTable(String id) throws ClassNotFoundException, IOException {
         return (Table) getSerial("TABLE." + id);
     }
-    
-      public void resetCache() throws IOException, ClassNotFoundException {
-        HashSet<String> set = (HashSet<String>) getSerial("map:agent");
-        if (set != null) {
-            for (String browser : set) {
-                delSerial("map:map:" + browser);
-                System.out.println(">>> DELMAP BROWSER " + browser);
-            }
-        }
-        delSerial("map:agent");
+
+    public void resetCache() throws IOException, ClassNotFoundException {
         clearAllCache();
     }
-    
+
     public String getValue(String url, HttpServletRequest request, HttpServletResponse response) throws ClassNotFoundException, IOException, EvalError {
         int idx = url.lastIndexOf("/");
         Table t = loadTable(url.substring(0, idx));
         HashMap<String, Serializable> map = t.getFileMap(url.substring(idx + 1));
-        int n = (Integer) map.get("#n");
         if ("Script".equals(map.get("type"))) {
             String code = new String((byte[]) getSerial("file:" + map.get("key")), "UTF-8");
-            String result = new Scriptlet(code).process(request, response, this, n, url);
+            String result = new Scriptlet(code).process(request, response, this, 0, url);
             return result;
         } else {
             return new String((byte[]) getSerial("file:" + map.get("key")));

@@ -226,14 +226,10 @@ public class Table implements Serializable {
      *
      * @param col
      * @param filename
-     * @param n
      * @return
      */
-    public HashMap<String, Serializable> getFileMap(int col, String filename, int n) {
-        n--;
+    public HashMap<String, Serializable> getFileMap(int col, String filename) {
         try {
-            int count = 0;
-            int idx = 0;
             for (Serializable ser : columns.get(col).data) {
                 HashMap<String, Serializable> map = null;
                 try {
@@ -241,14 +237,8 @@ public class Table implements Serializable {
                 } catch (Exception e) {
                 }
                 if (map != null && filename.matches((String) map.get("name")) || (filename.length()==0 && "index.html".matches((String) map.get("name")))) {
-                    if (n > -1 && count == n) {
-                        map.put("#n", idx);
                         return map;
-                    } else {
-                        count++;
-                    }
                 }
-                idx++;
             }
             return null;
         } catch (Exception e) {
@@ -279,27 +269,17 @@ public class Table implements Serializable {
     /**
      *
      * @param filename
-     * @param n
      * @return
      */
-    public HashMap<String, Serializable> getFileMap(String filename, int n) {
+    public HashMap<String, Serializable> getFileMap(String filename) {
         int colIdx = 0;
         while (columns.size() > colIdx && !(columns.get(colIdx).type.equals("File") || columns.get(colIdx).type.equals("Html") || columns.get(colIdx).type.equals("Script"))) {
             colIdx++;
         }
         if (columns.size() > colIdx && (columns.get(colIdx).type.equals("File") || columns.get(colIdx).type.equals("Html") || columns.get(colIdx).type.equals("Script"))) {
-            return getFileMap(colIdx, filename, n);
+            return getFileMap(colIdx, filename);
         }
         return null;
-    }
-
-    /**
-     *
-     * @param filename
-     * @return
-     */
-    public HashMap<String, Serializable> getFileMap(String filename) {
-        return getFileMap(filename, 1);
     }
 
     /**

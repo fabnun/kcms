@@ -143,8 +143,6 @@
                       border-radius: 3px 3px 3px 3px;">
                     &nbsp;&nbsp;<img src="user.png"  alt='Usuarios' style="position: relative; margin-bottom:-2px"><span style='float:right'>[ESC para Salir]</span>
                     <hr><br><table id='userTable'></table>
-                    &nbsp;AGENTES ESPECIALES <input id="agentes" type="text" style="margin: 8px;width:95%"
-                                                    onblur="agentes(this)"<%=Browser.all != null ? " value='" + Browser.all + "'" : ""%>>
                 </span>
             </button>
             <%}%>

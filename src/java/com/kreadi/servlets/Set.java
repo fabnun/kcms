@@ -711,13 +711,6 @@ public class Set extends HttpServlet {
                             }
                             break;
                         }
-                        case "agentes": {
-                            String s = (String) paramMap.get("list");
-                            s = s.replaceAll("\\s+", " ").trim();
-                            s = s.length() == 0 ? null : s;
-                            Browser.all = s;
-                            break;
-                        }
                         case "movTable": {
                             //MUEVE UNA TABLA (SUPERUSER)
                             String id = (String) paramMap.get("id");
@@ -783,7 +776,7 @@ public class Set extends HttpServlet {
                                     col.width = Integer.parseInt(value);
                                     break;
                                 case "coltype":
-                                    //TODO implementar type Select
+                                    //TODO implementar el type Select
                                     if (value.equals("Id")) {
                                         boolean found = false;
                                         for (Column c : tabla.columns) {

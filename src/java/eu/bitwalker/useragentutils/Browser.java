@@ -403,8 +403,6 @@ public enum Browser {
 		return null;
 	}
         
-                public static String all=null;
-	
 	/**
 	 * Iterates over all Browsers to compare the browser signature with 
 	 * the user agent string. If no match can be found Browser.UNKNOWN will
