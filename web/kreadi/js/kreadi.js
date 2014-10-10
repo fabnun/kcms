@@ -248,7 +248,7 @@ function showPreview(row, col, num, key, name, isImage, subId) {
 function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId) {
     var lname = (name ? name.toLowerCase() : "");
     var isImage = lname.endsWith('.jpg') || lname.endsWith('.jpeg') || lname.endsWith('.png') || lname.endsWith('.gif');
-    var isText = lname.endsWith('.html') || lname.endsWith('.txt') || lname.endsWith('.css') || lname.endsWith('.xml')  || lname.endsWith('.*') || lname.indexOf('.') === -1
+    var isText = lname.endsWith('.php') || lname.endsWith('.html') || lname.endsWith('.txt') || lname.endsWith('.css') || lname.endsWith('.xml')  || lname.endsWith('.*') || lname.indexOf('.') === -1
             || lname.endsWith('.js') || lname.endsWith('.jsp') || lname.indexOf('.') === 0 || lname.endsWith('.json');//initEdit(element, col, row, value, type, subId) {
     var html = "<img title='Upload' src='css/upload.png' style='cursor:pointer;top:5px;position:relative;' onclick='initEdit(this.parentNode, " + col + "," + row + ", \"\", \"File\"" + (subId ? (', "' + subId + '"') : "") + " )'>";
     html = html + "<a title='Download' href='" + server + "?id=" + key + "&name=" + name + "&download=" + size + "'><img title='Download' src='css/download.png' style='cursor:pointer;top:5px;position:relative;'></a>";

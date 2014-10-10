@@ -14,7 +14,6 @@ import com.kreadi.model.Column;
 import com.kreadi.model.Dao;
 import com.kreadi.model.Serial;
 import com.kreadi.model.Table;
-import eu.bitwalker.useragentutils.Browser;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -279,19 +278,23 @@ public class Set extends HttpServlet {
     private static void serial2Zip(Dao dao, ZipOutputStream zipStream, LinkedList<Serial> serList) throws IOException, ClassNotFoundException {
         if (serList.size() > 0) {
             Serial s = serList.pollFirst();
-            Serializable ser = s.getValue();
-            try {
-                byte[] data = Serial.toBytes(ser);
-                ZipEntry e = new ZipEntry(s.key);
-                zipStream.putNextEntry(e);
-                zipStream.write(data, 0, data.length);
-                zipStream.closeEntry();
-                if (ser instanceof Table) {
-                    table2Zip(dao, (Table) ser, zipStream, serList);
+            if (s != null) {
+                Serializable ser = s.getValue();
+                try {
+                    byte[] data = Serial.toBytes(ser);
+                    ZipEntry e = new ZipEntry(s.key);
+                    zipStream.putNextEntry(e);
+                    zipStream.write(data, 0, data.length);
+                    zipStream.closeEntry();
+                    if (ser instanceof Table) {
+                        table2Zip(dao, (Table) ser, zipStream, serList);
+                    }
+                    serial2Zip(dao, zipStream, serList);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                serial2Zip(dao, zipStream, serList);
-            } catch (IOException e) {
-                e.printStackTrace();
+            } else {
+                System.out.println("now!!!");
             }
         }
     }

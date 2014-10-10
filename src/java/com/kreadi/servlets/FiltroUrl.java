@@ -67,7 +67,7 @@ public class FiltroUrl implements Filter {
                         resp.getWriter().print(ex.getMessage());
                     }
                 }
-
+                String code = null;
                 try {
                     Integer index = (Integer) map.get("#n");
                     index = index == null ? 0 : index;
@@ -177,7 +177,7 @@ public class FiltroUrl implements Filter {
                                     subId = "." + idx;
                                 }
                             } while (bytes != null);
-                            String code = baos.toString("UTF-8");
+                            code=baos.toString("UTF-8");
                             if (!filename.endsWith("_")) {//Si no termina en _
                                 Scriptlet script = new Scriptlet(code);
                                 String process = script.process(req, resp, dao, index, uri);
@@ -201,6 +201,7 @@ public class FiltroUrl implements Filter {
                     }
                 } catch (ClassNotFoundException | IOException | NumberFormatException | ServletException | EvalError ex) {
                     ex.printStackTrace();
+                    if (code!=null) { resp.getWriter().print(code); System.err.println("\n---------------------------------------------------------\n"+code); } 
                     resp.getWriter().print(ex.getMessage());
                 }
                 if (!filename.startsWith("_")) {
