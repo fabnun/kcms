@@ -1,4 +1,37 @@
 var server = "/kreadi/set";
+var timeout;
+var idPreview = null;
+var currentEdit = undefined;
+var noBuild = false;
+var tooglePropsValue = false;
+
+if (typeof String.prototype.startsWith !== 'function') {
+    // see below for better implementation!
+    String.prototype.startsWith = function(str) {
+        return this.indexOf(str) == 0;
+    };
+}
+if (typeof String.prototype.startsWith !== 'function') {
+    String.prototype.startsWith = function(str) {
+        return this.indexOf(str) === 0;
+    };
+}
+if (typeof String.prototype.endsWith !== 'function') {
+    String.prototype.endsWith = function(s) {
+        return this.length >= s.length && this.substr(this.length - s.length) === s;
+    };
+}
+if (typeof Array.prototype.contains !== 'fucntion') {
+    Array.prototype.contains = function(obj) {
+        var i = this.length;
+        while (i--) {
+            if (this[i] === obj) {
+                return true;
+            }
+        }
+        return false;
+    };
+}
 
 function keyNumberFilter(evt) {
     var code = evt.keyCode;
@@ -10,13 +43,6 @@ function keyNumberFilter(evt) {
     return false;
 }
 
-/**Inicia la edicion de un nodo
- * @param element
- * @param col
- * @param row
- * @param value
- * @param subId
- * @param type*/
 function initEdit(element, col, row, value, type, subId) {
     if (subId) {
         subId = ",\"" + subId + "\"";
@@ -61,13 +87,6 @@ function initEdit(element, col, row, value, type, subId) {
     }
 }
 
-//Prototipo de funcion startWith en un String
-if (typeof String.prototype.startsWith !== 'function') {
-    String.prototype.startsWith = function(str) {
-        return this.indexOf(str) === 0;
-    };
-}
-
 function setWait(msg) {
     var wd = document.getElementById("waitDiv");
     if (msg) {
@@ -79,7 +98,7 @@ function setWait(msg) {
 
 function templateSelect(elem) {
     setWait("Restaurando Template");
-    var f = elem.files[0];//Archivo zip
+    var f = elem.files[0]; //Archivo zip
     zip.createReader(new zip.BlobReader(f), function(reader) {
         reader.getEntries(function(entries) {
             sendSerializable(entries, true, entries.length, true);
@@ -116,7 +135,7 @@ function fileSelect(elem, col, row, subId) {//Upload de archivos y respaldo
         });
     } else {
         setWait("Restaurando Web 0%");
-        var f = elem.files[0];//Archivo zip
+        var f = elem.files[0]; //Archivo zip
         // use a BlobReader to read the zip from a Blob object
         zip.createReader(new zip.BlobReader(f), function(reader) {
 
@@ -188,10 +207,6 @@ function sendSerializable(entries, first, size, isTemplate) {
     }
 }
 
-String.prototype.endsWith = function(s) {
-    return this.length >= s.length && this.substr(this.length - s.length) === s;
-};
-
 function agentes(input) {
     ajax(server, {command: "agentes", list: input.value},
     function() {
@@ -234,7 +249,6 @@ function showPreview(row, col, num, key, name, isImage, subId) {
             };
             html = html + "<span id='img" + key + "' style='white-space: nowrap'></span></div>";
             html = html + "<button style='float:right;margin-top:-36px;margin-right:16px;' onclick='showPreview()'> [ESC] </button>";
-
             html = html + "<img id='image" + key + "' src=\"" + server + "?id=" + key + "&name=" + name + "\" style='display:none;width:96%;border:1px dotted white;padding:4px'>";
         } else {
             html = html + "<button style='float:right;' onclick='showPreview()'> [ESC] </button>";
@@ -248,8 +262,8 @@ function showPreview(row, col, num, key, name, isImage, subId) {
 function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId) {
     var lname = (name ? name.toLowerCase() : "");
     var isImage = lname.endsWith('.jpg') || lname.endsWith('.jpeg') || lname.endsWith('.png') || lname.endsWith('.gif');
-    var isText = lname.endsWith('.php') || lname.endsWith('.html') || lname.endsWith('.txt') || lname.endsWith('.css') || lname.endsWith('.xml')  || lname.endsWith('.*') || lname.indexOf('.') === -1
-            || lname.endsWith('.js') || lname.endsWith('.jsp') || lname.indexOf('.') === 0 || lname.endsWith('.json');//initEdit(element, col, row, value, type, subId) {
+    var isText = lname.endsWith('.php') || lname.endsWith('.html') || lname.endsWith('.txt') || lname.endsWith('.css') || lname.endsWith('.xml') || lname.endsWith('.*') || lname.indexOf('.') === -1
+            || lname.endsWith('.js') || lname.endsWith('.jsp') || lname.indexOf('.') === 0 || lname.endsWith('.json'); //initEdit(element, col, row, value, type, subId) {
     var html = "<img title='Upload' src='css/upload.png' style='cursor:pointer;top:5px;position:relative;' onclick='initEdit(this.parentNode, " + col + "," + row + ", \"\", \"File\"" + (subId ? (', "' + subId + '"') : "") + " )'>";
     html = html + "<a title='Download' href='" + server + "?id=" + key + "&name=" + name + "&download=" + size + "'><img title='Download' src='css/download.png' style='cursor:pointer;top:5px;position:relative;'></a>";
     if (admin && isText)
@@ -258,16 +272,12 @@ function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId)
         html = html + "<img title='Rename' src='css/edit.png' style='margin:0px 4px;cursor:pointer;top:5px;position:relative;' onclick='rename(" + row + "," + col + ")'>";
     if (key) {
         html = html + "<img title='Vista Previa' src='css/see.png'  onmouseout='preview(null)' onmouseover=\"preview('" + key + "', '" + name + "',  this)\" style='cursor:pointer;top:5px;position:relative;margin-left:4px'  onclick='showPreview(" + row + "," + col + "," + num + ",\"" + key + "\",\"" + name + "\", " + isImage + ",\"" + subId + "\")'> ";
-
         html = html + " &nbsp; <span style='position:relative;top:-2px;text-decoration:none''>" +
                 name + (admin ? (" [" + type + "]") : "") + " </span> &nbsp; <span style='color:white;display: inline-block;text-align:right;top:-2px;position:relative'>(" + Math.round(size / 1024) + " kb)</span>";
     }
     return html;
 }
 
-var timeout;
-
-var idPreview = null;
 function preview(id, name, elem) {
     var prev = document.getElementById("toolpreview");
     if (id === null || (!name.toLowerCase().endsWith(".jpg") && !name.toLowerCase().endsWith(".png") && !name.toLowerCase().endsWith(".gif"))) {
@@ -291,14 +301,7 @@ function preview(id, name, elem) {
     }
 }
 
-var currentEdit = undefined;
-
-/**Realiza un request ajax
- * @param url : server service url
- * @param json : json element request
- * @param element : element that shows the progress bar
- * @param func : function that process the response with params (resp, json)*/
-function ajax(url, json, func, element) {
+function ajax(url, json, func) {
     var ajax = false;
     try {
         ajax = new ActiveXObject("Msxml2.XMLHTTP");
@@ -320,25 +323,10 @@ function ajax(url, json, func, element) {
             }
         };
     ajax.open("POST", url, true);
-
-//    if (element) {
-//        ajax.element = element;
-//        //ajax.upload.addEventListener("progress", progressHandler, false);
-//        ajax.upload.addEventListener("progress",
-//                (function(ele) {
-//                    return function(event) {
-//                        progressHandler(event, ele);
-//                    };
-//                }(element)), false);
-//    }
-
     var fd = new FormData();
-
     if (!json.data)
         json.data = "";
-
-    var isMultipart = true;//json.data;
-
+    var isMultipart = true;
     if (isMultipart)
     {
         for (var item in json)
@@ -367,12 +355,11 @@ function getSelRows(subId) {
     var inputs = document.getElementsByClassName(subId ? ("check_" + subId) : "checkInput");
     var selected = [];
     for (var i = 0; i < inputs.length; i++) {
-        if ((inputs[i].id.substring(0, 3) === "sel" || inputs[i].id.substring(0, 8) === "subTable") && inputs[i].checked)
+        if ((inputs[i].id.substring(0, 4) === "_sel" || inputs[i].id.substring(0, 8) === "subTable") && inputs[i].checked)
             selected.push(i);
     }
     return selected;
 }
-
 
 function delRow() {
     if (!currentEdit) {
@@ -399,13 +386,23 @@ function delRow() {
 
 function addRow() {
     if (!currentEdit) {
-        ajax(server, {command: "addrow", id: data.id},
-        function(resp) {
+        var sel = getSelRows();
+        ajax(server, {command: "addrow", id: data.id, before: sel.length > 0 ? sel[0] : -1},
+        function(resp, json) {
             if (resp === "") {
                 for (var i = 0; i < data.columns.length; i++) {
-                    data.columns[i].data.push("");
+                    if (json.before===-1)
+                        data.columns[i].data.push("");
+                    else
+                        data.columns[i].data.splice(json.before, 0, "");
                 }
                 buildTable(data);
+                if (sel.length > 0) {
+                    for (var i = 0; i < sel.length; i++) {
+                        var check = document.getElementById("_sel" + (sel[i] + 1));
+                        check.checked = true;
+                    }
+                }
             } else
                 alert(resp);
         });
@@ -416,30 +413,32 @@ function rename(row, col) {
     if (!currentEdit) {
         var oldname = data.columns[col].data[row].name;
         var newname = prompt('Rename', oldname);
-        newname = newname ? newname.replace(/^\s+|\s+$/g, '') : "";
-        if (oldname !== newname) {
-            ajax(server, {command: "rename", id: data.id, row: row, col: col, name: newname},
-            function(resp) {
-                if (resp === "OK") {
-                    data.columns[col].data[row].name = newname;
-                    buildTable(data);
-                }
-                if (resp) {
-                    resp = JSON.parse(resp);
-                    data.columns[col].data[row] = resp;
-                    buildTable(data);
-                } else
-                    alert(resp);
-            });
+        if (newname) {
+            newname = newname ? newname.replace(/^\s+|\s+$/g, '') : "";
+            if (oldname !== newname) {
+                ajax(server, {command: "rename", id: data.id, row: row, col: col, name: newname},
+                function(resp) {
+                    if (resp === "OK") {
+                        data.columns[col].data[row].name = newname;
+                        buildTable(data);
+                    }
+                    if (resp) {
+                        resp = JSON.parse(resp);
+                        data.columns[col].data[row] = resp;
+                        buildTable(data);
+                    } else
+                        alert(resp);
+                });
+            }
         }
     }
 }
 
-
 function setSel(add, indexes) {
     for (var i = 0; i < indexes.length; i++) {
-        var id = "sel" + (parseInt(indexes[i]) + add);
-        document.getElementById(id).checked = true;
+        var id = "_sel" + (parseInt(indexes[i]) + add);
+        var check = document.getElementById(id);
+        check.checked = true;
     }
 }
 
@@ -470,13 +469,6 @@ function downRow() {
             });
         }
     }
-}
-
-if (typeof String.prototype.startsWith != 'function') {
-    // see below for better implementation!
-    String.prototype.startsWith = function(str) {
-        return this.indexOf(str) == 0;
-    };
 }
 
 function sortRow() {
@@ -605,7 +597,6 @@ function saveScript(name) {
     });
 }
 
-
 function setHtml(row, col) {
     _editCol = col;
     _editRow = row;
@@ -616,10 +607,8 @@ function setHtml(row, col) {
         document.getElementById('html').innerHTML = "<textarea id='tinyeditor' onkeydown='return keyprocess(event);' style='width:100%;resize: none;'></textarea>" +
                 "<img src='css/cancel.png' style='position:absolute;right:12px;top:9px;cursor:pointer' onclick='showPreview()' title='Cancel'>";
         document.getElementById('tinyeditor').value = resp;
-
         var editor = CKEDITOR.replace('tinyeditor');
         CKEDITOR.config.startupOutlineBlocks = true;
-
         editor.on('key', function(val) {
             if (val.data.keyCode === 27) {
                 document.title = ((data.name !== null && data.name.trim().length > 0) ? data.name : data.id);
@@ -638,15 +627,13 @@ function setHtml(row, col) {
                 return false;
             }
         });
-
         document.getElementById('rowButtons').style.display = "none";
-
         // SET THE KEYSTROKE TO SAVE CTRL+S
         //setTimeout('var iframe=document.getElementsByClassName("cke_wysiwyg_frame");alert(iframe);if (iframe) iframe.onkeydown=function(){alert("chapala!!!");};',3000);
 
     });
-
 }
+
 function over(over, element) {
     var tds = element.children;
     for (var i = 0; i < tds.length; i++) {
@@ -668,7 +655,6 @@ function togleRow2(col, row, button) {
         button.style.background = "#DDD";
     }
 }
-
 
 function upRow() {
     if (!currentEdit) {
@@ -700,19 +686,51 @@ function upRow() {
 }
 
 function upRow2(col, row) {
-    ajax(server, {command: "upRow2", id: data.id, col: col, row: row}, function(resp) {
+    var sel = getSelRows("subTable" + col + "." + row);
+    if (sel.length > 0)
+        if (sel[0] !== 0) {
+            ajax(server, {command: "upRow2", id: data.id, col: col, row: row, rows: sel.join(",")}, function(resp, json) {
+                var sel = json.rows.split(",");
+                var parent = "_subTable" + json.col + "." + json.row + ".0";
+                parent = document.getElementById(parent).parentNode;
 
-    });
+                for (var i = 0; i < sel.length; i++) {
+                    var row = parseInt(sel[i]);
+                    var val0 = parent.childNodes[row];
+                    var val1 = parent.childNodes[row - 1];
+                    parent.removeChild(val0);
+                    parent.insertBefore(val0, val1);
+                }
+            });
+        }
 }
 
 function downRow2(col, row) {
-    ajax(server, {command: "downRow2", id: data.id, col: col, row: row}, function(resp) {
+    var sel = getSelRows("subTable" + col + "." + row);
+    if (sel.length > 0) {
+        var parent = "subTable" + col + "." + row + ".0";
+        parent = document.getElementById(parent).parentNode;
+        if (sel[sel.length - 1] !== parent.childNodes.length - 1)
+            ajax(server, {command: "downRow2", id: data.id, col: col, row: row, rows: sel.join(",")}, function(resp, json) {
+                var sel = json.rows.split(",");
+                var parent = "_subTable" + json.col + "." + json.row + ".0";
+                parent = document.getElementById(parent).parentNode;
 
-    });
+                for (var i = sel.length - 1; i >= 0; i--) {
+                    var row = parseInt(sel[i]);
+                    var val0 = parent.childNodes[row];
+                    var val1 = parent.childNodes[row + 1];
+                    parent.removeChild(val1);
+                    parent.insertBefore(val1, val0);
+                }
+            });
+    }
 }
 
 function addRow2(col, row) {
-    ajax(server, {command: "addRow2", id: data.id, col: col, row: row}, function(resp) {
+    var sel = getSelRows("subTable" + col + "." + row);
+    var before = sel.length > 0 ? sel[0] : -1;
+    ajax(server, {command: "addRow2", id: data.id, col: col, row: row, before: before}, function(resp) {
         var sd = {};
         eval("sd = " + resp);
         data.columns[col].data[row] = sd;
@@ -723,6 +741,12 @@ function addRow2(col, row) {
         } else {
             buildTable(data);
             count.innertHTML = " ( 0 ) ";
+        }
+        if (sel.length > 0) {
+            for (var i = 0; i < sel.length; i++) {
+                var check = document.getElementById("subTable" + col + "." + row + "." + (sel[i] + 1));
+                check.checked = true;
+            }
         }
     });
 }
@@ -749,9 +773,6 @@ function delRow2(col, row) {
     }
 }
 
-noBuild = false;
-/**Construye una tabla a partir de un json
- * @param {Number} colIndex indice de la columna seleccionada*/
 function buildTable(data, colIndex, subId) {
     if (subId || !noBuild) {
         var subTables = {};
@@ -771,10 +792,8 @@ function buildTable(data, colIndex, subId) {
             var cols = data.columns.length;
             document.getElementById("rowButtons").style.display = (cols > 0 && (superAdmin || data.allowAdd)) ? "block" : "none";
             html.push("</td></tr>");
-
             if (cols > 0) {
                 html.push("<tr class='tableHeader'>");
-
                 for (var i = 0; i < cols; i++) {
                     var columna = data.columns[i];
                     html.push("<td", columna.width > 0 ? (" width='" + columna.width + "'") : "");
@@ -786,9 +805,8 @@ function buildTable(data, colIndex, subId) {
         }
         if (data.columns && data.columns.length > 0) {
             var rows = data.columns[0].data.length;
-
             for (var i = 0; i < rows; i++) {
-                html.push("<tr class='tableData' onmouseover='over(true,this)' onmouseout='over(false,this)'>");
+                html.push("<tr class='tableData' id='" + (subId ? ("_" + subId + ".") : "sel") + i + "' onmouseover='over(true,this)' onmouseout='over(false,this)'>");
                 for (var j = 0; j < cols; j++) {
                     var columna = data.columns[j];
                     var value = columna.data[i];
@@ -807,6 +825,8 @@ function buildTable(data, colIndex, subId) {
                     html.push(">");
                     if (!subId && columna.type === "SubTable") {
                         html.push("<div style='float:right'><span  id='txt_subTable" + j + "." + i + "'  style='float:right;display:block;position:relative;margin:6px 8px'>( " + (value ? value.columns[0].data.length : "0") + " )</span> <span id='btn_subTable" + j + "." + i + "' style='display:none;'>");
+                        html.push("<button id='upRowButton' title='Mover arriba' onclick='upRow2(" + j + "," + i + ")' style='width:26px;padding:0;margin-right:2px'><img src='css/up.png'></button>");
+                        html.push("<button id='downRowButton' title='Mover abajo' onclick='downRow2(" + j + "," + i + ")' style='width:26px;padding:0;margin-right:4px'><img src='css/down.png'></button>");
                         html.push("<button onclick='addRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/add.png'></button>");
                         html.push("<button onclick='delRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/del.png'></button></span>");
                         html.push("<button onclick='togleRow2(" + j + "," + i + ",this)' style='padding:0;margin-left:12px;margin-right:6px'><img src='css/rest.png'></button></div>");
@@ -819,7 +839,6 @@ function buildTable(data, colIndex, subId) {
                                     count++;
                             }
                             html.push(getFileUploadedCode(j, i, value.key, value.name, value.size, count, true, value.type, subId));
-
                         } else
                             html.push(getFileUploadedCode(j, i, null, null, null, null, null, null, subId));
                     } else if (columna.type === "Boolean") {
@@ -837,7 +856,7 @@ function buildTable(data, colIndex, subId) {
                     html.push("</td>");
                 }
                 if (subId || superAdmin || data.allowAdd) {
-                    html.push("<td style='width:20px;padding-top:16px'><input id='" + (subId ? (subId + ".") : "sel") + i + "' type='checkbox' class='" + (subId ? ("check_" + subId) : "checkInput") + "'></td>");
+                    html.push("<td style='width:20px;padding-top:16px'><input id='" + (subId ? (subId + ".") : "_sel") + i + "' type='checkbox' class='" + (subId ? ("check_" + subId) : "checkInput") + "'></td>");
                 }
                 html.push("</tr>");
             }
@@ -848,7 +867,6 @@ function buildTable(data, colIndex, subId) {
         if (superAdmin && !subId) {
             html.push("<tr class='tableHeader'><td onclick='toogleProps()' id='propertiesSwitch' colspan=", data.columns.length, ">");
             html.push("&darr;Show Properties &darr;");
-
             html.push("</td></tr><tr class='tableHeader prop'>",
                     "<td colspan=", data.columns.length, " style='text-align:left'><span style='color:yellow'>Table Properties</span><br><br>",
                     " Table ID ", "<input type='text' onchange='changeTableVal(this, \"" + data.id + "\")' id='id' class='shortInput' value='" + data.id + "'>",
@@ -884,13 +902,11 @@ function buildTable(data, colIndex, subId) {
                     " <button id='colright' style='float:right;margin-top:-4px' onclick='rightCol()'>Column to Right</button>",
                     " <button id='colleft' style='float:right;margin-top:-4px' onclick='leftCol()'>Column to Left</button>",
                     "<br><br></td></tr>");
-
             html.push("<tr class='tableHeader prop'><td colspan=", data.columns.length, " style='text-align:left'><span style='color:yellow'>Subtables</span><br>");
             html.push("<br>Id <input type='text' id='newId' class='shortInput' value=''>",
                     " &nbsp; Name <input type='text' id='newName' class='midInput' value=''> ",
                     "<button onclick='newTable()'>New Table</button><br><br>");
             html.push("</td></tr></table>");
-
         } else {
             html.push("</table>");
         }
@@ -904,7 +920,6 @@ function buildTable(data, colIndex, subId) {
         }
 
         element.innerHTML = html.join("");
-
         for (var id in subTables) {
             if (subTables[id])
                 buildTable(subTables[id], undefined, id);
@@ -920,17 +935,6 @@ function buildTable(data, colIndex, subId) {
     }
 }
 
-Array.prototype.contains = function(obj) {
-    var i = this.length;
-    while (i--) {
-        if (this[i] === obj) {
-            return true;
-        }
-    }
-    return false;
-}
-
-var tooglePropsValue = false;
 function toogleProps(toogle) {
     if (!toogle)
         tooglePropsValue = !tooglePropsValue;
@@ -980,7 +984,6 @@ function leftCol() {
                 alert(resp);
         });
 }
-
 
 function delCol() {
     if (confirm("Delete this column?"))
@@ -1052,19 +1055,16 @@ function changeColIndex(idx) {
     var colType = document.getElementById("coltype");
     var colEditable = document.getElementById("coleditable");
     var colRulesElem = document.getElementById("colrules");
-
     var colnewElem = document.getElementById("colnew");
     var coldelElem = document.getElementById("coldel");
     var colrightElem = document.getElementById("colright");
     var colleftElem = document.getElementById("colleft");
-
     if (colIdx >= 0) {
         colNameElem.value = data.columns[colIdx].name;
         colRulesElem.value = data.columns[colIdx].rules;
         colWidthElem.value = data.columns[colIdx].width;
         colType.value = data.columns[colIdx].type;
         colEditable.checked = data.columns[colIdx].editable;
-
         colnewElem.style.display = "none";
         coldelElem.style.display = "inline-block";
         colrightElem.style.display = "inline-block";
@@ -1075,7 +1075,6 @@ function changeColIndex(idx) {
         colType.value = "String";
         colRulesElem.value = "";
         colEditable.checked = true;
-
         colnewElem.style.display = "inline-block";
         coldelElem.style.display = "none";
         colrightElem.style.display = "none";
@@ -1106,13 +1105,6 @@ function newTable() {
     });
 }
 
-/**Envia las modificaciones de un campo al servidor
- * @param elem
- * @param col
- * @param row
- * @param oldValue
- * @param subId
- * @param evt */
 function endEdit(elem, col, row, evt, oldValue, subId) {
 
     if (!elem.disabled && (evt === undefined || evt.keyCode === 13 || evt.keyCode === 27)) {

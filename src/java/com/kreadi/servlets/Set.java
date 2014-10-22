@@ -294,7 +294,7 @@ public class Set extends HttpServlet {
                     e.printStackTrace();
                 }
             } else {
-                System.out.println("now!!!");
+                System.out.println("now!!! aca paso algo!!!");
             }
         }
     }
@@ -1004,8 +1004,13 @@ public class Set extends HttpServlet {
                             }
                             case "addrow":
                                 //CREA UN NUEVO REGISTRO
+                                int before = Integer.parseInt((String) paramMap.get("before"));
                                 for (Column col : tabla.columns) {
-                                    col.data.add(null);
+                                    if (before == -1) {
+                                        col.data.add(null);
+                                    } else {
+                                        col.data.add(before, null);
+                                    }
                                 }
                                 dao.saveTable(tabla);
                                 dao.resetCache();
@@ -1222,7 +1227,7 @@ public class Set extends HttpServlet {
                                 int col = Integer.parseInt((String) paramMap.get("col"));
                                 int rw = Integer.parseInt((String) paramMap.get("row"));
                                 Table subTabla = (Table) tabla.columns.get(col).data.get(rw);
-                                if (subTabla == null) {
+                                if (subTabla != null) {
                                     String[] rows = ((String) paramMap.get("rows")).split(",");
                                     for (String row : rows) {
                                         int index = Integer.parseInt(row);
@@ -1233,7 +1238,7 @@ public class Set extends HttpServlet {
                                             column.data.set(index - 1, val0);
                                         }
                                     }
-                                    dao.saveTable(subTabla);
+                                    dao.saveTable(tabla);
                                 }
                                 break;
                             }
@@ -1243,7 +1248,7 @@ public class Set extends HttpServlet {
                                 int col = Integer.parseInt((String) paramMap.get("col"));
                                 int row = Integer.parseInt((String) paramMap.get("row"));
                                 Table subTabla = (Table) tabla.columns.get(col).data.get(row);
-                                if (subTabla == null) {
+                                if (subTabla != null) {
                                     String[] rows = ((String) paramMap.get("rows")).split(",");
                                     for (int j = rows.length - 1; j >= 0; j--) {
                                         int index = Integer.parseInt(rows[j]);
@@ -1263,6 +1268,7 @@ public class Set extends HttpServlet {
                                 //EN UNA SUBTABLA CREA UN REGISTRO AL FINAL////////////////////////////
                                 int col = Integer.parseInt((String) paramMap.get("col"));
                                 int row = Integer.parseInt((String) paramMap.get("row"));
+                                before = Integer.parseInt((String) paramMap.get("before"));
                                 Table subTabla = (Table) tabla.columns.get(col).data.get(row);
                                 if (subTabla == null) {
                                     subTabla = new Table(null, null);
@@ -1308,7 +1314,11 @@ public class Set extends HttpServlet {
                                     }
                                 }
                                 for (Column subcol : subTabla.columns) {
-                                    subcol.data.add(null);
+                                    if (before == -1) {
+                                        subcol.data.add(null);
+                                    } else {
+                                        subcol.data.add(before, null);
+                                    }
                                 }
                                 tabla.columns.get(col).data.set(row, subTabla);
                                 resp = subTabla.toJSON();

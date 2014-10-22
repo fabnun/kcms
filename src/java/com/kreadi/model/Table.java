@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -69,8 +70,8 @@ public class Table implements Serializable {
             return 0;
         }
     }
-    
-        /**
+
+    /**
      * Obtiene la cantidad de registros de la tabla
      *
      * @return
@@ -82,31 +83,34 @@ public class Table implements Serializable {
             return 0;
         }
     }
-    
+
     /**
      * Retorna la cantidad de columnas
-     * @return 
+     *
+     * @return
      */
-    public int cols(){
-        return columns==null?0:columns.size();
+    public int cols() {
+        return columns == null ? 0 : columns.size();
     }
-    
+
     /**
      * Agrega una registro al final
-     * @param row 
+     *
+     * @param row
      */
-    public void addRow(Serializable[] row){
-            addRow(row,0);
+    public void addRow(Serializable[] row) {
+        addRow(row, 0);
     }
-    
+
     /**
      * Agrega un registro en una posicion especifica
+     *
      * @param row
-     * @param idx 
+     * @param idx
      */
-    public void addRow(Serializable[] row, int idx){
-        int cols=cols();
-        for(int i=0;i<cols;i++){
+    public void addRow(Serializable[] row, int idx) {
+        int cols = cols();
+        for (int i = 0; i < cols; i++) {
             columns.get(i).data.add(idx, row[i]);
         }
     }
@@ -236,8 +240,8 @@ public class Table implements Serializable {
                     map = (HashMap<String, Serializable>) ser;
                 } catch (Exception e) {
                 }
-                if (map != null && filename.matches((String) map.get("name")) || (filename.length()==0 && "index.html".matches((String) map.get("name")))) {
-                        return map;
+                if (map != null && filename.matches((String) map.get("name")) || (filename.length() == 0 && "index.html".matches((String) map.get("name")))) {
+                    return map;
                 }
             }
             return null;
@@ -245,7 +249,7 @@ public class Table implements Serializable {
             return null;
         }
     }
-    
+
     public int getFileMapIndex(int col, String filename) {
         try {
             int idx = 0;
@@ -255,8 +259,8 @@ public class Table implements Serializable {
                     map = (HashMap<String, Serializable>) ser;
                 } catch (Exception e) {
                 }
-                if (map != null && filename.matches((String) map.get("name")) || (filename.length()==0 && "index.html".matches((String) map.get("name")))) {
-                        return idx;
+                if (map != null && filename.matches((String) map.get("name")) || (filename.length() == 0 && "index.html".matches((String) map.get("name")))) {
+                    return idx;
                 }
                 idx++;
             }
@@ -333,8 +337,8 @@ public class Table implements Serializable {
         StringBuilder sb = new StringBuilder();
         Set<String> set = subTableMap.keySet();
         Table table;
-        String rol=(String) dao.getSerial("user:rol");
-        rol=rol==null?"":rol;
+        String rol = (String) dao.getSerial("user:rol");
+        rol = rol == null ? "" : rol;
         String[] roles = rol.split(" ");
         String user = username;
         username = null;
@@ -346,16 +350,25 @@ public class Table implements Serializable {
             }
         }
         if (username != null) {
+            HashSet<String> del = new HashSet<>();
             for (String idSubTable : set) {
                 table = dao.loadTable(idSubTable);
-                String[] users = table.admins.split(",");
-                for (String usr : users) {
-                    usr = usr.trim().toLowerCase();
-                    if (usr.equals(username)) {
-                        sb.append(table.id).append("\",\"");
+                if (table == null) {
+                    del.add(idSubTable);
+                } else {
+                    String[] users = table.admins.split(",");
+                    for (String usr : users) {
+                        usr = usr.trim().toLowerCase();
+                        if (usr.equals(username)) {
+                            sb.append(table.id).append("\",\"");
+                        }
                     }
                 }
             }
+            for (String s : del) {
+                set.remove(s);
+            }
+            dao.saveTable(this);
         }
         int size = sb.length();
         if (size >= 2) {

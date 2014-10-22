@@ -65,8 +65,8 @@
             input[type=checkbox]{
                 margin-left:6px;
                 -webkit-box-shadow: none;
-	-moz-box-shadow: none;
-	box-shadow: none;
+                -moz-box-shadow: none;
+                box-shadow: none;
             }
         </style>
         <!--script src="js/codemirror.js"></script>
@@ -174,7 +174,7 @@
         </div>
         <script>
             var script = document.getElementById("script");
-            var editor = CodeMirror.fromTextArea(script, {
+            editor = CodeMirror.fromTextArea(script, {
                 lineNumbers: true,
                 styleActiveLine: true,
                 lineWrapping: true,
@@ -254,11 +254,13 @@
                         document.getElementById("preview").style.display = "none";
                         document.getElementById("htmlBox").style.display = "none";
                         document.getElementById("scriptDiv").style.display = "none";
+                        editor.setOption("fullScreen", false);
                         if (document.getElementById("users"))
                             document.getElementById("users").style.display = "none";
                         if (superAdmin || data.allowAdd) {
                             document.getElementById('rowButtons').style.display = "inline-block";
                         }
+                        document.body.style.overflow="scroll";
                     } else if (val.ctrlKey && val.keyCode !== 17) {
                         if (val.keyCode === 83) {// CTRL+S
                             save();

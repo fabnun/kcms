@@ -58,6 +58,11 @@ public class FiltroUrl implements Filter {
                         if (table != null) {
                             String col = req.getParameter("col");
                             map = col == null ? table.getFileMap(filename) : table.getFileMap(Integer.parseInt(col), filename);
+                            if (map == null) {
+                                resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+                                chain.doFilter(request, response);
+                                return;
+                            }
                         } else {
                             chain.doFilter(request, response);
                             return;
@@ -177,14 +182,14 @@ public class FiltroUrl implements Filter {
                                     subId = "." + idx;
                                 }
                             } while (bytes != null);
-                            code=baos.toString("UTF-8");
+                            code = baos.toString("UTF-8");
                             if (!filename.endsWith("_")) {//Si no termina en _
                                 Scriptlet script = new Scriptlet(code);
                                 String process = script.process(req, resp, dao, index, uri);
-                                cacheBytes=process.getBytes("UTF-8");
+                                cacheBytes = process.getBytes("UTF-8");
                                 resp.getOutputStream().write(cacheBytes);
-                                if (!filename.startsWith("_")){
-                                        dao.setCache(cacheKey2, cacheBytes);
+                                if (!filename.startsWith("_")) {
+                                    dao.setCache(cacheKey2, cacheBytes);
                                 }
                             } else if (req.getMethod().equals("POST")) {//Si termina en _ y es un metodo post retorna data
                                 Data data;
@@ -201,7 +206,10 @@ public class FiltroUrl implements Filter {
                     }
                 } catch (ClassNotFoundException | IOException | NumberFormatException | ServletException | EvalError ex) {
                     ex.printStackTrace();
-                    if (code!=null) { resp.getWriter().print(code); System.err.println("\n---------------------------------------------------------\n"+code); } 
+                    if (code != null) {
+                        resp.getWriter().print(code);
+                        System.err.println("\n---------------------------------------------------------\n" + code);
+                    }
                     resp.getWriter().print(ex.getMessage());
                 }
                 if (!filename.startsWith("_")) {
