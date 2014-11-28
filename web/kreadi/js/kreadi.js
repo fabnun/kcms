@@ -6,23 +6,22 @@ var noBuild = false;
 var tooglePropsValue = false;
 
 if (typeof String.prototype.startsWith !== 'function') {
-    // see below for better implementation!
-    String.prototype.startsWith = function(str) {
-        return this.indexOf(str) == 0;
+    String.prototype.startsWith = function (str) {
+        return this.indexOf(str) === 0;
     };
 }
 if (typeof String.prototype.startsWith !== 'function') {
-    String.prototype.startsWith = function(str) {
+    String.prototype.startsWith = function (str) {
         return this.indexOf(str) === 0;
     };
 }
 if (typeof String.prototype.endsWith !== 'function') {
-    String.prototype.endsWith = function(s) {
+    String.prototype.endsWith = function (s) {
         return this.length >= s.length && this.substr(this.length - s.length) === s;
     };
 }
-if (typeof Array.prototype.contains !== 'fucntion') {
-    Array.prototype.contains = function(obj) {
+if (typeof Array.prototype.contains !== 'function') {
+    Array.prototype.contains = function (obj) {
         var i = this.length;
         while (i--) {
             if (this[i] === obj) {
@@ -99,12 +98,12 @@ function setWait(msg) {
 function templateSelect(elem) {
     setWait("Restaurando Template");
     var f = elem.files[0]; //Archivo zip
-    zip.createReader(new zip.BlobReader(f), function(reader) {
-        reader.getEntries(function(entries) {
+    zip.createReader(new zip.BlobReader(f), function (reader) {
+        reader.getEntries(function (entries) {
             sendSerializable(entries, true, entries.length, true);
             currentEdit = undefined;
         });
-    }, function(error) {
+    }, function (error) {
         document.getElementById("restoreType").innerHTML = "";
         console.error("ERROR 9847");
     });
@@ -115,7 +114,7 @@ function fileSelect(elem, col, row, subId) {//Upload de archivos y respaldo
         var f = elem.files[0];
         setWait("Upload " + f.name);
         ajax(server, {command: 'upload', id: data.id, row: row, col: col, name: f.name, size: f.size, sid: subId, data: f},
-        function(resp) {
+        function (resp) {
             if (resp.startsWith("Error:")) {
             } else {
                 resp = JSON.parse(resp);
@@ -137,14 +136,14 @@ function fileSelect(elem, col, row, subId) {//Upload de archivos y respaldo
         setWait("Restaurando Web 0%");
         var f = elem.files[0]; //Archivo zip
         // use a BlobReader to read the zip from a Blob object
-        zip.createReader(new zip.BlobReader(f), function(reader) {
+        zip.createReader(new zip.BlobReader(f), function (reader) {
 
             // get all entries from the zip
-            reader.getEntries(function(entries) {
+            reader.getEntries(function (entries) {
                 sendSerializable(entries, true, entries.length);
                 currentEdit = undefined;
             });
-        }, function(error) {
+        }, function (error) {
             document.getElementById("restoreType").innerHTML = "";
             console.error("ERROR 8649769");
         });
@@ -155,16 +154,16 @@ function sendSerializable(entries, first, size, isTemplate) {
     if (isTemplate) {
 
         if (first) {
-            ajax(server, {command: "serialdelete"}, function(resp) {//Elimina los datos anteriores
+            ajax(server, {command: "serialdelete"}, function (resp) {//Elimina los datos anteriores
                 sendSerializable(entries, false, size, true);
             });
         } else {
             if (size > 0)
                 var esize = entries.length;
             if (esize > 0) {
-                entries[0].getData(new zip.BlobWriter(), function(text) {
+                entries[0].getData(new zip.BlobWriter(), function (text) {
                     ajax(server, {command: 'serial2', id: entries[0].filename, size: entries[0].uncompressedSize, data: text},
-                    function(resp, json) {
+                    function (resp, json) {
                         console.log(json.id);
                         setWait("Restaurando Template " + json.id);
                         entries.splice(0, 1);
@@ -181,7 +180,7 @@ function sendSerializable(entries, first, size, isTemplate) {
     } else {
 
         if (first) {
-            ajax(server, {command: "serialdelete"}, function(resp) {//Elimina los datos anteriores
+            ajax(server, {command: "serialdelete"}, function (resp) {//Elimina los datos anteriores
                 sendSerializable(entries, false, size);
             });
         } else {
@@ -189,9 +188,9 @@ function sendSerializable(entries, first, size, isTemplate) {
                 var esize = entries.length;
             if (esize > 0) {
                 esize = Math.min(2, esize);
-                entries[0].getData(new zip.BlobWriter(), function(text) {
+                entries[0].getData(new zip.BlobWriter(), function (text) {
                     ajax(server, {command: 'serial', id: entries[0].filename, data: text},
-                    function() {
+                    function () {
                         setWait("Restaurando Web " + Math.round(100 * (size - entries.length) / size) + "%");
                         entries.splice(0, 1);
                         if (entries.length > 0)
@@ -209,7 +208,7 @@ function sendSerializable(entries, first, size, isTemplate) {
 
 function agentes(input) {
     ajax(server, {command: "agentes", list: input.value},
-    function() {
+    function () {
     });
 }
 
@@ -239,7 +238,7 @@ function showPreview(row, col, num, key, name, isImage, subId) {
         if (isImage) {
             var img = new Image();
             img.src = server + "?id=" + key + "&name=" + name;
-            img.onload = function() {
+            img.onload = function () {
                 var spanDim = document.getElementById("img" + key);
                 var image = document.getElementById("image" + key);
                 image.style.maxWidth = this.width + "px";
@@ -291,7 +290,7 @@ function preview(id, name, elem) {
         idPreview = id;
         prev.src = "/kreadi/set?id=" + id + "&name=" + name + "&resize=120x120";
         timeout = setTimeout(
-                function() {
+                function () {
                     if (id === idPreview && idPreview !== null) {
                         prev.style.left = (elem.offsetLeft + 32) + "px";
                         prev.style.top = (elem.offsetTop - 64) + "px";
@@ -316,7 +315,7 @@ function ajax(url, json, func) {
         ajax = new XMLHttpRequest();
     }
     if (func)
-        ajax.onreadystatechange = function() {
+        ajax.onreadystatechange = function () {
             if (ajax.readyState === 4 && ajax.status === 200) {
                 //console.log(JSON.stringify(json) + " -> " + ajax.responseText);
                 func.call(this, ajax.responseText, json);
@@ -367,7 +366,7 @@ function delRow() {
         if (sel.length > 0) {
             if (confirm("Desea eliminar " + sel.length + " registros?")) {
                 ajax(server, {command: "delrow", id: data.id, rows: sel.join(",")},
-                function(resp, json) {
+                function (resp, json) {
                     if (resp === "") {
                         var sel = json.rows.split(",");
                         for (var i = 0; i < data.columns.length; i++) {
@@ -388,10 +387,10 @@ function addRow() {
     if (!currentEdit) {
         var sel = getSelRows();
         ajax(server, {command: "addrow", id: data.id, before: sel.length > 0 ? sel[0] : -1},
-        function(resp, json) {
+        function (resp, json) {
             if (resp === "") {
                 for (var i = 0; i < data.columns.length; i++) {
-                    if (json.before===-1)
+                    if (json.before === -1)
                         data.columns[i].data.push("");
                     else
                         data.columns[i].data.splice(json.before, 0, "");
@@ -417,7 +416,7 @@ function rename(row, col) {
             newname = newname ? newname.replace(/^\s+|\s+$/g, '') : "";
             if (oldname !== newname) {
                 ajax(server, {command: "rename", id: data.id, row: row, col: col, name: newname},
-                function(resp) {
+                function (resp) {
                     if (resp === "OK") {
                         data.columns[col].data[row].name = newname;
                         buildTable(data);
@@ -449,7 +448,7 @@ function downRow() {
             var button = document.getElementById("downRowButton");
             button.disabled = true;
             ajax(server, {command: "downrow", id: data.id, rows: sel.join(",")},
-            function(resp, json) {
+            function (resp, json) {
                 var sel = json.rows.split(",");
                 for (var j = sel.length - 1; j >= 0; j--) {
                     var index = parseInt(sel[j]);
@@ -478,11 +477,11 @@ function sortRow() {
             var button = document.getElementById("sortRowButton");
             button.disabled = true;
             ajax(server, {command: "sortrow", id: data.id, sort: sel},
-            function(resp, json) {
+            function (resp) {
                 if (resp.startsWith("ERROR: ")) {
                     alert(resp);
                 } else {
-                    window.location.href = window.location.href;
+                    window.location.reload();
                 }
                 button.disabled = false;
             });
@@ -503,7 +502,7 @@ function restore() {
 function setBoolean(element, row, col, subId) {
     var value = element.checked;
     element.disabled = true;
-    ajax(server, {command: "setTableVal", id: data.id, col: col, row: row, value: value, subId: subId}, function(resp) {
+    ajax(server, {command: "setTableVal", id: data.id, col: col, row: row, value: value, subId: subId}, function (resp) {
         element.disabled = false;
     });
 }
@@ -511,8 +510,8 @@ function setBoolean(element, row, col, subId) {
 function saveHtml() {
     setWait("Saving Html...");
     var value = CKEDITOR.instances.tinyeditor.getData();
-    ajax(server, {command: "setTableVal", id: data.id, col: _editCol, row: _editRow, value: value},
-    function(resp, json) {
+    ajax(server, {command: "setTableVal", id: data.id, col: _editCol, row: _editRow, value: value, subId:_subId},
+    function (resp, json) {
         data.columns[json.col].data[json.row] = JSON.parse(resp);
         document.getElementsByTagName("body")[0].style.overflow = "auto";
         setWait();
@@ -521,7 +520,7 @@ function saveHtml() {
 
 function delUser(idx) {
     ajax(server, {command: "delUser", idx: idx},
-    function(resp, json) {
+    function (resp, json) {
         updateUsers(resp);
     });
 }
@@ -545,7 +544,7 @@ function addUser() {
     var userRol = document.getElementById("userRol");
     userRol = userRol ? userRol.value : "";
     ajax(server, {command: "addUser", userName: userName, userRol: userRol},
-    function(resp, json) {
+    function (resp, json) {
         updateUsers(resp);
     });
 }
@@ -571,7 +570,7 @@ function setScript(row, col) {
     editor.getDoc().setValue("");
     if (val) {
         document.getElementById("scriptname").value = val.name;
-        ajax(server, {command: "getText", id: data.id, col: col, row: row}, function(resp) {
+        ajax(server, {command: "getText", id: data.id, col: col, row: row}, function (resp) {
             editor.getDoc().setValue(resp);
             var idxExt = val.name.lastIndexOf(".");
             var ext = idxExt > -1 ? val.name.substring(idxExt + 1).toLowerCase() : null;
@@ -590,17 +589,18 @@ function saveScript(name) {
     setWait("Saving Script...");
     var value = editor.getDoc().getValue();
     ajax(server, {command: "setTableVal", id: data.id, col: _editCol, row: _editRow, value: value, name: name, type: "Script"},
-    function(resp, json) {
+    function (resp, json) {
         data.columns[json.col].data[json.row] = JSON.parse(resp);
         buildTable(data);
         setWait();
     });
 }
 
-function setHtml(row, col) {
+function setHtml(row, col, subId) {
     _editCol = col;
     _editRow = row;
-    ajax(server, {command: "getText", id: data.id, col: _editCol, row: _editRow}, function(resp) {
+    _subId= subId;
+    ajax(server, {command: "getText", id: data.id, col: _editCol, row: _editRow, subId:subId}, function (resp) {
 
         document.getElementsByTagName("body")[0].style.overflow = "hidden";
         document.getElementById('htmlBox').style.display = "block";
@@ -609,7 +609,7 @@ function setHtml(row, col) {
         document.getElementById('tinyeditor').value = resp;
         var editor = CKEDITOR.replace('tinyeditor');
         CKEDITOR.config.startupOutlineBlocks = true;
-        editor.on('key', function(val) {
+        editor.on('key', function (val) {
             if (val.data.keyCode === 27) {
                 document.title = ((data.name !== null && data.name.trim().length > 0) ? data.name : data.id);
                 document.getElementById("preview").style.display = "none";
@@ -663,7 +663,7 @@ function upRow() {
             var button = document.getElementById("upRowButton");
             button.disabled = true;
             ajax(server, {command: "uprow", id: data.id, rows: sel.join(",")},
-            function(resp, json) {
+            function (resp, json) {
                 var sel = json.rows.split(",");
                 for (var j = 0; j < sel.length; j++) {
                     var index = parseInt(sel[j]);
@@ -689,7 +689,7 @@ function upRow2(col, row) {
     var sel = getSelRows("subTable" + col + "." + row);
     if (sel.length > 0)
         if (sel[0] !== 0) {
-            ajax(server, {command: "upRow2", id: data.id, col: col, row: row, rows: sel.join(",")}, function(resp, json) {
+            ajax(server, {command: "upRow2", id: data.id, col: col, row: row, rows: sel.join(",")}, function (resp, json) {
                 var sel = json.rows.split(",");
                 var parent = "_subTable" + json.col + "." + json.row + ".0";
                 parent = document.getElementById(parent).parentNode;
@@ -711,7 +711,7 @@ function downRow2(col, row) {
         var parent = "subTable" + col + "." + row + ".0";
         parent = document.getElementById(parent).parentNode;
         if (sel[sel.length - 1] !== parent.childNodes.length - 1)
-            ajax(server, {command: "downRow2", id: data.id, col: col, row: row, rows: sel.join(",")}, function(resp, json) {
+            ajax(server, {command: "downRow2", id: data.id, col: col, row: row, rows: sel.join(",")}, function (resp, json) {
                 var sel = json.rows.split(",");
                 var parent = "_subTable" + json.col + "." + json.row + ".0";
                 parent = document.getElementById(parent).parentNode;
@@ -730,7 +730,7 @@ function downRow2(col, row) {
 function addRow2(col, row) {
     var sel = getSelRows("subTable" + col + "." + row);
     var before = sel.length > 0 ? sel[0] : -1;
-    ajax(server, {command: "addRow2", id: data.id, col: col, row: row, before: before}, function(resp) {
+    ajax(server, {command: "addRow2", id: data.id, col: col, row: row, before: before}, function (resp) {
         var sd = {};
         eval("sd = " + resp);
         data.columns[col].data[row] = sd;
@@ -755,7 +755,7 @@ function delRow2(col, row) {
     var sel = getSelRows("subTable" + col + "." + row);
     if (sel.length > 0) {
         if (confirm("Desea eliminar " + sel.length + " registros?")) {
-            ajax(server, {command: "delRow2", id: data.id, col: col, row: row, checks: sel.join(",")}, function(resp) {
+            ajax(server, {command: "delRow2", id: data.id, col: col, row: row, checks: sel.join(",")}, function (resp) {
                 var sd = undefined;
                 if (resp !== "")
                     eval("sd = " + resp);
@@ -773,6 +773,50 @@ function delRow2(col, row) {
     }
 }
 
+function dragStartHandler(e) {
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('id', e.target.id);
+    e.dataTransfer.setData('fid', getParameterByName("id"));
+    e.dataTransfer.setData('html', e.target.innerHTML);
+}
+
+function noopHandler(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+}
+
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
+function drop(evt) {
+
+    evt.stopPropagation();
+    evt.preventDefault();
+    if (evt.target.className !== 'tableCell') {
+        return;
+    }
+    var dat = evt.dataTransfer.getData('id');
+    var fid = evt.dataTransfer.getData('fid');
+    var html = evt.dataTransfer.getData('html');
+
+    var fn = function (resp, json) {
+        if (resp === "") {
+            evt.target.style.bborder = "1px solid red";
+            
+        } else {
+            evt.target.innerHTML = html;
+            evt.target.style.border = "1px solid green";
+            
+        }
+    };
+    ajax(server, {command: "drag", tid: getParameterByName("id"), from: dat, to: this.id, fid: fid}, fn);
+}
+
+
 function buildTable(data, colIndex, subId) {
     if (subId || !noBuild) {
         var subTables = {};
@@ -785,7 +829,12 @@ function buildTable(data, colIndex, subId) {
             html.push("style='padding-right:30px'");
         }
         html.push(">");
-        var cols = data.columns.length;
+        var cols = 0;
+        try{
+          cols=  data.columns.length;
+        } catch(e){
+            
+        }
         if (!subId) {
             html.push("<tr class='tableHeader'>",
                     "<td colspan=", data.columns.length, " id='tituloTabla'><span style='top:6px;position:relative'>", data.name, "</span>");
@@ -810,7 +859,12 @@ function buildTable(data, colIndex, subId) {
                 for (var j = 0; j < cols; j++) {
                     var columna = data.columns[j];
                     var value = columna.data[i];
-                    html.push("<td");
+                    html.push("<td class='tableCell' draggable=true id='");
+                    html.push(idData + "-");
+                    html.push(i);
+                    html.push(".");
+                    html.push(j);
+                    html.push("'");
                     if (subId && i === 0 && columna.width > 0) {
                         html.push(" width='" + columna.width + "'");
                     }
@@ -824,12 +878,16 @@ function buildTable(data, colIndex, subId) {
                     }
                     html.push(">");
                     if (!subId && columna.type === "SubTable") {
-                        html.push("<div style='float:right'><span  id='txt_subTable" + j + "." + i + "'  style='float:right;display:block;position:relative;margin:6px 8px'>( " + (value ? value.columns[0].data.length : "0") + " )</span> <span id='btn_subTable" + j + "." + i + "' style='display:none;'>");
-                        html.push("<button id='upRowButton' title='Mover arriba' onclick='upRow2(" + j + "," + i + ")' style='width:26px;padding:0;margin-right:2px'><img src='css/up.png'></button>");
-                        html.push("<button id='downRowButton' title='Mover abajo' onclick='downRow2(" + j + "," + i + ")' style='width:26px;padding:0;margin-right:4px'><img src='css/down.png'></button>");
-                        html.push("<button onclick='addRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/add.png'></button>");
-                        html.push("<button onclick='delRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/del.png'></button></span>");
-                        html.push("<button onclick='togleRow2(" + j + "," + i + ",this)' style='padding:0;margin-left:12px;margin-right:6px'><img src='css/rest.png'></button></div>");
+                        try {
+                            html.push("<div style='float:right'><span  id='txt_subTable" + j + "." + i + "'  style='float:right;display:block;position:relative;margin:6px 8px'>( " + (value ? value.columns[0].data.length : "0") + " )</span> <span id='btn_subTable" + j + "." + i + "' style='display:none;'>");
+                            html.push("<button id='upRowButton' title='Mover arriba' onclick='upRow2(" + j + "," + i + ")' style='width:26px;padding:0;margin-right:2px'><img src='css/up.png'></button>");
+                            html.push("<button id='downRowButton' title='Mover abajo' onclick='downRow2(" + j + "," + i + ")' style='width:26px;padding:0;margin-right:4px'><img src='css/down.png'></button>");
+                            html.push("<button onclick='addRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/add.png'></button>");
+                            html.push("<button onclick='delRow2(" + j + "," + i + ")' style='padding:0;'><img src='css/del.png'></button></span>");
+                            html.push("<button onclick='togleRow2(" + j + "," + i + ",this)' style='padding:0;margin-left:12px;margin-right:6px'><img src='css/rest.png'></button></div>");
+                        } catch (e) {
+
+                        }
                     }
                     if (columna.type === "File") {
                         if (value) {
@@ -844,7 +902,7 @@ function buildTable(data, colIndex, subId) {
                     } else if (columna.type === "Boolean") {
                         html.push("<input type='checkbox' " + (value ? "checked" : "") + " style='margin-left:10px;width:12px' onchange='setBoolean(this," + i + "," + j + (subId ? (",\"" + subId + "\"") : "") + ")'>");
                     } else if (columna.type === "Html") {
-                        html.push("<button style='width:90px' onclick='setHtml(" + i + "," + j + ")'> Edit Html </button>");
+                        html.push("<button style='width:90px' onclick='setHtml(" + i + "," + j +(subId?",\""+subId+"\"":"") +")'> Edit Html </button>");
                     } else if (columna.type === "Script") {
                         html.push("<button style='width:90px' onclick='setScript(" + i + "," + j + ")'> Edit Script </button> " + (value ? value.name : ""));
                     } else if (columna.type === "SubTable") {
@@ -862,8 +920,10 @@ function buildTable(data, colIndex, subId) {
             }
 
 
-
         }
+
+
+
         if (superAdmin && !subId) {
             html.push("<tr class='tableHeader'><td onclick='toogleProps()' id='propertiesSwitch' colspan=", data.columns.length, ">");
             html.push("&darr;Show Properties &darr;");
@@ -920,6 +980,10 @@ function buildTable(data, colIndex, subId) {
         }
 
         element.innerHTML = html.join("");
+
+
+
+
         for (var id in subTables) {
             if (subTables[id])
                 buildTable(subTables[id], undefined, id);
@@ -932,6 +996,26 @@ function buildTable(data, colIndex, subId) {
                 changeColIndex();
         noBuild = false;
         toogleProps(true);
+    }
+
+    var cells = document.querySelectorAll('.tableData td');
+
+
+    [].forEach.call(cells, function (cel) {
+        cel.addEventListener('dragenter', noopHandler, false);
+        cel.addEventListener('dragexit', noopHandler, false);
+        cel.addEventListener('dragover', noopHandler, false);
+        cel.addEventListener('drop', drop, false);
+        cel.addEventListener('dragstart', dragStartHandler, false);
+    });
+
+    var img = document.getElementsByTagName('img');
+    var falso = function () {
+        return false;
+    };
+    for (var i = 0; i < img.length; i++) {
+        img[i].ondragstart = falso;
+        img[i].ondrop = falso;
     }
 }
 
@@ -950,7 +1034,7 @@ function toogleProps(toogle) {
 function rightCol() {
     var idx = document.getElementById("colIdx").value;
     if (data.columns.length > 1)
-        ajax(server, {command: "rightCol", id: data.id, idx: idx}, function(resp, json) {
+        ajax(server, {command: "rightCol", id: data.id, idx: idx}, function (resp, json) {
             if (resp === "") {
                 var idx = parseInt(json.idx);
                 var idx0 = (idx + 1) % data.columns.length;
@@ -967,7 +1051,7 @@ function rightCol() {
 
 function leftCol() {
     if (data.columns.length > 1)
-        ajax(server, {command: "leftCol", id: data.id, idx: document.getElementById("colIdx").value}, function(resp, json) {
+        ajax(server, {command: "leftCol", id: data.id, idx: document.getElementById("colIdx").value}, function (resp, json) {
             if (resp === "") {
                 var idx = parseInt(json.idx);
                 var idx0 = idx - 1;
@@ -987,7 +1071,7 @@ function leftCol() {
 
 function delCol() {
     if (confirm("Delete this column?"))
-        ajax(server, {command: "delCol", id: data.id, idx: document.getElementById("colIdx").value}, function(resp, json) {
+        ajax(server, {command: "delCol", id: data.id, idx: document.getElementById("colIdx").value}, function (resp, json) {
             if (resp === "") {
                 data.columns.splice(json.idx, 1);
                 buildTable(data);
@@ -1003,7 +1087,7 @@ function newCol() {
         width: document.getElementById("colwidth").value,
         editable: document.getElementById("coleditable").checked,
         rules: document.getElementById("colrules").value
-    }, function(resp, json) {
+    }, function (resp, json) {
         if (resp === "") {
             var size = 0;
             var jsonCol = {name: json.name, type: json.type, width: json.width, editable: json.editable, rules: json.rules, data: []};
@@ -1027,12 +1111,12 @@ function changeColVal(elem) {
         var param = elem.id;
         var value = elem.type === "checkbox" ? elem.checked : elem.value;
         ajax(server, {command: "setCol", id: data.id, idx: colIdx, param: param, value: value},
-        function(resp, json) {
+        function (resp, json) {
             if (resp === "") {
                 var param = json.param.substr(3);
                 data.columns[json.idx][param] = json.value;
                 if (json.param === "coltype") {
-                    ajax(server, {command: "getData", id: data.id, idx: json.idx}, function(resp) {
+                    ajax(server, {command: "getData", id: data.id, idx: json.idx}, function (resp) {
                         eval("data = " + resp);
                         buildTable(data, json.idx);
                     });
@@ -1091,7 +1175,7 @@ function newTable() {
     var idElem = document.getElementById("newId");
     var nameElem = document.getElementById("newName");
     ajax(server, {command: "newTable", parent: data.id, key: idElem.value, value: nameElem.value},
-    function(resp, json) {
+    function (resp, json) {
         if (resp === "") {
             idElem.value = "";
             nameElem.value = "";
@@ -1115,7 +1199,7 @@ function endEdit(elem, col, row, evt, oldValue, subId) {
             elem.disabled = true;
             if (elem.value !== oldValue) {
                 ajax(server, {command: "setTableVal", id: data.id, col: col, row: row, value: elem.value, subId: subId},
-                function(resp, json) {
+                function (resp, json) {
                     var newValue = resp === "" ? elem.value : oldValue;
                     if (resp !== "") {
                         alert(resp);
@@ -1130,7 +1214,7 @@ function endEdit(elem, col, row, evt, oldValue, subId) {
                             data.columns[json.col].data[json.row] = newValue;
                         }
                     }
-                    elem.parentNode.onclick = function() {
+                    elem.parentNode.onclick = function () {
                         var command = "initEdit(this, " + json.col + "," + json.row + ", '" + newValue + "','" + data.columns[json.col].type + "'" + (subId ? (",'" + subId + "'") : "") + ")";
                         eval(command);
                     };
@@ -1148,14 +1232,14 @@ function endEdit(elem, col, row, evt, oldValue, subId) {
 function delTable() {
     if (confirm("Do delete the table " + data.id + ":" + data.name + "?")) {
         ajax(server, {command: "delTable", id: data.id},
-        function(resp) {
+        function (resp) {
             if (resp === "") {
                 if (window.opener) {
                     delete window.opener.data.subTableMap[data.id];
                     window.opener.buildTable(window.opener.data);
                 }
                 if (data.id === "ROOT")
-                    window.location.href = window.location.href;
+                    window.location.reload();
                 else
                     window.close();
             } else
@@ -1173,13 +1257,13 @@ function movTable() {
         var newParentId = prompt('New Parent ID', parentId);
         if (newParentId) {
             ajax(server, {command: "movTable", id: data.id, parentId: newParentId},
-            function(resp) {
+            function (resp) {
                 if (resp === "") {
                     if (window.opener) {
                         delete window.opener.data.subTableMap[data.id];
                         window.opener.buildTable(window.opener.data);
                     }
-                    window.location.href = window.location.href;
+                    window.location.reload();
                 } else
                     alert(resp);
             });
@@ -1208,7 +1292,7 @@ function changeTableVal(elem, oldValue) {
     elem.disabled = true;
     var value = (elem.type === "checkbox") ? elem.checked : elem.value;
     ajax(server, {command: "setTable", table: data.id, key: elem.id, value: value},
-    function(resp, json) {
+    function (resp, json) {
         if (resp !== "") {
             alert(resp);
             if (elem.type === "checkbox")

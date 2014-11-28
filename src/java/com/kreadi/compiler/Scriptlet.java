@@ -4,7 +4,6 @@ import bsh.EvalError;
 import bsh.Interpreter;
 import com.kreadi.model.Dao;
 import com.kreadi.model.Data;
-import eu.bitwalker.useragentutils.Browser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;

@@ -74,7 +74,6 @@
         <script src="js/searchcursor.js"></script>
         <script src="js/dialog.js"></script>
         
-        
         <script src="js/xml.js"></script>
         <script src="js/javascript.js"></script>
         <script src="js/css.js"></script>

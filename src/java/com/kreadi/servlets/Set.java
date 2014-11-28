@@ -250,11 +250,17 @@ public class Set extends HttpServlet {
                                 while (fileSerial != null) {
                                     byte[] dat = Serial.toBytes(fileSerial.getValue());
                                     ZipEntry ee = new ZipEntry(fileSerial.key);
-                                    zipStream.putNextEntry(ee);
-                                    zipStream.write(dat, 0, dat.length);
-                                    zipStream.closeEntry();
-                                    count++;
-                                    fileSerial = dao.getObject(Serial.class, "file:" + key + "." + count);
+                                    try {
+                                        zipStream.putNextEntry(ee);
+                                        zipStream.write(dat, 0, dat.length);
+                                        zipStream.closeEntry();
+                                        count++;
+                                        fileSerial = dao.getObject(Serial.class, "file:" + key + "." + count);
+                                    } catch (Exception e) {
+                                        System.err.println(e.getMessage());
+                                        fileSerial = null;
+                                    }
+
                                 }
                             }
                         }
@@ -401,11 +407,11 @@ public class Set extends HttpServlet {
 
                 String mimeType = ("woff".equals(ext) ? "application/font-woff"
                         : "ttf".equals(ext) ? "font/ttf"
-                        : "mp4".equals(ext) ? "video/mp4"
-                        : "ogv".equals(ext) ? "video/ogg"
-                        : "webm".equals(ext) ? "video/webm"
-                        : "js".equals(ext) ? "application/javascript"
-                        : sc.getMimeType(name));//Obtiene el mime type
+                                : "mp4".equals(ext) ? "video/mp4"
+                                        : "ogv".equals(ext) ? "video/ogg"
+                                                : "webm".equals(ext) ? "video/webm"
+                                                        : "js".equals(ext) ? "application/javascript"
+                                                                : sc.getMimeType(name));//Obtiene el mime type
 
                 resp.setContentType(mimeType);
 
@@ -1002,6 +1008,79 @@ public class Set extends HttpServlet {
                                 dao.saveTable(tabla);
                                 break;
                             }
+                            case "drag":
+                                //TODO hacer el drag
+
+                                String tid = (String) paramMap.get("tid");
+                                String fid = (String) paramMap.get("fid");
+                                String from0 = (String) paramMap.get("from");
+                                String to0 = (String) paramMap.get("to");
+                                int idxFrom = from0.indexOf("-");
+                                int idxTo = to0.indexOf("-");
+                                String from1 = from0.substring(idxFrom + 1);
+                                from0 = from0.substring(0, idxFrom);
+                                String to1 = to0.substring(idxTo + 1);
+                                to0 = to0.substring(0, idxTo);
+
+                                Table tableFrom = dao.loadTable(fid);
+                                Table tableTo = dao.loadTable(tid);
+
+                                String tipoFrom = null;
+                                Serializable elementFrom = null;
+
+                                String tipoTo = null;
+
+                                if (from0.endsWith("data")) {
+                                    idxFrom = from1.indexOf(".");
+                                    int row = Integer.parseInt(from1.substring(0, idxFrom));
+                                    int col = Integer.parseInt(from1.substring(idxFrom + 1));
+                                    tipoFrom = tableFrom.columns.get(col).type;
+                                    elementFrom = tableFrom.columns.get(col).data.get(row);
+                                } else {
+                                    from0 = from0.substring(8);
+                                    idxFrom = from0.indexOf(".");
+                                    int col = Integer.parseInt(from0.substring(0, idxFrom));
+                                    int row = Integer.parseInt(from0.substring(idxFrom + 1));
+                                    Table subTable = (Table) tableFrom.columns.get(col).data.get(row);
+                                    idxFrom = from1.indexOf(".");
+                                    row = Integer.parseInt(from1.substring(0, idxFrom));
+                                    col = Integer.parseInt(from1.substring(idxFrom + 1));
+                                    tipoFrom = subTable.columns.get(col).type;
+                                    elementFrom = subTable.columns.get(col).data.get(row);
+                                }
+
+                                if (to0.endsWith("data")) {
+                                    idxFrom = to1.indexOf(".");
+                                    int row = Integer.parseInt(to1.substring(0, idxFrom));
+                                    int col = Integer.parseInt(to1.substring(idxFrom + 1));
+                                    tipoTo = tableTo.columns.get(col).type;
+                                    if (tipoTo.equals(tipoFrom)) {
+                                        tableTo.columns.get(col).data.set(row, elementFrom);
+                                        dao.saveTable(tableTo);
+                                        resp = elementFrom.toString();
+                                    } else {
+                                        resp = "";
+                                    }
+                                } else {
+                                    to0 = to0.substring(8);
+                                    idxTo = to0.indexOf(".");
+                                    int col = Integer.parseInt(to0.substring(0, idxTo));
+                                    int row = Integer.parseInt(to0.substring(idxTo + 1));
+                                    Table subTable = (Table) tableTo.columns.get(col).data.get(row);
+                                    idxTo = to1.indexOf(".");
+                                    row = Integer.parseInt(to1.substring(0, idxTo));
+                                    col = Integer.parseInt(to1.substring(idxTo + 1));
+                                    tipoTo = subTable.columns.get(col).type;
+                                    if (tipoTo.equals(tipoFrom)) {
+                                        subTable.columns.get(col).data.set(row, elementFrom);
+                                        dao.saveTable(tableTo);
+                                        resp = elementFrom.toString();
+                                    } else {
+                                        resp = "";
+                                    }
+                                }
+
+                                break;
                             case "addrow":
                                 //CREA UN NUEVO REGISTRO
                                 int before = Integer.parseInt((String) paramMap.get("before"));
@@ -1045,6 +1124,18 @@ public class Set extends HttpServlet {
                                 resp = tabla.toJSON();
                                 break;
                             case "getText": {
+                                String suid = (String) paramMap.get("subId");
+                                System.out.println(suid);
+                                if (!"undefined".equals(suid)) {
+                                    suid = suid.substring(8);
+                                    int idx = suid.indexOf(".");
+                                    int colIdx = Integer.parseInt(suid.substring(0,idx));
+                                    int rowIdx = Integer.parseInt(suid.substring(idx+1));
+                                    try {
+                                        tabla = (Table) tabla.columns.get(colIdx).data.get(rowIdx);
+                                    } catch (Exception e) {
+                                    }
+                                }
                                 //OBTIENE EL TEXTO ASOCIADO A UN KEY DE UN FILE (SOLO UN KEY... HASTA 1024 KB)
                                 int colIdx = Integer.parseInt((String) paramMap.get("col"));
                                 int rowIdx = Integer.parseInt((String) paramMap.get("row"));
