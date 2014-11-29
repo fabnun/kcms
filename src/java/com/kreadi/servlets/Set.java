@@ -1125,8 +1125,7 @@ public class Set extends HttpServlet {
                                 break;
                             case "getText": {
                                 String suid = (String) paramMap.get("subId");
-                                System.out.println(suid);
-                                if (!"undefined".equals(suid)) {
+                                if (suid!=null && !"undefined".equals(suid)) {
                                     suid = suid.substring(8);
                                     int idx = suid.indexOf(".");
                                     int colIdx = Integer.parseInt(suid.substring(0,idx));
