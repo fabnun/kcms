@@ -60,7 +60,11 @@ public class FiltroUrl implements Filter {
                             map = col == null ? table.getFileMap(filename) : table.getFileMap(Integer.parseInt(col), filename);
                             if (map == null) {
                                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
-                                chain.doFilter(request, response);
+                                try {
+                                    chain.doFilter(request, response);
+                                } catch (IOException | ServletException| IllegalStateException e) {
+                                   //TODO: Manage this Exception
+                                }
                                 return;
                             }
                         } else {

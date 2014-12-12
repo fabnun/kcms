@@ -154,14 +154,28 @@ function sendSerializable(entries, first, size, isTemplate) {
     if (isTemplate) {
 
         if (first) {
+
+            var compare=function(a, b) {
+                if (a.filename < b.filename)
+                    return -1;
+                if (a.filename > b.filename)
+                    return 1;
+                return 0;
+            };
+            entries.sort(compare);
+
+
             ajax(server, {command: "serialdelete"}, function (resp) {//Elimina los datos anteriores
+
                 sendSerializable(entries, false, size, true);
             });
         } else {
             if (size > 0)
                 var esize = entries.length;
+
             if (esize > 0) {
                 entries[0].getData(new zip.BlobWriter(), function (text) {
+
                     ajax(server, {command: 'serial2', id: entries[0].filename, size: entries[0].uncompressedSize, data: text},
                     function (resp, json) {
                         console.log(json.id);
@@ -510,7 +524,7 @@ function setBoolean(element, row, col, subId) {
 function saveHtml() {
     setWait("Saving Html...");
     var value = CKEDITOR.instances.tinyeditor.getData();
-    ajax(server, {command: "setTableVal", id: data.id, col: _editCol, row: _editRow, value: value, subId:_subId},
+    ajax(server, {command: "setTableVal", id: data.id, col: _editCol, row: _editRow, value: value, subId: _subId},
     function (resp, json) {
         data.columns[json.col].data[json.row] = JSON.parse(resp);
         document.getElementsByTagName("body")[0].style.overflow = "auto";
@@ -599,8 +613,8 @@ function saveScript(name) {
 function setHtml(row, col, subId) {
     _editCol = col;
     _editRow = row;
-    _subId= subId;
-    ajax(server, {command: "getText", id: data.id, col: _editCol, row: _editRow, subId:subId}, function (resp) {
+    _subId = subId;
+    ajax(server, {command: "getText", id: data.id, col: _editCol, row: _editRow, subId: subId}, function (resp) {
 
         document.getElementsByTagName("body")[0].style.overflow = "hidden";
         document.getElementById('htmlBox').style.display = "block";
@@ -806,11 +820,11 @@ function drop(evt) {
     var fn = function (resp, json) {
         if (resp === "") {
             evt.target.style.bborder = "1px solid red";
-            
+
         } else {
             evt.target.innerHTML = html;
             evt.target.style.border = "1px solid green";
-            
+
         }
     };
     ajax(server, {command: "drag", tid: getParameterByName("id"), from: dat, to: this.id, fid: fid}, fn);
@@ -830,10 +844,10 @@ function buildTable(data, colIndex, subId) {
         }
         html.push(">");
         var cols = 0;
-        try{
-          cols=  data.columns.length;
-        } catch(e){
-            
+        try {
+            cols = data.columns.length;
+        } catch (e) {
+
         }
         if (!subId) {
             html.push("<tr class='tableHeader'>",
@@ -902,7 +916,7 @@ function buildTable(data, colIndex, subId) {
                     } else if (columna.type === "Boolean") {
                         html.push("<input type='checkbox' " + (value ? "checked" : "") + " style='margin-left:10px;width:12px' onchange='setBoolean(this," + i + "," + j + (subId ? (",\"" + subId + "\"") : "") + ")'>");
                     } else if (columna.type === "Html") {
-                        html.push("<button style='width:90px' onclick='setHtml(" + i + "," + j +(subId?",\""+subId+"\"":"") +")'> Edit Html </button>");
+                        html.push("<button style='width:90px' onclick='setHtml(" + i + "," + j + (subId ? ",\"" + subId + "\"" : "") + ")'> Edit Html </button>");
                     } else if (columna.type === "Script") {
                         html.push("<button style='width:90px' onclick='setScript(" + i + "," + j + ")'> Edit Script </button> " + (value ? value.name : ""));
                     } else if (columna.type === "SubTable") {

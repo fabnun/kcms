@@ -160,6 +160,7 @@ public class Dao extends DAOBase {
 
     public void saveTable(Table table) throws IOException, ClassNotFoundException {
         setSerial("TABLE." + table.id, table);
+        System.out.println("save table "+table.id);
     }
 
     public void delTable(String id) throws IOException, ClassNotFoundException {

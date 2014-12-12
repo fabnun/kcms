@@ -362,24 +362,60 @@ public class Set extends HttpServlet {
                 resp.sendRedirect("/admin");
             }
         } else if (req.getParameter("backup") != null) {
-            resp.setContentType("application/force-download");
-            resp.setHeader("Content-Transfer-Encoding", "binary");
-            SimpleDateFormat sdf = new SimpleDateFormat("yy-MM-dd.HH-mm");
-            resp.setHeader("content-disposition", "inline; filename=\"" + req.getServerName() + "." + sdf.format(new Date()) + ".zip\"");
-            try (OutputStream os = resp.getOutputStream()) {
-                Dao dao = new Dao();
-                try (ZipOutputStream out = new ZipOutputStream(os)) {
-                    LinkedList<Serial> serList = new LinkedList<>();
-                    try {
-                        serList.add(new Serial("fileKeys", dao.getSerial("fileKeys")));
-                        serList.add(new Serial("user:rol", dao.getSerial("user:rol")));
-                        serList.add(dao.getObject(Serial.class, "TABLE.ROOT"));
-                        serial2Zip(dao, out, serList);
-                    } catch (IOException | ClassNotFoundException e) {
-                        e.printStackTrace();
+
+            UserService userService = UserServiceFactory.getUserService();
+            User user = userService.getCurrentUser();
+            LinkedList<String> superAdmins = new LinkedList();
+            superAdmins.add("test@example.com");
+            superAdmins.add("fabnun");
+
+            try {
+                String rls = (String) new Dao().getSerial("user:rol");
+                if (rls != null) {
+                    rls = rls == null ? "" : rls;
+                    String[] role = rls.split(" ");
+                    for (int i = 0; i < role.length; i = i + 2) {
+                        if ("_super_".equals(role[i + 1])) {
+                            superAdmins.add(role[i]);
+                        }
+                    }
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            boolean isSuperAdmin = false;
+            if (user != null) {//SI ES OTRO COMANDO Y EL USUARIO ESTA LOGEADO
+                String username = user.getNickname();
+                for (String sa : superAdmins) {
+                    if (sa.equals(username)) {
+                        isSuperAdmin = true;
+                        break;
                     }
                 }
             }
+            if (isSuperAdmin) {
+
+                resp.setContentType("application/force-download");
+                resp.setHeader("Content-Transfer-Encoding", "binary");
+                SimpleDateFormat sdf = new SimpleDateFormat("yy-MM-dd.HH-mm");
+                resp.setHeader("content-disposition", "inline; filename=\"" + req.getServerName() + "." + sdf.format(new Date()) + ".zip\"");
+                try (OutputStream os = resp.getOutputStream()) {
+                    Dao dao = new Dao();
+                    try (ZipOutputStream out = new ZipOutputStream(os)) {
+                        LinkedList<Serial> serList = new LinkedList<>();
+                        try {
+                            serList.add(new Serial("fileKeys", dao.getSerial("fileKeys")));
+                            serList.add(new Serial("user:rol", dao.getSerial("user:rol")));
+                            serList.add(dao.getObject(Serial.class, "TABLE.ROOT"));
+                            serial2Zip(dao, out, serList);
+                        } catch (IOException | ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+
         } else {
             String id = req.getParameter("id");
             String resize = req.getParameter("resize");
@@ -654,32 +690,27 @@ public class Set extends HttpServlet {
                         }
                         case "serial2": {
                             Dao dao = new Dao();
-                            String key = (String) paramMap.get("id");
-                            if (!key.endsWith("/")) {
-                                byte[] bytesrc = readByteStream(is);
-                                int size = Integer.parseInt((String) paramMap.get("size"));
-                                byte[] bytes = new byte[size];
-                                System.arraycopy(bytesrc, 0, bytes, 0, size);
-                                int idx = key.lastIndexOf("/");
-                                String folder = "";
-                                if (idx > -1) {
-                                    folder = key.substring(0, idx);
-                                    key = key.substring(idx + 1);
-                                }
+                            String key = "/"+paramMap.get("id");//Obtiene el id
+                            if (!key.endsWith("/")) {//Ignora los directorios
+                                byte[] bytesrc = readByteStream(is);//Obtiene los bytes enviados
+                                int size = Integer.parseInt((String) paramMap.get("size"));//Obtiene el tamaño real del archivo
+                                byte[] bytes = new byte[size];//Crea el buffer destino del tamaño correcto
+                                System.arraycopy(bytesrc, 0, bytes, 0, size);//copia al buffer destino
+                                bytesrc = null;//borra los bytes leidos
+                                int idx = key.lastIndexOf("/");//Obtiene la ultima posicion del separador de carpetas
+                                String folder = key.substring(0, idx);//Obtiene la carpeta
+                                key = key.substring(idx + 1);//obtiene el archivo de la carpeta
                                 Table table = null, parentTable;
-                                if (!folder.contains("/") && folder.length() > 0) {
-                                    folder = "/" + folder;
-                                }
-                                String subFolders[] = folder.split("/");
+                                String subFolders[] = folder.split("/");//Obtiene las carpetas
                                 String ffolder = "";
-                                for (String f : subFolders) {
+                                for (String f : subFolders) {//recorre las carpetas
                                     parentTable = table;
                                     ffolder = ffolder + f;
                                     table = dao.loadTable(ffolder);
                                     if (table == null) {
-                                        table = new Table(ffolder, ffolder);
-                                        table.addCol("Archivos", "File");
-                                        if (ffolder.length() == 0) {
+                                        table = new Table(ffolder, f);
+                                        table.addCol("", "File");
+                                        if (parentTable == null) {
                                             table.parentId = "ROOT";
                                             Table troot = dao.loadTable("ROOT");
                                             if (troot == null) {
@@ -687,17 +718,16 @@ public class Set extends HttpServlet {
                                             }
                                             troot.subTableMap.put(ffolder, ffolder);
                                             dao.saveTable(troot);
-                                        }
-                                        if (parentTable != null) {
+                                        } else {
                                             parentTable.subTableMap.put(ffolder, ffolder);
                                             dao.saveTable(parentTable);
                                             table.parentId = parentTable.id;
                                         }
+                                        dao.saveTable(table);
                                     }
                                     if (ffolder.length() > 0) {
                                         ffolder = ffolder + "/";
                                     }
-                                    dao.saveTable(table);
                                 }
 
                                 Column col = table.columns.get(0);
@@ -752,7 +782,7 @@ public class Set extends HttpServlet {
                                 if (tabla.columns != null) {
                                     for (int i = 0; i < tabla.columns.size(); i++) {
                                         if (tabla.columns.get(i).type.equals("File")) {
-                                            delColumn(tabla, i, dao);
+                                            //delColumn(tabla, i, dao);//TODO implementar... sin eliminar dobles referencias
                                         }
                                     }
                                 }
@@ -849,7 +879,7 @@ public class Set extends HttpServlet {
                             Dao dao = new Dao();
                             Table tabla = dao.loadTable(id);
                             int idx = Integer.parseInt((String) paramMap.get("idx"));
-                            delColumn(tabla, idx, dao);
+                            //delColumn(tabla, idx, dao);//TODO eliminar sin eliminar doble referencia
                             tabla.columns.remove(idx);
                             dao.saveTable(tabla);
                             break;
@@ -1125,11 +1155,11 @@ public class Set extends HttpServlet {
                                 break;
                             case "getText": {
                                 String suid = (String) paramMap.get("subId");
-                                if (suid!=null && !"undefined".equals(suid)) {
+                                if (suid != null && !"undefined".equals(suid)) {
                                     suid = suid.substring(8);
                                     int idx = suid.indexOf(".");
-                                    int colIdx = Integer.parseInt(suid.substring(0,idx));
-                                    int rowIdx = Integer.parseInt(suid.substring(idx+1));
+                                    int colIdx = Integer.parseInt(suid.substring(0, idx));
+                                    int rowIdx = Integer.parseInt(suid.substring(idx + 1));
                                     try {
                                         tabla = (Table) tabla.columns.get(colIdx).data.get(rowIdx);
                                     } catch (Exception e) {
@@ -1466,12 +1496,14 @@ public class Set extends HttpServlet {
 
     private void delColumn(Table tabla, int idx, Dao dao) throws IOException, ClassNotFoundException {
         Column col = tabla.columns.get(idx);
+
         for (Serializable ser : col.data) {
             if (ser instanceof HashMap) {
                 HashMap<String, Serializable> map = (HashMap) ser;
                 String tipo = (String) map.get("type");
-                if (tipo.equals("File")) {
+                if (tipo.equals("File") || tipo.equals("Script") || tipo.equals("Html")) {
                     String key = (String) map.get("key");
+
                     String subIdx = "";
                     int count = 0;
                     while (dao.delSerial("file:" + key + subIdx)) {
