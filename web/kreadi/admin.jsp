@@ -119,7 +119,7 @@
             if (isAdmin || isSuperAdmin) {%>
         <div id="top">
             <img src="logo.png" alt="logo" style="float:left;margin-left: 10px">
-            <button style="position:relative;top:5px;right:16px;margin-left:32px;padding:3px 12px;" onclick="window.open('/', 'test', 'toolbar=0,titlebar=0,menubar=0,location=0,status=0,scrollbars=1,width=1200,height=600');">
+            <button style="position:relative;top:5px;right:16px;margin-left:32px;padding:3px 12px;" onclick="incognito()">
                 <img src="ver.png" alt="ver" style="position: relative; margin-bottom:-2px"> VER 
             </button>
             <%if (isSuperAdmin && tableID.equals("ROOT")) {%>
@@ -196,6 +196,9 @@
 
         <script type="text/javascript" src="js/kreadi.js"></script>
         <script type = "text/javascript">
+            function incognito() {
+                    window.open('/', 'test', 'toolbar=0,titlebar=0,menubar=0,location=0,status=0,scrollbars=1,width=1200,height=600');
+            }
             <%if (isSuperAdmin && tableID.equals("ROOT")) {%>addUser();<%}%>
                 data = <%=tabla.toJSON()%>;
                 subtables = [<%=tabla.subTables(username, dao)%>];
@@ -203,12 +206,12 @@
                 buildTable(data);
 
                 CKEDITOR.plugins.registered['save'] = {
-                    init: function(editor)
+                    init: function (editor)
                     {
                         editor.addCommand('save',
                                 {
                                     modes: {wysiwyg: 1, source: 1},
-                                    exec: function(editor) {
+                                    exec: function (editor) {
                                         editor.updateElement();
                                         saveHtml();
                                     }
@@ -219,11 +222,11 @@
                 };
 
                 // Hook each textarea with its editor
-                CKEDITOR.on('instanceReady', function(e) {
+                CKEDITOR.on('instanceReady', function (e) {
                     onresize();
                 });
 
-                onresize = function() {
+                onresize = function () {
                     var te = document.getElementById('cke_tinyeditor');
                     if (te) {
                         var h = document.getElementById('html').offsetHeight;
@@ -247,7 +250,7 @@
                     window.open('/', 'test', 'toolbar=0,titlebar=0,menubar=0,location=0,status=0,scrollbars=1,width=1200,height=600');
                 }
 
-                onkeydown = function(val) {
+                onkeydown = function (val) {
                     if (val.keyCode === 27) {
                         document.title = ((data.name !== null && data.name.trim().length > 0) ? data.name : data.id);
                         document.getElementById("preview").style.display = "none";
@@ -259,7 +262,7 @@
                         if (superAdmin || data.allowAdd) {
                             document.getElementById('rowButtons').style.display = "inline-block";
                         }
-                        document.body.style.overflow="scroll";
+                        document.body.style.overflow = "scroll";
                     } else if (val.ctrlKey && val.keyCode !== 17) {
                         if (val.keyCode === 83) {// CTRL+S
                             save();

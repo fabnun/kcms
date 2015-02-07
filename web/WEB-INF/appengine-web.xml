@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-    <application>de-proyect</application>
+    <application>motel-blue</application>
     <version>1</version> 
     <threadsafe>true</threadsafe>
-    <static-files>
-        <include path="/kreadi/**.*" />
-        <exclude path="/kreadi/admin.jsp" />
-        <exclude path="/kreadi/js/kreadi.js" />
-    </static-files>
+
 </appengine-web-app>

@@ -442,12 +442,14 @@ public class Set extends HttpServlet {
                 String ext = idxDot > -1 ? name.substring(idxDot + 1).toLowerCase() : "";
 
                 String mimeType = ("woff".equals(ext) ? "application/font-woff"
-                        : "ttf".equals(ext) ? "font/ttf"
-                                : "mp4".equals(ext) ? "video/mp4"
-                                        : "ogv".equals(ext) ? "video/ogg"
-                                                : "webm".equals(ext) ? "video/webm"
-                                                        : "js".equals(ext) ? "application/javascript"
-                                                                : sc.getMimeType(name));//Obtiene el mime type
+                                    :"woff2".equals(ext) ? "application/font-woff2"
+                                    : "ttf".equals(ext) ? "font/ttf"
+                                            : "mp4".equals(ext) ? "video/mp4"
+                                                    : "ogv".equals(ext) ? "video/ogg"
+                                                            : "webm".equals(ext) ? "video/webm"
+                                                                    : "js".equals(ext) ? "application/javascript"
+                                                                            : "appcache".equals(ext) ? "text/cache-manifest"
+                                                                                    : sc.getMimeType(name));
 
                 resp.setContentType(mimeType);
 
@@ -690,7 +692,7 @@ public class Set extends HttpServlet {
                         }
                         case "serial2": {
                             Dao dao = new Dao();
-                            String key = "/"+paramMap.get("id");//Obtiene el id
+                            String key = "/" + paramMap.get("id");//Obtiene el id
                             if (!key.endsWith("/")) {//Ignora los directorios
                                 byte[] bytesrc = readByteStream(is);//Obtiene los bytes enviados
                                 int size = Integer.parseInt((String) paramMap.get("size"));//Obtiene el tamaño real del archivo

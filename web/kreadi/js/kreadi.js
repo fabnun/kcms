@@ -155,7 +155,7 @@ function sendSerializable(entries, first, size, isTemplate) {
 
         if (first) {
 
-            var compare=function(a, b) {
+            var compare = function (a, b) {
                 if (a.filename < b.filename)
                     return -1;
                 if (a.filename > b.filename)
@@ -275,7 +275,7 @@ function showPreview(row, col, num, key, name, isImage, subId) {
 function getFileUploadedCode(col, row, key, name, size, num, admin, type, subId) {
     var lname = (name ? name.toLowerCase() : "");
     var isImage = lname.endsWith('.jpg') || lname.endsWith('.jpeg') || lname.endsWith('.png') || lname.endsWith('.gif');
-    var isText = lname.endsWith('.php') || lname.endsWith('.html') || lname.endsWith('.txt') || lname.endsWith('.css') || lname.endsWith('.xml') || lname.endsWith('.*') || lname.indexOf('.') === -1
+    var isText = lname.endsWith('.appcache') || lname.endsWith('.php') || lname.endsWith('.html') || lname.endsWith('.txt') || lname.endsWith('.css') || lname.endsWith('.xml') || lname.endsWith('.*') || lname.indexOf('.') === -1
             || lname.endsWith('.js') || lname.endsWith('.jsp') || lname.indexOf('.') === 0 || lname.endsWith('.json'); //initEdit(element, col, row, value, type, subId) {
     var html = "<img title='Upload' src='css/upload.png' style='cursor:pointer;top:5px;position:relative;' onclick='initEdit(this.parentNode, " + col + "," + row + ", \"\", \"File\"" + (subId ? (', "' + subId + '"') : "") + " )'>";
     html = html + "<a title='Download' href='" + server + "?id=" + key + "&name=" + name + "&download=" + size + "'><img title='Download' src='css/download.png' style='cursor:pointer;top:5px;position:relative;'></a>";
@@ -788,10 +788,10 @@ function delRow2(col, row) {
 }
 
 function dragStartHandler(e) {
-    e.dataTransfer.effectAllowed = 'copy';
-    e.dataTransfer.setData('id', e.target.id);
-    e.dataTransfer.setData('fid', getParameterByName("id"));
-    e.dataTransfer.setData('html', e.target.innerHTML);
+//    e.dataTransfer.effectAllowed = 'copy';
+//    e.dataTransfer.setData('id', e.target.id);
+//    e.dataTransfer.setData('fid', getParameterByName("id"));
+//    e.dataTransfer.setData('html', e.target.innerHTML);
 }
 
 function noopHandler(evt) {
@@ -808,26 +808,26 @@ function getParameterByName(name) {
 
 function drop(evt) {
 
-    evt.stopPropagation();
-    evt.preventDefault();
-    if (evt.target.className !== 'tableCell') {
-        return;
-    }
-    var dat = evt.dataTransfer.getData('id');
-    var fid = evt.dataTransfer.getData('fid');
-    var html = evt.dataTransfer.getData('html');
-
-    var fn = function (resp, json) {
-        if (resp === "") {
-            evt.target.style.bborder = "1px solid red";
-
-        } else {
-            evt.target.innerHTML = html;
-            evt.target.style.border = "1px solid green";
-
-        }
-    };
-    ajax(server, {command: "drag", tid: getParameterByName("id"), from: dat, to: this.id, fid: fid}, fn);
+//    evt.stopPropagation();
+//    evt.preventDefault();
+//    if (evt.target.className !== 'tableCell') {
+//        return;
+//    }
+//    var dat = evt.dataTransfer.getData('id');
+//    var fid = evt.dataTransfer.getData('fid');
+//    var html = evt.dataTransfer.getData('html');
+//
+//    var fn = function (resp, json) {
+//        if (resp === "") {
+//            evt.target.style.bborder = "1px solid red";
+//
+//        } else {
+//            evt.target.innerHTML = html;
+//            evt.target.style.border = "1px solid green";
+//
+//        }
+//    };
+//    ajax(server, {command: "drag", tid: getParameterByName("id"), from: dat, to: this.id, fid: fid}, fn);
 }
 
 
@@ -873,7 +873,7 @@ function buildTable(data, colIndex, subId) {
                 for (var j = 0; j < cols; j++) {
                     var columna = data.columns[j];
                     var value = columna.data[i];
-                    html.push("<td class='tableCell' draggable=true id='");
+                    html.push("<td class='tableCell' id='");
                     html.push(idData + "-");
                     html.push(i);
                     html.push(".");
@@ -986,7 +986,23 @@ function buildTable(data, colIndex, subId) {
         }
         if (!subId)
             html.push("<br>");
-        for (var subtable in data.subTableMap) {
+
+
+        var keys = [], k, i, len;
+
+        for (k in data.subTableMap) {
+            if (data.subTableMap.hasOwnProperty(k)) {
+                keys.push(k);
+            }
+        }
+
+        keys.sort();
+        len = keys.length;
+
+        for (i = 0; i < len; i++)
+        {
+            var subtable = keys[i];
+
             var loContiene = subtables.contains(subtable);
             if (superAdmin || loContiene) {
                 html.push("<button onclick='newTab(\"admin.jsp?id=" + subtable + "\")' style='background:#dfa'> " + data.subTableMap[subtable] + (superAdmin ? " (" + subtable + ")" : "") + "</button>");
@@ -994,8 +1010,6 @@ function buildTable(data, colIndex, subId) {
         }
 
         element.innerHTML = html.join("");
-
-
 
 
         for (var id in subTables) {

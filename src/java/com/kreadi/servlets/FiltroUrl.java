@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashMap;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -28,8 +29,10 @@ public class FiltroUrl implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
+        resp.setHeader("X-FRAME-OPTIONS", "ALLOWALL");
         req.setCharacterEncoding("UTF-8");
         resp.setCharacterEncoding("UTF-8");
         String uri = req.getRequestURI();
@@ -62,8 +65,8 @@ public class FiltroUrl implements Filter {
                                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                                 try {
                                     chain.doFilter(request, response);
-                                } catch (IOException | ServletException| IllegalStateException e) {
-                                   //TODO: Manage this Exception
+                                } catch (IOException | ServletException | IllegalStateException e) {
+                                    //TODO: Manage this Exception
                                 }
                                 return;
                             }
@@ -77,11 +80,18 @@ public class FiltroUrl implements Filter {
                     }
                 }
                 String code = null;
+                String expires = req.getParameter("expires");
+                long expireTime = expires != null ? (Long.parseLong(expires)) : 0;
+                long expiry = new Date().getTime() + expireTime * 1000;
+                HttpServletResponse httpResponse = (HttpServletResponse) response;
+                httpResponse.setDateHeader("Expires", expiry);
+                httpResponse.setHeader("Cache-Control", "max-age=" + expireTime);
+                
                 try {
                     Integer index = (Integer) map.get("#n");
                     index = index == null ? 0 : index;
                     String type = (String) map.get("type");
-                    String expires = req.getParameter("expires");
+
                     if (!type.equals("Script")) {//Si no es script
                         String down = req.getParameter("down");
                         if (down != null) {
@@ -93,22 +103,19 @@ public class FiltroUrl implements Filter {
                             int idxDot = filename.lastIndexOf(".");
                             String ext = idxDot > -1 ? filename.substring(idxDot + 1).toLowerCase() : "";
                             String mimeType = ("woff".equals(ext) ? "application/font-woff"
+                                    :"woff2".equals(ext) ? "application/font-woff2"
                                     : "ttf".equals(ext) ? "font/ttf"
-                                    : "mp4".equals(ext) ? "video/mp4"
-                                    : "ogv".equals(ext) ? "video/ogg"
-                                    : "webm".equals(ext) ? "video/webm"
-                                    : "js".equals(ext) ? "application/javascript"
-                                    : sc.getMimeType(filename));
+                                            : "mp4".equals(ext) ? "video/mp4"
+                                                    : "ogv".equals(ext) ? "video/ogg"
+                                                            : "webm".equals(ext) ? "video/webm"
+                                                                    : "js".equals(ext) ? "application/javascript"
+                                                                            : "appcache".equals(ext) ? "text/cache-manifest"
+                                                                                    : sc.getMimeType(filename));
 
                             resp.setContentType(mimeType);
                             resp.setHeader("Accept-Ranges", "bytes");
                         }
                         resp.setHeader("content-disposition", "inline; filename=\"" + filename + "\"");
-
-                        long now = System.currentTimeMillis();
-                        long expireTime = expires != null ? (Long.parseLong(expires)) : 0;
-                        resp.setDateHeader("Expires", now + expireTime);
-                        resp.setHeader("Cache-Control", "public, max-age=" + expireTime);
 
                         try (OutputStream os = resp.getOutputStream()) {
                             byte[] bytes;
@@ -133,11 +140,11 @@ public class FiltroUrl implements Filter {
 
                                 String mimeType = ("woff".equals(ext) ? "application/font-woff"
                                         : "ttf".equals(ext) ? "font/ttf"
-                                        : "mp4".equals(ext) ? "video/mp4"
-                                        : "ogv".equals(ext) ? "video/ogg"
-                                        : "webm".equals(ext) ? "video/webm"
-                                        : "js".equals(ext) ? "application/javascript"
-                                        : sc.getMimeType(filename));//Obtiene el mime type
+                                                : "mp4".equals(ext) ? "video/mp4"
+                                                        : "ogv".equals(ext) ? "video/ogg"
+                                                                : "webm".equals(ext) ? "video/webm"
+                                                                        : "js".equals(ext) ? "application/javascript"
+                                                                                : sc.getMimeType(filename));//Obtiene el mime type
 
                                 resp.setContentType(mimeType);
                                 resp.setHeader("ETag", uri + size);
@@ -154,16 +161,11 @@ public class FiltroUrl implements Filter {
 
                         String mimeType = ("woff".equals(ext) ? "application/font-woff"
                                 : "ttf".equals(ext) ? "font/ttf"
-                                : "mp4".equals(ext) ? "video/mp4"
-                                : "ogv".equals(ext) ? "video/ogg"
-                                : "webm".equals(ext) ? "video/webm"
-                                : "js".equals(ext) ? "application/javascript"
-                                : sc.getMimeType("a." + ext));//Obtiene el mime type
-
-                        long now = System.currentTimeMillis();
-                        long expireTime = expires != null ? (Long.parseLong(expires)) : 0;
-                        resp.setDateHeader("Expires", now + expireTime);
-                        resp.setHeader("Cache-Control", "public, max-age=" + expireTime);
+                                        : "mp4".equals(ext) ? "video/mp4"
+                                                : "ogv".equals(ext) ? "video/ogg"
+                                                        : "webm".equals(ext) ? "video/webm"
+                                                                : "js".equals(ext) ? "application/javascript"
+                                                                        : sc.getMimeType("a." + ext));//Obtiene el mime type
 
                         resp.setContentType(mimeType);
                         resp.setHeader("Accept-Ranges", "bytes");
