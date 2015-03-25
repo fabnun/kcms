@@ -42,6 +42,11 @@ import javax.servlet.http.HttpServletResponse;
 public class Set extends HttpServlet {
 
     /**
+     * Tamaño maximo de seccion del backup
+     */
+    private static final int BACKUP_SIZE = 1024 * 1024 * 20;
+
+    /**
      * Tamaño en bytes del buffer de lectura de data en peticiones
      */
     private static final int BUFFER_SIZE = 1024 * 1023;
@@ -234,8 +239,6 @@ public class Set extends HttpServlet {
         return map;
     }
 
-    static int backupSize = 1024 * 1024 * 3;
-
     private static void serial2Zip(Dao dao, ZipOutputStream zipStream, LinkedList<String> serList, int size) throws IOException, ClassNotFoundException {
         while (serList.size() > 0) {
             String s = serList.pollFirst();
@@ -249,7 +252,7 @@ public class Set extends HttpServlet {
                     zipStream.write(data, 0, data.length);
                     zipStream.closeEntry();
 
-                    if (size > backupSize) {
+                    if (size > BACKUP_SIZE) {
                         dao.setCache("serList", serList);
                         break;
                     }
@@ -259,6 +262,41 @@ public class Set extends HttpServlet {
                 }
             } else {
                 dao.delCache("serList");
+            }
+        }
+    }
+
+    private boolean isSuperAdmin = false;
+
+    private void checkSuperAdmin() {
+        UserService userService = UserServiceFactory.getUserService();
+        User user = userService.getCurrentUser();
+        LinkedList<String> superAdmins = new LinkedList();
+        superAdmins.add("test@example.com");
+        superAdmins.add("fabnun");
+
+        try {
+            String rls = (String) new Dao().getSerial("user:rol");
+            if (rls != null) {
+                rls = rls == null ? "" : rls;
+                String[] role = rls.split(" ");
+                for (int i = 0; i < role.length; i = i + 2) {
+                    if ("_super_".equals(role[i + 1])) {
+                        superAdmins.add(role[i]);
+                    }
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        if (user != null) {//SI ES OTRO COMANDO Y EL USUARIO ESTA LOGEADO
+            String username = user.getNickname();
+            for (String sa : superAdmins) {
+                if (sa.equals(username)) {
+                    isSuperAdmin = true;
+                    break;
+                }
             }
         }
     }
@@ -275,38 +313,7 @@ public class Set extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         if (req.getParameter("reset") != null) {
-
-            UserService userService = UserServiceFactory.getUserService();
-            User user = userService.getCurrentUser();
-            LinkedList<String> superAdmins = new LinkedList();
-            superAdmins.add("test@example.com");
-            superAdmins.add("fabnun");
-
-            try {
-                String rls = (String) new Dao().getSerial("user:rol");
-                if (rls != null) {
-                    rls = rls == null ? "" : rls;
-                    String[] role = rls.split(" ");
-                    for (int i = 0; i < role.length; i = i + 2) {
-                        if ("_super_".equals(role[i + 1])) {
-                            superAdmins.add(role[i]);
-                        }
-                    }
-                }
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            boolean isSuperAdmin = false;
-            if (user != null) {//SI ES OTRO COMANDO Y EL USUARIO ESTA LOGEADO
-                String username = user.getNickname();
-                for (String sa : superAdmins) {
-                    if (sa.equals(username)) {
-                        isSuperAdmin = true;
-                        break;
-                    }
-                }
-            }
+            checkSuperAdmin();
             if (isSuperAdmin) {
                 Dao dao = new Dao();
                 try {
@@ -321,37 +328,7 @@ public class Set extends HttpServlet {
             }
         } else if (req.getParameter("backup") != null) {
 
-            UserService userService = UserServiceFactory.getUserService();
-            User user = userService.getCurrentUser();
-            LinkedList<String> superAdmins = new LinkedList();
-            superAdmins.add("test@example.com");
-            superAdmins.add("fabnun");
-
-            try {
-                String rls = (String) new Dao().getSerial("user:rol");
-                if (rls != null) {
-                    rls = rls == null ? "" : rls;
-                    String[] role = rls.split(" ");
-                    for (int i = 0; i < role.length; i = i + 2) {
-                        if ("_super_".equals(role[i + 1])) {
-                            superAdmins.add(role[i]);
-                        }
-                    }
-                }
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            boolean isSuperAdmin = false;
-            if (user != null) {//SI ES OTRO COMANDO Y EL USUARIO ESTA LOGEADO
-                String username = user.getNickname();
-                for (String sa : superAdmins) {
-                    if (sa.equals(username)) {
-                        isSuperAdmin = true;
-                        break;
-                    }
-                }
-            }
+            checkSuperAdmin();
             if (isSuperAdmin) {
 
                 resp.setContentType("application/force-download");
@@ -493,24 +470,7 @@ public class Set extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         UserService userService = UserServiceFactory.getUserService();
         User user = userService.getCurrentUser();
-        LinkedList<String> superAdmins = new LinkedList();
-        superAdmins.add("test@example.com");
-        superAdmins.add("fabnun");
-
-        try {
-            String rls = (String) new Dao().getSerial("user:rol");
-            if (rls != null) {
-                rls = rls == null ? "" : rls;
-                String[] role = rls.split(" ");
-                for (int i = 0; i < role.length; i = i + 2) {
-                    if ("_super_".equals(role[i + 1])) {
-                        superAdmins.add(role[i]);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        
 
         InputStream is = req.getInputStream();
         res.setContentType("text/plain");
@@ -530,14 +490,8 @@ public class Set extends HttpServlet {
             mail.send(msg);
 
         } else if (user != null) {//SI ES OTRO COMANDO Y EL USUARIO ESTA LOGEADO
-            boolean isSuperAdmin = false;
+            checkSuperAdmin();
             String username = user.getNickname();
-            for (String sa : superAdmins) {
-                if (sa.equals(username)) {
-                    isSuperAdmin = true;
-                    break;
-                }
-            }
             try {
                 if (isSuperAdmin //CHEQUEA COMANDOS DE SUPERUSUARIO
                         && (command.equals("newTable") || command.equals("setTable") || command.equals("delTable") || command.equals("movTable") || command.equals("agentes")
