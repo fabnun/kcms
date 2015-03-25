@@ -44,7 +44,7 @@ public class Set extends HttpServlet {
     /**
      * Tamaño maximo de seccion del backup
      */
-    private static final int BACKUP_SIZE = 1024 * 1024 * 20;
+    private static final int BACKUP_SIZE = 33554432;// 1024 * 1024 * 40;
 
     /**
      * Tamaño en bytes del buffer de lectura de data en peticiones
