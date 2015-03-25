@@ -178,7 +178,7 @@ public class Scriptlet {
             String tableId = base.substring(0, idxTable);
             String scriptName = base.substring(idxTable + 1);
             HashMap<String, Serializable> map = dao.loadTable(tableId).getFileMap(scriptName);
-            String code = new String((byte[]) dao.getSerial("file:" + map.get("key")));
+            String code = new String((byte[]) dao.getSerial("file:" + map.get("key")),"utf-8");
             String includeText = sb.toString();
             String result = new Scriptlet(code).process(request, response, dao, includeText, index, url);
             return result;

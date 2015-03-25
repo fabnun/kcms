@@ -179,6 +179,35 @@ public class Table implements Serializable {
     }
 
     /**
+     * Obtiene el tamaño de una imagen
+     *
+     * @param col
+     * @param row
+     * @param dao
+     * @return
+     */
+    public String getSize(int col, int row, Dao dao, int w, int h) {
+        try {
+            Serializable ser = columns.get(col).data.get(row);
+            if (ser != null) {
+                HashMap<String, Serializable> map = (HashMap<String, Serializable>) ser;
+                String key0 = (String) map.get("key");
+                Object o=dao.getSerial("size:" + key0);
+                if (o!=null){
+                    int[] size = (int[]) o;
+                    return size != null ? "w:" + size[0] + ", h:" + size[1] : "w:" + w + ", h:" + h;
+                } else {
+                    return "w:" + w + ", h:" + h;
+                }
+            } else {
+                return "w:" + w + ", h:" + h;
+            }
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+    }
+
+    /**
      * Obtiene la url del registro de la primera columna tipo File
      *
      * @param row

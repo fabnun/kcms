@@ -234,73 +234,31 @@ public class Set extends HttpServlet {
         return map;
     }
 
-    private static void table2Zip(Dao dao, Table table, ZipOutputStream zipStream, LinkedList<Serial> serList) throws IOException, ClassNotFoundException {
+    static int backupSize = 1024 * 1024 * 3;
 
-        if (table != null && table.columns != null) {
-            for (Column col : table.columns) {
-                switch (col.type) {
-                    case "Script":
-                    case "File":
-                    case "Html":
-                        for (Serializable row : col.data) {
-                            if (row != null) {
-                                String key = (String) ((HashMap<String, Serializable>) row).get("key");
-                                Serial fileSerial = dao.getObject(Serial.class, "file:" + key);
-                                int count = 0;
-                                while (fileSerial != null) {
-                                    byte[] dat = Serial.toBytes(fileSerial.getValue());
-                                    ZipEntry ee = new ZipEntry(fileSerial.key);
-                                    try {
-                                        zipStream.putNextEntry(ee);
-                                        zipStream.write(dat, 0, dat.length);
-                                        zipStream.closeEntry();
-                                        count++;
-                                        fileSerial = dao.getObject(Serial.class, "file:" + key + "." + count);
-                                    } catch (Exception e) {
-                                        System.err.println(e.getMessage());
-                                        fileSerial = null;
-                                    }
-
-                                }
-                            }
-                        }
-                        break;
-                    case "SubTable":
-                        for (int j = 0; j < col.getRows(); j++) {
-                            Table sub = (Table) col.data.get(j);
-                            table2Zip(dao, sub, zipStream, serList);
-                        }
-                        break;
-                }
-            }
-        }
-        if (table != null && table.subTableMap != null) {
-            for (String sub : table.subTableMap.keySet()) {
-                serList.add(dao.getObject(Serial.class, "TABLE." + sub));
-            }
-        }
-    }
-
-    private static void serial2Zip(Dao dao, ZipOutputStream zipStream, LinkedList<Serial> serList) throws IOException, ClassNotFoundException {
-        if (serList.size() > 0) {
-            Serial s = serList.pollFirst();
+    private static void serial2Zip(Dao dao, ZipOutputStream zipStream, LinkedList<String> serList, int size) throws IOException, ClassNotFoundException {
+        while (serList.size() > 0) {
+            String s = serList.pollFirst();
             if (s != null) {
-                Serializable ser = s.getValue();
+                Serializable ser = dao.getSerial(s);
                 try {
                     byte[] data = Serial.toBytes(ser);
-                    ZipEntry e = new ZipEntry(s.key);
+                    size = size + data.length;
+                    ZipEntry e = new ZipEntry(s);
                     zipStream.putNextEntry(e);
                     zipStream.write(data, 0, data.length);
                     zipStream.closeEntry();
-                    if (ser instanceof Table) {
-                        table2Zip(dao, (Table) ser, zipStream, serList);
+
+                    if (size > backupSize) {
+                        dao.setCache("serList", serList);
+                        break;
                     }
-                    serial2Zip(dao, zipStream, serList);
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             } else {
-                System.out.println("now!!! aca paso algo!!!");
+                dao.delCache("serList");
             }
         }
     }
@@ -399,19 +357,37 @@ public class Set extends HttpServlet {
                 resp.setContentType("application/force-download");
                 resp.setHeader("Content-Transfer-Encoding", "binary");
                 SimpleDateFormat sdf = new SimpleDateFormat("yy-MM-dd.HH-mm");
-                resp.setHeader("content-disposition", "inline; filename=\"" + req.getServerName() + "." + sdf.format(new Date()) + ".zip\"");
-                try (OutputStream os = resp.getOutputStream()) {
+                try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
                     Dao dao = new Dao();
+                    byte[] bytes = null;
                     try (ZipOutputStream out = new ZipOutputStream(os)) {
-                        LinkedList<Serial> serList = new LinkedList<>();
+                        LinkedList<String> serList = new LinkedList<>();
                         try {
-                            serList.add(new Serial("fileKeys", dao.getSerial("fileKeys")));
-                            serList.add(new Serial("user:rol", dao.getSerial("user:rol")));
-                            serList.add(dao.getObject(Serial.class, "TABLE.ROOT"));
-                            serial2Zip(dao, out, serList);
+                            Object serialList = dao.getCache("serList");
+                            if (serialList != null) {
+                                serList = (LinkedList<String>) serialList;
+                            } else {
+                                List<String> keys = dao.getSerialIds();
+                                for (String s : keys) {
+                                    serList.add(s);
+                                }
+                            }
+                            serial2Zip(dao, out, serList, 0);
+                            if (serList.size() == 0) {
+                                resp.setHeader("content-disposition", "inline; filename=\"" + req.getServerName() + "." + sdf.format(new Date()) + ".zip\"");
+                                dao.delCache("serList");
+                            } else {
+                                resp.setHeader("content-disposition", "inline; filename=\"" + req.getServerName() + "." + sdf.format(new Date()) + "._zip\"");
+                            }
+                            out.close();
+                            os.close();
+                            bytes = os.toByteArray();
                         } catch (IOException | ClassNotFoundException e) {
                             e.printStackTrace();
                         }
+                    }
+                    if (bytes != null) {
+                        resp.getOutputStream().write(bytes);
                     }
                 }
             }
@@ -442,14 +418,14 @@ public class Set extends HttpServlet {
                 String ext = idxDot > -1 ? name.substring(idxDot + 1).toLowerCase() : "";
 
                 String mimeType = ("woff".equals(ext) ? "application/font-woff"
-                                    :"woff2".equals(ext) ? "application/font-woff2"
-                                    : "ttf".equals(ext) ? "font/ttf"
-                                            : "mp4".equals(ext) ? "video/mp4"
-                                                    : "ogv".equals(ext) ? "video/ogg"
-                                                            : "webm".equals(ext) ? "video/webm"
-                                                                    : "js".equals(ext) ? "application/javascript"
-                                                                            : "appcache".equals(ext) ? "text/cache-manifest"
-                                                                                    : sc.getMimeType(name));
+                        : "woff2".equals(ext) ? "application/font-woff2"
+                                : "ttf".equals(ext) ? "font/ttf"
+                                        : "mp4".equals(ext) ? "video/mp4"
+                                                : "ogv".equals(ext) ? "video/ogg"
+                                                        : "webm".equals(ext) ? "video/webm"
+                                                                : "js".equals(ext) ? "application/javascript"
+                                                                        : "appcache".equals(ext) ? "text/cache-manifest"
+                                                                                : sc.getMimeType(name));
 
                 resp.setContentType(mimeType);
 
@@ -1112,6 +1088,14 @@ public class Set extends HttpServlet {
                                     }
                                 }
 
+                                break;
+                            case "setSize":
+                                //Establece el tamaño
+                                String key1 = (String) paramMap.get("key");
+                                int width = Integer.parseInt((String) paramMap.get("width"));
+                                int height = Integer.parseInt((String) paramMap.get("height"));
+                                dao.setSerial("size:" + key1, new int[]{width, height});
+                                dao.resetCache();
                                 break;
                             case "addrow":
                                 //CREA UN NUEVO REGISTRO

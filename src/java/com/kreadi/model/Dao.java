@@ -3,6 +3,7 @@ package com.kreadi.model;
 import bsh.EvalError;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.util.DAOBase;
@@ -10,6 +11,7 @@ import com.kreadi.compiler.Scriptlet;
 import java.io.*;
 import java.security.MessageDigest;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -120,6 +122,17 @@ public class Dao extends DAOBase {
     public <T> T getObject(Class<T> clase, String id) {
         return ofy().find(clase, id);
     }
+    
+    public List<String> getSerialIds(){
+        List<Key<Serial>> list=ofy().query(Serial.class).listKeys();
+        List<String> ret=new LinkedList<>();
+        for(Key<Serial> key:list){
+            ret.add(key.getName());
+        }
+        return ret;
+    }
+    
+    
 
     /**
      * Obtiene un objecto mediante su clase e id

@@ -100,7 +100,7 @@ function templateSelect(elem) {
     var f = elem.files[0]; //Archivo zip
     zip.createReader(new zip.BlobReader(f), function (reader) {
         reader.getEntries(function (entries) {
-            sendSerializable(entries, true, entries.length, true);
+            sendSerializable(entries, null, true, entries.length, true);
             currentEdit = undefined;
         });
     }, function (error) {
@@ -140,7 +140,7 @@ function fileSelect(elem, col, row, subId) {//Upload de archivos y respaldo
 
             // get all entries from the zip
             reader.getEntries(function (entries) {
-                sendSerializable(entries, true, entries.length);
+                sendSerializable(entries, f.name, true, entries.length);
                 currentEdit = undefined;
             });
         }, function (error) {
@@ -150,11 +150,9 @@ function fileSelect(elem, col, row, subId) {//Upload de archivos y respaldo
     }
 }
 
-function sendSerializable(entries, first, size, isTemplate) {
+function sendSerializable(entries, name, first, size, isTemplate) {
     if (isTemplate) {
-
         if (first) {
-
             var compare = function (a, b) {
                 if (a.filename < b.filename)
                     return -1;
@@ -163,11 +161,8 @@ function sendSerializable(entries, first, size, isTemplate) {
                 return 0;
             };
             entries.sort(compare);
-
-
             ajax(server, {command: "serialdelete"}, function (resp) {//Elimina los datos anteriores
-
-                sendSerializable(entries, false, size, true);
+                sendSerializable(entries, name, false, size, true);
             });
         } else {
             if (size > 0)
@@ -182,7 +177,7 @@ function sendSerializable(entries, first, size, isTemplate) {
                         setWait("Restaurando Template " + json.id);
                         entries.splice(0, 1);
                         if (entries.length > 0)
-                            sendSerializable(entries, false, size, true);
+                            sendSerializable(entries, name, false, size, true);
                         else {
                             window.location = "/admin";
                         }
@@ -190,13 +185,15 @@ function sendSerializable(entries, first, size, isTemplate) {
                 });
             }
         }
-
     } else {
-
+        console.log(name);
         if (first) {
-            ajax(server, {command: "serialdelete"}, function (resp) {//Elimina los datos anteriores
-                sendSerializable(entries, false, size);
-            });
+            if (name.indexOf(".zip") === name.length - 4) {
+                ajax(server, {command: "serialdelete"}, function (resp) {//Elimina los datos anteriores
+                    sendSerializable(entries, name, false, size);
+                });
+            } else
+                sendSerializable(entries, name, false, size);
         } else {
             if (size > 0)
                 var esize = entries.length;
@@ -208,7 +205,7 @@ function sendSerializable(entries, first, size, isTemplate) {
                         setWait("Restaurando Web " + Math.round(100 * (size - entries.length) / size) + "%");
                         entries.splice(0, 1);
                         if (entries.length > 0)
-                            sendSerializable(entries, false, size);
+                            sendSerializable(entries, name, false, size);
                         else {
                             window.location = "/admin";
                         }
@@ -257,8 +254,12 @@ function showPreview(row, col, num, key, name, isImage, subId) {
                 var image = document.getElementById("image" + key);
                 image.style.maxWidth = this.width + "px";
                 image.style.display = "inline-block";
-                if (spanDim)
+                if (spanDim) {
                     spanDim.innerHTML = "<span style='color:#FF8;margin-left:32px'> DIMENSIONES : </span> " + this.width + ":" + this.height;
+                    ajax(server, {command: "setSize", key: key, width: this.width, height: this.height}, function (resp) {
+                        console.log(resp);
+                    });
+                }
             };
             html = html + "<span id='img" + key + "' style='white-space: nowrap'></span></div>";
             html = html + "<button style='float:right;margin-top:-36px;margin-right:16px;' onclick='showPreview()'> [ESC] </button>";
