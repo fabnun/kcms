@@ -1123,7 +1123,7 @@ public class Set extends HttpServlet {
                                     int idx = 0;
                                     do {
                                         bytes = (byte[]) dao.getSerial("file:" + key + subId);
-                                        if (bytes != null && bytes.length > 0) {
+                                        if (bytes != null) {//TPDP CHECKEAR ESTA CONDICION
                                             baos.write(bytes);
                                             idx++;
                                             subId = "." + idx;

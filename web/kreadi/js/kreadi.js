@@ -404,12 +404,14 @@ function addRow() {
         ajax(server, {command: "addrow", id: data.id, before: sel.length > 0 ? sel[0] : -1},
         function (resp, json) {
             if (resp === "") {
+                console.log("1: "+JSON.stringify(data));
                 for (var i = 0; i < data.columns.length; i++) {
                     if (json.before === -1)
                         data.columns[i].data.push("");
                     else
                         data.columns[i].data.splice(json.before, 0, "");
                 }
+                console.log("2: "+JSON.stringify(data));
                 buildTable(data);
                 if (sel.length > 0) {
                     for (var i = 0; i < sel.length; i++) {
@@ -517,8 +519,9 @@ function restore() {
 function setBoolean(element, row, col, subId) {
     var value = element.checked;
     element.disabled = true;
-    ajax(server, {command: "setTableVal", id: data.id, col: col, row: row, value: value, subId: subId}, function (resp) {
+    ajax(server, {command: "setTableVal", id: data.id, col: col, row: row, value: value, subId: subId}, function (resp, json) {
         element.disabled = false;
+        data.columns[json.col].data[json.row] = value;
     });
 }
 
