@@ -370,99 +370,107 @@ public class Set extends HttpServlet {
             }
 
         } else {
-            String id = req.getParameter("id");
-            String resize = req.getParameter("resize");
-            int[] resi = null;
-            if (resize != null) {
-                try {
-                    resize = resize.trim().toLowerCase();
-                    int idx = resize.indexOf("x");
-                    resi = new int[]{Integer.parseInt(resize.substring(0, idx)), Integer.parseInt(resize.substring(idx + 1))};
-                } catch (Exception e) {
-                    e.printStackTrace();
+            processFile(req, resp, getServletContext());
+        }
+    }
+
+    public static void processFile(HttpServletRequest req, HttpServletResponse resp, ServletContext sc) throws IOException, ServletException {
+        String id = req.getParameter("id");
+        String resize = req.getParameter("resize");
+        int[] resi = null;
+        if (resize != null) {
+            try {
+                resize = resize.trim().toLowerCase();
+                int idx = resize.indexOf("x");
+                resi = new int[]{Integer.parseInt(resize.substring(0, idx)), Integer.parseInt(resize.substring(idx + 1))};
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        String name = req.getParameter("name");
+        String down = req.getParameter("download");
+        processFile(id, resi, name, down, resp, sc);
+    }
+
+    public static void processFile(String id, int[] resi, String name, String down, HttpServletResponse resp, ServletContext scx) throws IOException, ServletException {
+        if (down != null) {
+            resp.setContentType("application/octet-stream");
+            resp.setContentLength(Integer.parseInt(down));
+            resp.setHeader("Content-Transfer-Encoding", "binary");
+        } else {
+
+            int idxDot = name.lastIndexOf(".");
+            String ext = idxDot > -1 ? name.substring(idxDot + 1).toLowerCase() : "";
+
+            String mimeType = ("woff".equals(ext) ? "application/font-woff"
+                    : "woff2".equals(ext) ? "application/font-woff2"
+                            : "ttf".equals(ext) ? "font/ttf"
+                                    : "mp4".equals(ext) ? "video/mp4"
+                                            : "ogv".equals(ext) ? "video/ogg"
+                                                    : "webm".equals(ext) ? "video/webm"
+                                                            : "js".equals(ext) ? "application/javascript"
+                                                                    : "appcache".equals(ext) ? "text/cache-manifest"
+                                                                            : scx.getMimeType(name));
+
+            resp.setContentType(mimeType);
+
+            resp.setHeader("Accept-Ranges", "bytes");
+        }
+        resp.setHeader("content-disposition", "inline; filename=\"" + name + "\"");
+
+        long time = 2592000000l;//por defecto expiran en 1 mes los recursos estaticos
+        long now = System.currentTimeMillis() + time;
+        resp.setDateHeader("Expires", now);
+        resp.setHeader("Cache-Control", "public, max-age=" + time);
+        resp.setHeader("ETag", id);
+        byte[] bytes;
+        int idx = 0;
+        String subId = "";
+        if (resi != null) {
+            Dao dao = new Dao();
+
+            try {
+                byte[] newImageData;
+                try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+                    do {
+                        bytes = (byte[]) dao.getSerial("file:" + id + subId);
+                        if (bytes != null && bytes.length > 0) {
+                            os.write(bytes);
+                            idx++;
+                            subId = "." + idx;
+                        }
+                    } while (bytes != null);
+                    bytes = os.toByteArray();
+                    ImagesService imagesService = ImagesServiceFactory.getImagesService();
+                    Image oldImage = ImagesServiceFactory.makeImage(bytes);
+                    Transform res = ImagesServiceFactory.makeResize(resi[0], resi[1]);
+                    Image newImage = imagesService.applyTransform(res, oldImage);
+                    newImageData = newImage.getImageData();
                 }
+                resp.getOutputStream().write(newImageData);
+
+            } catch (ClassNotFoundException ex) {
+                throw new ServletException(ex);
             }
-            String name = req.getParameter("name");
-            String down = req.getParameter("download");
-            if (down != null) {
-                resp.setContentType("application/octet-stream");
-                resp.setContentLength(Integer.parseInt(down));
-                resp.setHeader("Content-Transfer-Encoding", "binary");
-            } else {
-                ServletContext sc = getServletContext();
+        } else {
+            try (OutputStream os = resp.getOutputStream()) {
 
-                int idxDot = name.lastIndexOf(".");
-                String ext = idxDot > -1 ? name.substring(idxDot + 1).toLowerCase() : "";
-
-                String mimeType = ("woff".equals(ext) ? "application/font-woff"
-                        : "woff2".equals(ext) ? "application/font-woff2"
-                                : "ttf".equals(ext) ? "font/ttf"
-                                        : "mp4".equals(ext) ? "video/mp4"
-                                                : "ogv".equals(ext) ? "video/ogg"
-                                                        : "webm".equals(ext) ? "video/webm"
-                                                                : "js".equals(ext) ? "application/javascript"
-                                                                        : "appcache".equals(ext) ? "text/cache-manifest"
-                                                                                : sc.getMimeType(name));
-
-                resp.setContentType(mimeType);
-
-                resp.setHeader("Accept-Ranges", "bytes");
-            }
-            resp.setHeader("content-disposition", "inline; filename=\"" + name + "\"");
-
-            long time = 2592000000l;//por defecto expiran en 1 mes los recursos estaticos
-            long now = System.currentTimeMillis() + time;
-            resp.setDateHeader("Expires", now);
-            resp.setHeader("Cache-Control", "public, max-age=" + time);
-            resp.setHeader("ETag", id);
-            byte[] bytes;
-            int idx = 0;
-            String subId = "";
-            if (resi != null) {
                 Dao dao = new Dao();
-
                 try {
-                    byte[] newImageData;
-                    try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-                        do {
-                            bytes = (byte[]) dao.getSerial("file:" + id + subId);
-                            if (bytes != null && bytes.length > 0) {
-                                os.write(bytes);
-                                idx++;
-                                subId = "." + idx;
-                            }
-                        } while (bytes != null);
-                        bytes = os.toByteArray();
-                        ImagesService imagesService = ImagesServiceFactory.getImagesService();
-                        Image oldImage = ImagesServiceFactory.makeImage(bytes);
-                        Transform res = ImagesServiceFactory.makeResize(resi[0], resi[1]);
-                        Image newImage = imagesService.applyTransform(res, oldImage);
-                        newImageData = newImage.getImageData();
-                    }
-                    resp.getOutputStream().write(newImageData);
-
+                    do {
+                        bytes = (byte[]) dao.getSerial("file:" + id + subId);
+                        if (bytes != null && bytes.length > 0) {
+                            os.write(bytes);
+                            idx++;
+                            subId = "." + idx;
+                        }
+                    } while (bytes != null);
                 } catch (ClassNotFoundException ex) {
                     throw new ServletException(ex);
                 }
-            } else {
-                try (OutputStream os = resp.getOutputStream()) {
-
-                    Dao dao = new Dao();
-                    try {
-                        do {
-                            bytes = (byte[]) dao.getSerial("file:" + id + subId);
-                            if (bytes != null && bytes.length > 0) {
-                                os.write(bytes);
-                                idx++;
-                                subId = "." + idx;
-                            }
-                        } while (bytes != null);
-                    } catch (ClassNotFoundException ex) {
-                        throw new ServletException(ex);
-                    }
-                }
             }
         }
+
     }
 
     @Override
@@ -470,7 +478,6 @@ public class Set extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         UserService userService = UserServiceFactory.getUserService();
         User user = userService.getCurrentUser();
-        
 
         InputStream is = req.getInputStream();
         res.setContentType("text/plain");

@@ -245,7 +245,7 @@ function showPreview(row, col, num, key, name, isImage, subId) {
         }
     } else {
         var html = "<div style='margin:12px'><span style='color:#FF8'> URL ESTATICA:</span> /" + data.id + "/" + name + (num > 1 ? "?n=" + num : "") +
-                " <span style='margin-left:32px'> <span style='color:#FF8'> URL DINAMICA :</span> " + server + "?id=" + key + "&name=" + name + "</span>";
+                " <span style='margin-left:32px'> <span style='color:#FF8'> URL DINAMICA :</span> /kreadi/file" + key + "_" + name.replace(".","_") + "</span>";
         if (isImage) {
             var img = new Image();
             img.src = server + "?id=" + key + "&name=" + name;

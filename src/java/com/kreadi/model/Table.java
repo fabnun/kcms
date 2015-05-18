@@ -169,7 +169,7 @@ public class Table implements Serializable {
             Serializable ser = columns.get(col).data.get(row);
             if (ser != null) {
                 HashMap<String, Serializable> map = (HashMap<String, Serializable>) ser;
-                return "/kreadi/set?id=" + map.get("key") + "&name=" + map.get("name");
+                return "/kreadi/file" + map.get("key") + "_" + map.get("name").toString().replaceAll("\\.", "_");
             } else {
                 return "";
             }

@@ -69,7 +69,7 @@
                 box-shadow: none;
             }
         </style>
-        <!--script src="js/codemirror.js"></script>
+        <script src="js/codemirror.js"></script>
         <script src="js/search.js"></script>
         <script src="js/searchcursor.js"></script>
         <script src="js/dialog.js"></script>
@@ -81,11 +81,11 @@
         <script src="js/htmlembedded.js"></script>
         <script src="js/fullscreen.js"></script>
         <script src="js/active-line.js"></script>
-        <script src="js/zip.js"></script-->
-        <script src="js/all.js"></script>
+        <script src="js/zip.js"></script>
+        <!--script src="js/all.js"></script-->
 
     </head>
-    <body>
+    <body>x
         <%
 
             if (tabla == null && tableID.equals("ROOT")) {

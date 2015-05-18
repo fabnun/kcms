@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -27,6 +28,28 @@ public class FiltroUrl implements Filter {
 
     Dao dao;
 
+    private static final String pattern = "/kreadi/file-?\\d+(\\.\\d+\\.\\d+)?(_.*)?";
+
+    private boolean redirectFile(String uri, HttpServletResponse resp) throws IOException, ServletException {
+        if (uri.matches(pattern)) {
+            String[] var = uri.substring(12).split("\\.");
+            String name = "";
+            int idxName = var[var.length - 1].indexOf("_");
+            if (idxName > -1) {
+                name = var[var.length - 1].substring(idxName + 1).replaceAll("_", ".");
+                var[var.length - 1] = var[var.length - 1].substring(0, idxName);
+            }
+            if (var.length == 1) {
+                Set.processFile(var[0], null, name, null, resp, getFilterConfig().getServletContext());
+                return true;
+            } else if (var.length == 3) {
+                Set.processFile(var[0], new int[]{Integer.parseInt(var[1]), Integer.parseInt(var[2])}, name, null, resp, getFilterConfig().getServletContext());
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
@@ -38,7 +61,10 @@ public class FiltroUrl implements Filter {
         String uri = req.getRequestURI();
         String param = req.getQueryString();
         if (uri.startsWith("/kreadi/") || uri.startsWith("/_ah/")) {
-            chain.doFilter(request, response);
+            boolean redirect = redirectFile(uri, resp);
+            if (!redirect) {
+                chain.doFilter(request, response);
+            }
         } else {
             if (uri.startsWith("/admin")) {
                 resp.sendRedirect("/kreadi/admin.jsp");
@@ -86,7 +112,7 @@ public class FiltroUrl implements Filter {
                 HttpServletResponse httpResponse = (HttpServletResponse) response;
                 httpResponse.setDateHeader("Expires", expiry);
                 httpResponse.setHeader("Cache-Control", "max-age=" + expireTime);
-                
+
                 try {
                     Integer index = (Integer) map.get("#n");
                     index = index == null ? 0 : index;
@@ -103,14 +129,14 @@ public class FiltroUrl implements Filter {
                             int idxDot = filename.lastIndexOf(".");
                             String ext = idxDot > -1 ? filename.substring(idxDot + 1).toLowerCase() : "";
                             String mimeType = ("woff".equals(ext) ? "application/font-woff"
-                                    :"woff2".equals(ext) ? "application/font-woff2"
-                                    : "ttf".equals(ext) ? "font/ttf"
-                                            : "mp4".equals(ext) ? "video/mp4"
-                                                    : "ogv".equals(ext) ? "video/ogg"
-                                                            : "webm".equals(ext) ? "video/webm"
-                                                                    : "js".equals(ext) ? "application/javascript"
-                                                                            : "appcache".equals(ext) ? "text/cache-manifest"
-                                                                                    : sc.getMimeType(filename));
+                                    : "woff2".equals(ext) ? "application/font-woff2"
+                                            : "ttf".equals(ext) ? "font/ttf"
+                                                    : "mp4".equals(ext) ? "video/mp4"
+                                                            : "ogv".equals(ext) ? "video/ogg"
+                                                                    : "webm".equals(ext) ? "video/webm"
+                                                                            : "js".equals(ext) ? "application/javascript"
+                                                                                    : "appcache".equals(ext) ? "text/cache-manifest"
+                                                                                            : sc.getMimeType(filename));
 
                             resp.setContentType(mimeType);
                             resp.setHeader("Accept-Ranges", "bytes");
