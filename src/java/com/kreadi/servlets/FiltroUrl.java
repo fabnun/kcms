@@ -13,7 +13,6 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.regex.Pattern;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;

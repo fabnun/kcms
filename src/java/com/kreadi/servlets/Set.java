@@ -254,7 +254,7 @@ public class Set extends HttpServlet {
 
                     if (size > BACKUP_SIZE) {
                         dao.setCache("serList", serList);
-                        break;
+                        return;
                     }
 
                 } catch (IOException e) {
@@ -264,6 +264,7 @@ public class Set extends HttpServlet {
                 dao.delCache("serList");
             }
         }
+        dao.delCache("serList");
     }
 
     private boolean isSuperAdmin = false;
@@ -334,41 +335,32 @@ public class Set extends HttpServlet {
                 resp.setContentType("application/force-download");
                 resp.setHeader("Content-Transfer-Encoding", "binary");
                 SimpleDateFormat sdf = new SimpleDateFormat("yy-MM-dd.HH-mm");
-                try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-                    Dao dao = new Dao();
-                    byte[] bytes = null;
-                    try (ZipOutputStream out = new ZipOutputStream(os)) {
-                        LinkedList<String> serList = new LinkedList<>();
-                        try {
-                            Object serialList = dao.getCache("serList");
-                            if (serialList != null) {
-                                serList = (LinkedList<String>) serialList;
-                            } else {
-                                List<String> keys = dao.getSerialIds();
-                                for (String s : keys) {
-                                    serList.add(s);
-                                }
-                            }
-                            serial2Zip(dao, out, serList, 0);
-                            if (serList.size() == 0) {
-                                resp.setHeader("content-disposition", "inline; filename=\"" + req.getServerName() + "." + sdf.format(new Date()) + ".zip\"");
-                                dao.delCache("serList");
-                            } else {
-                                resp.setHeader("content-disposition", "inline; filename=\"" + req.getServerName() + "." + sdf.format(new Date()) + "._zip\"");
-                            }
-                            out.close();
-                            os.close();
-                            bytes = os.toByteArray();
-                        } catch (IOException | ClassNotFoundException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    if (bytes != null) {
-                        resp.getOutputStream().write(bytes);
+
+                Dao dao = new Dao();
+                LinkedList<String> serList = new LinkedList<>();
+                Object serialList = dao.getCache("serList");//Obtiene la lista de seriales desde el cache
+                if (serialList != null) {
+                    serList = (LinkedList<String>) serialList;
+                } else {
+                    serList.addAll(dao.getSerialIds());//Obtiene la lista completa de todas las keys de los objetos serial...
+                }
+
+                if (serList.isEmpty()) {//TODO hacer esto antes de escribir el zip.... ver otro mecanismo... guardar el map de los keys serial y el tamaño del serial... para hacer el calculo de tamaño antes
+                    resp.setHeader("content-disposition", "inline; filename=\"" + req.getServerName() + "." + sdf.format(new Date()) + ".zip\"");
+                    dao.delCache("serList");
+                } else {
+                    resp.setHeader("content-disposition", "inline; filename=\"" + req.getServerName() + "." + sdf.format(new Date()) + "._zip\"");
+                }
+
+                try (ZipOutputStream out = new ZipOutputStream(resp.getOutputStream())) {
+                    try {
+                        serial2Zip(dao, out, serList, 0);
+                    } catch (IOException | ClassNotFoundException e) {
+                        e.printStackTrace();
                     }
                 }
-            }
 
+            }
         } else {
             processFile(req, resp, getServletContext());
         }
