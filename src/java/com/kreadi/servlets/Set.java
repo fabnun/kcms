@@ -49,7 +49,7 @@ public class Set extends HttpServlet {
     /**
      * Tamaño en bytes del buffer de lectura de data en peticiones
      */
-    private static final int BUFFER_SIZE = 1024 * 1023;
+    private static final int BUFFER_SIZE = 1000000;
 
     /**
      * Mapa de StringBuilders de lectura de data
@@ -127,7 +127,7 @@ public class Set extends HttpServlet {
         byte[][] buffer = new byte[2][];
         int r;
         int pos = 0;
-        buffer[0] = new byte[1024 * 16];//Buffer de lectura
+        buffer[0] = new byte[BUFFER_SIZE];//Buffer de lectura
         buffer[1] = new byte[BUFFER_SIZE];//Buffer de almacenado
         do {
             r = is.read(buffer[0]);//Lee los bytes
@@ -153,7 +153,7 @@ public class Set extends HttpServlet {
                         match = false;
                     }
                 }
-                if (match) {
+                if (match) {//TODO OJO el archivo candara.svg... obtenido de general el fontface de candara.ttf no hace match nunca
                     if (pos > boundarySize) {
                         byte[] bytes = new byte[pos - boundarySize];
                         System.arraycopy(buffer[1], 0, bytes, 0, pos - boundarySize);
@@ -173,6 +173,7 @@ public class Set extends HttpServlet {
                 }
             }
         } while (r > -1);
+
         return key;
     }
 
