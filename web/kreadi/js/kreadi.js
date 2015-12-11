@@ -43,6 +43,7 @@ function keyNumberFilter(evt) {
 }
 
 function initEdit(element, col, row, value, type, subId) {
+    value = value ? unescape(value) : value;
     if (subId) {
         subId = ",\"" + subId + "\"";
     } else
@@ -50,15 +51,15 @@ function initEdit(element, col, row, value, type, subId) {
     if (currentEdit !== element) {
         currentEdit = element;
         if (type === "String" || type === "Id") {
-            var html = "<input type='text' value='" + value + "' onkeydown='endEdit(this, " + col + ", " + row + ", event, \"" + value + "\"" + subId + " )' onblur='endEdit(this, " + col + ", " + row + ", undefined, \"" + value + "\"" + subId + ")'>";
+            var html = "<input type='text' value='" + value + "' onkeydown='endEdit(this, " + col + ", " + row + ", event, \"" + escape(value) + "\"" + subId + " )' onblur='endEdit(this, " + col + ", " + row + ", undefined, \"" + escape(value) + "\"" + subId + ")'>";
             element.innerHTML = html;
             element.childNodes[0].focus();
         } else if (type === "Number") {
-            var html = "<input type='text' value='" + value + "' onkeydown='if (keyNumberFilter(event)) endEdit(this, " + col + ", " + row + ", event, \"" + value + "\"" + subId + ")' onblur='endEdit(this, " + col + ", " + row + ", undefined, \"" + value + "\"" + subId + ")'>";
+            var html = "<input type='text' value='" + value + "' onkeydown='if (keyNumberFilter(event)) endEdit(this, " + col + ", " + row + ", event, \"" + escape(value) + "\"" + subId + ")' onblur='endEdit(this, " + col + ", " + row + ", undefined, \"" + escape(value) + "\"" + subId + ")'>";
             element.innerHTML = html;
             element.childNodes[0].focus();
         } else if (type === "Select") {
-            var html = "<select value='" + value + "' onblur='endEdit(this, " + col + ", " + row + ", undefined, \"" + value + "\"" + subId + ")'>";
+            var html = "<select value='" + value + "' onblur='endEdit(this, " + col + ", " + row + ", undefined, \"" + escape(value) + "\"" + subId + ")'>";
             var types = [];
             if (subId) {
                 var val = subId.substring(10);
@@ -245,7 +246,7 @@ function showPreview(row, col, num, key, name, isImage, subId) {
         }
     } else {
         var html = "<div style='margin:12px'><span style='color:#FF8'> URL ESTATICA:</span> /" + data.id + "/" + name + (num > 1 ? "?n=" + num : "") +
-                " <span style='margin-left:32px'> <span style='color:#FF8'> URL DINAMICA :</span> /kreadi/file" + key + "_" + name.replace(".","_") + "</span>";
+                " <span style='margin-left:32px'> <span style='color:#FF8'> URL DINAMICA :</span> /kreadi/file" + key + "_" + name.replace(".", "_") + "</span>";
         if (isImage) {
             var img = new Image();
             img.src = server + "?id=" + key + "&name=" + name;
@@ -404,14 +405,14 @@ function addRow() {
         ajax(server, {command: "addrow", id: data.id, before: sel.length > 0 ? sel[0] : -1},
         function (resp, json) {
             if (resp === "") {
-                console.log("1: "+JSON.stringify(data));
+                console.log("1: " + JSON.stringify(data));
                 for (var i = 0; i < data.columns.length; i++) {
                     if (json.before === -1)
                         data.columns[i].data.push("");
                     else
                         data.columns[i].data.splice(json.before, 0, "");
                 }
-                console.log("2: "+JSON.stringify(data));
+                console.log("2: " + JSON.stringify(data));
                 buildTable(data);
                 if (sel.length > 0) {
                     for (var i = 0; i < sel.length; i++) {
@@ -890,7 +891,7 @@ function buildTable(data, colIndex, subId) {
                         html.push(" class='editable'");
                         if (columna.type !== "File") {
                             html.push(" onclick=\"initEdit(this, ", j, ",", i);
-                            html.push(", '", value);
+                            html.push(", '", escape(value));
                             html.push("','", columna.type, "'", (subId ? (",'" + subId + "'") : ""), ")\"");
                         }
                     }
@@ -1242,14 +1243,22 @@ function endEdit(elem, col, row, evt, oldValue, subId) {
                             var scol = parseInt(val.substring(0, idx));
                             var srow = parseInt(val.substring(idx + 1));
                             data.columns[scol].data[srow].columns[json.col].data[json.row] = newValue;
+
+                            elem.parentNode.onclick = function () {
+                                var command = "initEdit(this, " + json.col + "," + json.row + ", '" + escape(newValue) + "','" + data.columns[scol].data[srow].columns[json.col].type + "'" + (subId ? (",'" + subId + "'") : "") + ")";
+                                eval(command);
+                            };
+
                         } else {
                             data.columns[json.col].data[json.row] = newValue;
+
+                            elem.parentNode.onclick = function () {
+                                var command = "initEdit(this, " + json.col + "," + json.row + ", '" + escape(newValue) + "','" + data.columns[json.col].type + "'" + (subId ? (",'" + subId + "'") : "") + ")";
+                                eval(command);
+                            };
                         }
                     }
-                    elem.parentNode.onclick = function () {
-                        var command = "initEdit(this, " + json.col + "," + json.row + ", '" + newValue + "','" + data.columns[json.col].type + "'" + (subId ? (",'" + subId + "'") : "") + ")";
-                        eval(command);
-                    };
+
                     elem.parentNode.innerHTML = newValue;
                     currentEdit = undefined;
                 });

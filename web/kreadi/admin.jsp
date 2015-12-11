@@ -1,8 +1,6 @@
-<%@page import="eu.bitwalker.useragentutils.Browser"%>
-<%@page import="java.util.LinkedList"%>
-<%@page import="com.kreadi.model.Column"%>
 <%@page import="com.kreadi.model.Table"%>
 <%@page import="com.kreadi.model.Dao"%>
+<%@page import="java.util.LinkedList"%>
 <%@page import="com.google.appengine.api.users.User"%>
 <%@page import="com.google.appengine.api.users.UserServiceFactory"%>
 <%@page import="com.google.appengine.api.users.UserService"%>

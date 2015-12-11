@@ -33,11 +33,11 @@ public class FiltroUrl implements Filter {
         if (uri.matches(pattern)) {
             String[] var = uri.substring(12).split("\\.");
             String name = "";
-            int idxName = var[var.length - 1].indexOf("_");
+            int idxName = var[0].indexOf("_");
             if (idxName > -1) {
-                name = var[var.length - 1].substring(idxName + 1).replaceAll("_", ".");
-                var[var.length - 1] = var[var.length - 1].substring(0, idxName);
+                name = var[0].substring(idxName + 1).replaceAll("_", ".");
             }
+            var[0] = var[0].substring(0, idxName);
             if (var.length == 1) {
                 Set.processFile(var[0], null, name, null, resp, getFilterConfig().getServletContext());
                 return true;
@@ -65,7 +65,7 @@ public class FiltroUrl implements Filter {
                 chain.doFilter(request, response);
             }
         } else {
-            if (uri.startsWith("/admin")) {
+            if (uri.equals("/admin")) {
                 resp.sendRedirect("/kreadi/admin.jsp");
             } else {
                 String filename;
