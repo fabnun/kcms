@@ -8,7 +8,10 @@ import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.util.DAOBase;
 import com.kreadi.compiler.Scriptlet;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -82,6 +85,20 @@ public class Dao extends DAOBase {
         syncCache.delete(id);
     }
 
+    public String getString(String id) throws IOException, ClassNotFoundException {
+        Serializable s = (Serializable) syncCache.get("s:" + id);
+        if (s == null) {
+            Serial ser = getObject(Serial.class, id);
+            if (ser != null) {
+                s = ser.getValue();
+                if (s != null) {
+                    syncCache.put("s:" + id, s);
+                }
+            }
+        }
+        return (String)s;
+    }
+    
     public Serializable getSerial(String id) throws IOException, ClassNotFoundException {
         Serializable s = (Serializable) syncCache.get("s:" + id);
         if (s == null) {

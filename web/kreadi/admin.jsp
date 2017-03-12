@@ -18,7 +18,7 @@
     String username = "";
     Dao dao = new Dao();
 
-    String rls = (String) dao.getSerial("user:rol");
+    String rls = dao.getString("user:rol");
     if (rls != null) {
         rls = rls == null ? "" : rls;
         String[] role = rls.split(" ");
@@ -91,7 +91,7 @@
                 dao.saveTable(tabla);
             }
             if (tabla != null) {
-                String rol = (String) dao.getSerial("user:rol");
+                String rol = dao.getString("user:rol");
                 rol = rol == null ? "" : rol;
                 String[] roles = rol.split(" ");
                 String usr = username;

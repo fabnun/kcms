@@ -139,6 +139,31 @@ public class Table implements Serializable {
         Serializable val = columns.get(col).data.get(row);
         return val;
     }
+    
+    /**
+     * @param col
+     * @param row
+     * @param dao
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    public String getValue(int col, int row, Dao dao) throws IOException, ClassNotFoundException {
+        return columns.get(col).value(row, dao);
+    }
+
+    /**
+     *
+     * @param col
+     * @param row
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    public Serializable getValue(int col, int row) throws IOException, ClassNotFoundException {
+        Serializable val = columns.get(col).data.get(row);
+        return val;
+    }
 
     /**
      * Obtiene la url del registro de la primera columna tipo File
