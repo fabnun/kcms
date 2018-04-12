@@ -1,1 +1,2 @@
-c:\appengine-java-sdk-1.9.15\bin\appcfg.cmd update web
+c:\appengine\bin\appcfg.cmd update web
+pause
