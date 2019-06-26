@@ -1,0 +1,1 @@
+Executing [C:\Program Files\Java\jdk1.8.0_201\jre\bin\java, -Dfile.encoding=UTF-8, -classpath, c:\appengine-java-sdk-1.9.73\bin\..\lib\appengine-tools-api.jar, com.google.appengine.tools.development.DevAppServerMain, --property=kickstart.user.dir=D:\_TRABAJO\proyectos\APP\kcms1, --no_java_agent, --port=8080, D:\_TRABAJO\proyectos\APP\kcms1\build\web]
